@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres_nest
+    restart: always
+    environment:
+      POSTGRES_USER: nest
+      POSTGRES_PASSWORD: nest
+      POSTGRES_DB: nest_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
