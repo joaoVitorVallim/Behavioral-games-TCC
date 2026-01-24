@@ -1,11 +1,16 @@
 import React, { useState } from "react"
 import { GraduationCap, Brain } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export function LoginPage() {
+
+  const navigate = useNavigate()
+
   const [view, setView] = useState<'landing' | 'login'>('landing')
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [erro, setErro] = useState("")
+  
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -14,6 +19,7 @@ export function LoginPage() {
       return
     }
     console.log("Login:", { email, senha })
+
   }
 
   return (
@@ -107,7 +113,11 @@ export function LoginPage() {
                     </p>
                   </div>
 
-                  <button className="w-full py-4 bg-[#58A8F6] hover:bg-[#4a96e0] text-[#050F25] rounded-xl font-bold transition-all">
+                  {/* BOTÃO DE NAVEGAÇÃO PARA DASHBOARD */}
+                  <button 
+                    onClick={() => navigate('/DashBoard')}
+                    className="w-full py-4 bg-[#58A8F6] hover:bg-[#4a96e0] text-[#050F25] rounded-xl font-bold transition-all"
+                  >
                     Ver Sessões Disponíveis
                   </button>
                 </div>
@@ -126,7 +136,7 @@ export function LoginPage() {
                     placeholder="docente@fho.edu.br"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#050F25] border border-[#4C5D73] rounded-xl px-4 py-3"
+                    className="w-full bg-[#050F25] border border-[#4C5D73] rounded-xl px-4 py-3 outline-none focus:border-[#58A8F6] transition-colors"
                   />
 
                   <input
@@ -134,7 +144,7 @@ export function LoginPage() {
                     placeholder="••••••••"
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
-                    className="w-full bg-[#050F25] border border-[#4C5D73] rounded-xl px-4 py-3"
+                    className="w-full bg-[#050F25] border border-[#4C5D73] rounded-xl px-4 py-3 outline-none focus:border-[#58A8F6] transition-colors"
                   />
 
                   {erro && (
