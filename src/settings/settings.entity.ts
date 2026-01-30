@@ -7,21 +7,18 @@ import {
 } from 'typeorm';
 import { Session } from '../session/session.entity';
 
-@Entity('users')
-export class User {
+@Entity('settings')
+export class Settings {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100 })
-  name: string;
+  @Column({ nullable: false })
+  configName: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ type: 'json', nullable: false })
+  parameters: Record<string, any>;
 
-  @Column()
-  password: string;
-
-  @OneToMany(() => Session, (session) => session.user)
+  @OneToMany(() => Session, (session) => session.settings)
   sessions: Session[];
 
   @CreateDateColumn()

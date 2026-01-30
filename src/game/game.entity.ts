@@ -7,21 +7,18 @@ import {
 } from 'typeorm';
 import { Session } from '../session/session.entity';
 
-@Entity('users')
-export class User {
+@Entity('games')
+export class Game {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100 })
+  @Column({ nullable: false })
   name: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ type: 'text', nullable: false })
+  description: string;
 
-  @Column()
-  password: string;
-
-  @OneToMany(() => Session, (session) => session.user)
+  @OneToMany(() => Session, (session) => session.game)
   sessions: Session[];
 
   @CreateDateColumn()
