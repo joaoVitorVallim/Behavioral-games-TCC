@@ -45,4 +45,13 @@ export class SessionService {
   async remove(id: string): Promise<void> {
     await this.sessionRepository.delete(id);
   }
+
+  async getResults(id: string) {
+    // TODO: implementar lógica de resultados
+  }
+
+
+  async exportData(id: string, format: string) {
+    // TODO: implementar exportação xlsx/csv
+  }
 }

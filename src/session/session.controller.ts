@@ -45,4 +45,14 @@ export class SessionController {
   remove(@Param('id') id: string) {
     return this.sessionService.remove(id);
   }
+
+  @Get(':id/results')
+  getResults(@Param('id') id: string) {
+    return this.sessionService.getResults(id);
+  }
+
+  @Get(':id/export')
+  exportData(@Param('id') id: string, @Query('format') format: string) {
+    return this.sessionService.exportData(id, format);
+  }
 }
