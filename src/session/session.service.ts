@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Session } from './session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
+import { MatchStatus } from '../match/match.entity';
 
 @Injectable()
 export class SessionService {
@@ -47,11 +48,116 @@ export class SessionService {
   }
 
   async getResults(id: string) {
-    // TODO: implementar lógica de resultados
+    const session = await this.sessionRepository.findOne({
+      where: { id },
+      relations: ['game', 'settings', 'matches', 'matches.player1', 'matches.player2'],
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Sessão ${id} não encontrada`);
+    }
+
+    const matches = session.matches || [];
+
+    const summary = {
+      totalMatches: matches.length,
+      byStatus: {
+        waiting: matches.filter(m => m.status === MatchStatus.WAITING).length,
+        in_progress: matches.filter(m => m.status === MatchStatus.IN_PROGRESS).length,
+        finished: matches.filter(m => m.status === MatchStatus.FINISHED).length,
+        cancelled: matches.filter(m => m.status === MatchStatus.CANCELLED).length,
+      },
+    };
+
+    const playersMap = new Map<string, any>();
+    for (const match of matches) {
+      if (match.player1) playersMap.set(match.player1.id, match.player1);
+      if (match.player2) playersMap.set(match.player2.id, match.player2);
+    }
+
+    return {
+      session: {
+        id: session.id,
+        inviteCode: session.inviteCode,
+        roundsLimit: session.roundsLimit,
+        game: session.game,
+        settings: session.settings,
+        createdAt: session.createdAt,
+      },
+      summary,
+      players: Array.from(playersMap.values()),
+      matches: matches.map(m => ({
+        id: m.id,
+        player1: m.player1,
+        player2: m.player2,
+        moves: m.moves,
+        status: m.status,
+        matchTime: m.matchTime,
+        createdAt: m.createdAt,
+      })),
+    };
   }
 
 
-  async exportData(id: string, format: string) {
-    // TODO: implementar exportação xlsx/csv
+  async exportData(id: string) {
+    const session = await this.sessionRepository.findOne({
+      where: { id },
+      relations: ['game', 'matches', 'matches.player1', 'matches.player2'],
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Sessão ${id} não encontrada`);
+    }
+
+    const matches = session.matches || [];
+
+    const headers = ['match_id', 'player1_nickname', 'player1_course', 'player2_nickname', 'player2_course', 'round', 'p1_move', 'p2_move', 'status', 'createdAt'];
+    const rows: string[][] = [];
+
+    for (const m of matches) {
+      const moves = m.moves || {};
+      const roundKeys = Object.keys(moves);
+
+      if (roundKeys.length === 0) {
+        rows.push([
+          m.id,
+          m.player1?.nickname || '',
+          m.player1?.course || '',
+          m.player2?.nickname || '',
+          m.player2?.course || '',
+          '',
+          '',
+          '',
+          m.status,
+          m.createdAt?.toISOString() || '',
+        ]);
+      } else {
+        for (const round of roundKeys) {
+          const roundData = moves[round] || {};
+          rows.push([
+            m.id,
+            m.player1?.nickname || '',
+            m.player1?.course || '',
+            m.player2?.nickname || '',
+            m.player2?.course || '',
+            round,
+            roundData.p1 || '',
+            roundData.p2 || '',
+            m.status,
+            m.createdAt?.toISOString() || '',
+          ]);
+        }
+      }
+    }
+
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    return {
+      csv,
+      filename: `session_${session.inviteCode}.csv`,
+    };
   }
 }

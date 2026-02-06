@@ -65,8 +65,8 @@ src/
 | GET | `/sessions/codigo/:codigo` | Buscar por código de convite |
 | PATCH | `/sessions/:id` | Atualizar sessão |
 | DELETE | `/sessions/:id` | Remover sessão |
-| GET | `/sessions/:id/results` | Ver resultados (TODO) |
-| GET | `/sessions/:id/export?format=xlsx` | Exportar dados (TODO) |
+| GET | `/sessions/:id/results` | Ver resultados (sessão, summary, players, matches) |
+| GET | `/sessions/:id/export` | Exportar dados em CSV (download automático) |
 
 ### Players
 | Método | Rota | Descrição |
@@ -107,13 +107,14 @@ src/
 5. Sistema cria partida quando 2 jogadores estão prontos
    POST /matches { session_id, player1_id, player2_id }
 
-6. Jogo acontece...
+6. Jogo acontece (front envia jogadas)
+   PATCH /matches/:id { moves: { round1: { p1, p2 }, ... }, status }
 
 7. Professor vê resultados
    GET /sessions/:id/results
 
-8. Professor exporta dados
-   GET /sessions/:id/export?format=xlsx
+8. Professor exporta dados (CSV com uma linha por round)
+   GET /sessions/:id/export
 ```
 
 ---
@@ -182,7 +183,7 @@ Acesse: `http://localhost:3000`
 
 ## TODO
 
-- [ ] Implementar `GET /sessions/:id/results`
-- [ ] Implementar `GET /sessions/:id/export`
+- [x] Implementar `GET /sessions/:id/results`
+- [x] Implementar `GET /sessions/:id/export`
 - [ ] Endpoint `POST /sessions/:id/join` (entrar na sessão)
 - [ ] Endpoint `GET /sessions/:id/status` (verificar pareamento)

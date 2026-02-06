@@ -6,8 +6,9 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
@@ -52,7 +53,10 @@ export class SessionController {
   }
 
   @Get(':id/export')
-  exportData(@Param('id') id: string, @Query('format') format: string) {
-    return this.sessionService.exportData(id, format);
+  async exportData(@Param('id') id: string, @Res() res: Response) {
+    const { csv, filename } = await this.sessionService.exportData(id);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
   }
 }
