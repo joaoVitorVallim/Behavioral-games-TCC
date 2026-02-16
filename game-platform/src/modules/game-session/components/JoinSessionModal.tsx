@@ -127,7 +127,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
       >
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-muted-foreground hover:text-foreground text-xl w-6 h-6 flex items-center justify-center leading-none"
+          className="absolute top-5 right-5 text-muted-foreground hover:text-foreground hover:scale-125 transition-all text-xl w-6 h-6 flex items-center justify-center leading-none"
         >
           ✕
         </button>
@@ -160,7 +160,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
             <button
               onClick={handleCodeSubmit}
               disabled={is_validating}
-              className="w-full py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground rounded-lg text-sm font-semibold transition-opacity"
+              className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 hover:text-background disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground transition-all"
             >
               {is_validating ? 'Validando...' : 'Continuar'}
             </button>
@@ -195,7 +195,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
             <button
               onClick={handleRequirementsSubmit}
               disabled={is_joining}
-              className="w-full py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground rounded-lg text-sm font-semibold transition-opacity"
+              className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 hover:text-background disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground transition-all"
             >
               {is_joining ? 'Entrando...' : 'Entrar na Sessão'}
             </button>

@@ -1,13 +1,18 @@
 import { useState } from 'react'
+import { Brain } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { SessionCard } from '../components/SessionCard'
 import { SessionCardSkeleton } from '../components/SessionCardSkeleton'
 import { JoinSessionModal } from '../components/JoinSessionModal'
+import { LoginModal } from '../../auth/components/LoginModal'
 import { useSessions } from '../hooks/useSessions'
 import type { Session } from '../types'
 
 export const SessionsPage = () => {
+  const navigate = useNavigate()
   const { sessions, is_loading, refetch } = useSessions()
   const [selected_session, setSelectedSession] = useState<Session | null>(null)
+  const [show_login_modal, setShowLoginModal] = useState(false)
 
   const handleEnterSession = (session: Session) => {
     setSelectedSession(session)
@@ -29,16 +34,18 @@ export const SessionsPage = () => {
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border">
         <div className="max-w-350 mx-auto px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-              </svg>
-            </div>
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center gap-3 hover:scale-105 transition-transform"
+          >
+            <Brain className="w-8 h-8 text-primary" />
             <h1 className="text-foreground text-lg font-semibold">BehaviorLab</h1>
-          </div>
+          </button>
           
-          <button className="px-5 py-2 bg-primary hover:opacity-90 text-primary-foreground rounded-lg text-sm font-medium transition-opacity">
+          <button 
+            onClick={() => setShowLoginModal(true)}
+            className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:scale-105 hover:text-background transition-all"
+          >
             Sou Docente
           </button>
         </div>
@@ -51,7 +58,7 @@ export const SessionsPage = () => {
             <button
               onClick={handleReload}
               disabled={is_loading}
-              className="p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg text-muted-foreground hover:scale-110 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               title="Recarregar sessões"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +98,10 @@ export const SessionsPage = () => {
           onClose={handleCloseModal}
           onSuccess={handleJoinSuccess}
         />
+      )}
+
+      {show_login_modal && (
+        <LoginModal onClose={() => setShowLoginModal(false)} />
       )}
     </div>
   )
