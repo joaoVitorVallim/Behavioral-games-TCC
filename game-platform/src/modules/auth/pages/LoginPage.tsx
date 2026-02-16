@@ -1,11 +1,9 @@
-import { useState } from "react"
-import { GraduationCap, Brain } from "lucide-react"
+import { GraduationCap } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { LoginModal } from "../components/LoginModal"
+import { Header } from "../../../shared/components/Header"
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [show_login_modal, setShowLoginModal] = useState(false)
 
   return (
     <>
@@ -24,24 +22,7 @@ export function LoginPage() {
       <div className="min-h-screen flex flex-col bg-background text-foreground font-sans relative">
 
         {/* HEADER */}
-        <header className="w-full max-w-6xl mx-auto p-6 flex justify-between items-center z-10 bg-background border-b border-border">
-          <button 
-            onClick={() => navigate('/')} 
-            className="flex items-center gap-3 hover:scale-105 transition-transform"
-          >
-            <Brain className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold tracking-tight">BehaviorLab</span>
-          </button>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 hover:text-background transition-all"
-            >
-              Sou Docente
-            </button>
-          </div>
-        </header>
+        <Header />
 
         {/* MAIN */}
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 z-10 bg-background">
@@ -98,10 +79,6 @@ export function LoginPage() {
           </p>
         </footer>
       </div>
-
-      {show_login_modal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} />
-      )}
     </>
   )
 }

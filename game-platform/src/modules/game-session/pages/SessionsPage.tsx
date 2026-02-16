@@ -1,18 +1,14 @@
 import { useState } from 'react'
-import { Brain } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { SessionCard } from '../components/SessionCard'
 import { SessionCardSkeleton } from '../components/SessionCardSkeleton'
 import { JoinSessionModal } from '../components/JoinSessionModal'
-import { LoginModal } from '../../auth/components/LoginModal'
+import { Header } from '../../../shared/components/Header'
 import { useSessions } from '../hooks/useSessions'
 import type { Session } from '../types'
 
 export const SessionsPage = () => {
-  const navigate = useNavigate()
   const { sessions, is_loading, refetch } = useSessions()
   const [selected_session, setSelectedSession] = useState<Session | null>(null)
-  const [show_login_modal, setShowLoginModal] = useState(false)
 
   const handleEnterSession = (session: Session) => {
     setSelectedSession(session)
@@ -32,24 +28,7 @@ export const SessionsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border">
-        <div className="max-w-350 mx-auto px-8 py-4 flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/')} 
-            className="flex items-center gap-3 hover:scale-105 transition-transform"
-          >
-            <Brain className="w-8 h-8 text-primary" />
-            <h1 className="text-foreground text-lg font-semibold">BehaviorLab</h1>
-          </button>
-          
-          <button 
-            onClick={() => setShowLoginModal(true)}
-            className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:scale-105 hover:text-background transition-all"
-          >
-            Sou Docente
-          </button>
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-350 mx-auto px-8 py-16">
         <div className="text-center mb-16">
@@ -98,10 +77,6 @@ export const SessionsPage = () => {
           onClose={handleCloseModal}
           onSuccess={handleJoinSuccess}
         />
-      )}
-
-      {show_login_modal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} />
       )}
     </div>
   )
