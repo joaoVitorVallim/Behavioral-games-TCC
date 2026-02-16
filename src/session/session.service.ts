@@ -1,16 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Session } from './session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
+import { JoinSessionDto } from './dto/join-session.dto';
 import { MatchStatus } from '../match/match.entity';
+import { PlayerService } from '../player/player.service';
 
 @Injectable()
 export class SessionService {
   constructor(
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
+    private playerService: PlayerService,
   ) {}
 
   async create(createSessionDto: CreateSessionDto): Promise<Session> {
@@ -36,6 +39,42 @@ export class SessionService {
       where: { inviteCode },
       relations: ['game', 'settings'],
     });
+  }
+
+  async joinSession(inviteCode: string, joinSessionDto: JoinSessionDto) {
+    const session = await this.sessionRepository.findOne({
+      where: { inviteCode },
+      relations: ['game', 'settings'],
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Sessão com código ${inviteCode} não encontrada`);
+    }
+
+    // Cria o player já associado à sessão
+    const player = await this.playerService.create({
+      ...joinSessionDto,
+      session_id: session.id,
+    });
+
+    return {
+      message: 'Player entrou na sessão com sucesso',
+      session: {
+        id: session.id,
+        inviteCode: session.inviteCode,
+        roundsLimit: session.roundsLimit,
+        game: session.game,
+        settings: session.settings,
+      },
+      player: {
+        id: player.id,
+        nickname: player.nickname,
+        course: player.course,
+        age: player.age,
+        gender: player.gender,
+        profession: player.profession,
+      },
+    };
   }
 
   async update(id: string, updateSessionDto: UpdateSessionDto): Promise<Session | null> {

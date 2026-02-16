@@ -12,6 +12,7 @@ import type { Response } from 'express';
 import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
+import { JoinSessionDto } from './dto/join-session.dto';
 
 @Controller('sessions')
 export class SessionController {
@@ -30,6 +31,14 @@ export class SessionController {
   @Get('codigo/:codigo')
   findByCode(@Param('codigo') codigo: string) {
     return this.sessionService.findByCode(codigo);
+  }
+
+  @Post(':inviteCode/join')
+  joinSession(
+    @Param('inviteCode') inviteCode: string,
+    @Body() joinSessionDto: JoinSessionDto,
+  ) {
+    return this.sessionService.joinSession(inviteCode, joinSessionDto);
   }
 
   @Get(':id')

@@ -12,6 +12,7 @@ import { Game } from '../game/game.entity';
 import { Settings } from '../settings/settings.entity';
 import { User } from '../users/user.entity';
 import { Match } from '../match/match.entity';
+import { Player } from '../player/player.entity';
 import { randomBytes } from 'crypto';
 
 @Entity('sessions')
@@ -48,6 +49,9 @@ export class Session {
 
   @OneToMany(() => Match, (match) => match.session)
   matches: Match[];
+
+  @OneToMany(() => Player, (player) => player.session)
+  players: Player[];
 
   @CreateDateColumn()
   createdAt: Date;

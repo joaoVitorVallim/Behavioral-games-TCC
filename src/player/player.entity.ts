@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Match } from '../match/match.entity';
+import { Session } from '../session/session.entity';
 
 @Entity('players')
 export class Player {
@@ -26,6 +29,13 @@ export class Player {
 
   @Column()
   profession: string;
+
+  @ManyToOne(() => Session, (session) => session.players, { nullable: false })
+  @JoinColumn({ name: 'session_id' })
+  session: Session;
+
+  @Column({ nullable: false })
+  session_id: string;
 
   @OneToMany(() => Match, (match) => match.player1)
   matchesAsPlayer1: Match[];

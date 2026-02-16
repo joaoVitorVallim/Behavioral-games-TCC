@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsUUID } from 'class-validator';
 
 export class CreatePlayerDto {
   @IsOptional()
@@ -20,4 +20,7 @@ export class CreatePlayerDto {
   @IsOptional()
   @IsString()
   profession?: string;
+
+  @IsUUID()
+  session_id: string;
 }
