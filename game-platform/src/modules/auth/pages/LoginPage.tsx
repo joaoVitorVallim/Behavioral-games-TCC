@@ -49,26 +49,13 @@ export function LoginPage() {
               </div>
             </div>
 
-            {/* MAIN CARD */}
-            <div className="w-full max-w-[500px] mx-auto bg-card border border-border rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-bold">Área do Aluno</h2>
-                  <p className="text-muted-foreground text-sm">
-                    Acesse as sessões experimentais disponíveis para sua turma.
-                  </p>
-                </div>
-
-                <button 
-                  onClick={() => navigate('/sessions')}
-                  className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 hover:text-background transition-all"
-                >
-                  Ver Sessões Disponíveis
-                </button>
-              </div>
-            </div>
+            {/* CTA */}
+            <button
+              onClick={() => navigate('/sessions')}
+              className="w-full max-w-[500px] mx-auto py-4 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 hover:text-background transition-all block"
+            >
+              Ver Sessões Disponíveis
+            </button>
           </div>
         </main>
 

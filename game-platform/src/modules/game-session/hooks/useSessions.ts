@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { sessionService } from '../services/sessionService'
-import { mock_sessions } from '../mocks/sessions.mock'
 
 export const useSessions = () => {
   const sessions_query = useQuery({
     queryKey: ['sessions'],
     queryFn: async () => {
-      // Usando mock durante desenvolvimento com delay para simular loading
-      await new Promise(resolve => setTimeout(resolve, 800))
-      return mock_sessions
-      // Para usar API real, comente as linhas acima e descomente a linha abaixo
-      // return sessionService.getAllSessions()
+      const sessions = await sessionService.getAllSessions()
+      console.log('[useSessions] GET /sessions:', sessions)
+      return sessions
     },
     staleTime: 0, // Força refetch a sempre buscar dados novos
     gcTime: 0 // Não mantém cache (antes era cacheTime)
