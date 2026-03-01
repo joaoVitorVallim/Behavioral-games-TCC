@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -10,16 +11,22 @@ import { MatchModule } from './match/match.module';
 
 @Module({
   imports: [
+
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5433,
-      username: 'nest',
-      password: 'nest',
-      database: 'nest_db',
+      host: process.env.DATABASE_HOST,
+      port: parseInt(process.env.DATABASE_PORT ?? '5432'),
+      username: process.env.DATABASE_USER,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: true,
     }),
+
     UsersModule,
     AuthModule,
     GameModule,
@@ -27,6 +34,12 @@ import { MatchModule } from './match/match.module';
     SessionModule,
     PlayerModule,
     MatchModule,
+    
   ],
 })
 export class AppModule {}
+console.log(process.env.DATABASE_HOST)
+console.log(process.env.DATABASE_PORT)
+console.log(process.env.DATABASE_USER)
+console.log(process.env.DATABASE_PASSWORD)
+console.log(process.env.DATABASE_NAME)

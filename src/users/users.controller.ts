@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, Put, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -14,17 +23,27 @@ export class UsersController {
     return this.service.create(dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  //@UseGuards(AuthGuard('jwt'))
   @Get()
   findAll() {
     return this.service.findAll();
   }
 
-  @Put(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateUserDto,
-  ) {
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.service.update(id, dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 }

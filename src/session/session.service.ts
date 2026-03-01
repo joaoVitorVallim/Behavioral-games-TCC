@@ -1,202 +1,162 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Session } from './session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
-import { JoinSessionDto } from './dto/join-session.dto';
-import { MatchStatus } from '../match/match.entity';
-import { PlayerService } from '../player/player.service';
+import { GameService } from '../game/game.service';
+import { SettingsService } from '../settings/settings.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SessionService {
   constructor(
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
-    private playerService: PlayerService,
+    private gameService: GameService,
+    private settingsService: SettingsService,
+    private usersService: UsersService,
   ) {}
 
-  async create(createSessionDto: CreateSessionDto): Promise<Session> {
-    const session = this.sessionRepository.create(createSessionDto);
+  /**
+   * Generate a unique invite code
+   */
+  private generateInviteCode(): string {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  async create(dto: CreateSessionDto): Promise<Session> {
+    // Verify game exists
+    const game = await this.gameService.findOne(dto.jogo_id);
+    if (!game) {
+      throw new NotFoundException(`Game with ID ${dto.jogo_id} not found`);
+    }
+
+    // Verify settings exists
+    const settings = await this.settingsService.findOne(dto.settings_id);
+    if (!settings) {
+      throw new NotFoundException(`Settings with ID ${dto.settings_id} not found`);
+    }
+
+    // Verify user exists
+    const user = await this.usersService.findOne(dto.user_id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${dto.user_id} not found`);
+    }
+
+    // Generate unique invite code
+    let inviteCode = this.generateInviteCode();
+    let codeExists = await this.sessionRepository.findOne({
+      where: { codigo_convite: inviteCode },
+    });
+
+    while (codeExists) {
+      inviteCode = this.generateInviteCode();
+      codeExists = await this.sessionRepository.findOne({
+        where: { codigo_convite: inviteCode },
+      });
+    }
+
+    const session = this.sessionRepository.create({
+      jogo_id: dto.jogo_id,
+      settings_id: dto.settings_id,
+      codigo_convite: inviteCode,
+      user_id: dto.user_id,
+      isActive: true,
+    });
+
     return await this.sessionRepository.save(session);
   }
 
-  async findAll(): Promise<Session[]> {
-    return await this.sessionRepository.find({
-      relations: ['game', 'settings', 'user'],
-    });
+  async findAll(filters?: { gameId?: string; userId?: string; isActive?: boolean }): Promise<Session[]> {
+    const query = this.sessionRepository.createQueryBuilder('session');
+
+    if (filters?.gameId) {
+      query.andWhere('session.jogo_id = :gameId', { gameId: filters.gameId });
+    }
+
+    if (filters?.userId) {
+      query.andWhere('session.user_id = :userId', { userId: filters.userId });
+    }
+
+    if (filters?.isActive !== undefined) {
+      query.andWhere('session.isActive = :isActive', { isActive: filters.isActive });
+    }
+
+    return await query.leftJoinAndSelect('session.game', 'game')
+      .leftJoinAndSelect('session.settings', 'settings')
+      .leftJoinAndSelect('session.user', 'user')
+      .leftJoinAndSelect('session.players', 'players')
+      .orderBy('session.created_at', 'DESC')
+      .getMany();
   }
 
-  async findOne(id: string): Promise<Session | null> {
-    return await this.sessionRepository.findOne({
-      where: { id },
-      relations: ['game', 'settings', 'user', 'matches'],
-    });
-  }
-
-  async findByCode(inviteCode: string): Promise<Session | null> {
-    return await this.sessionRepository.findOne({
-      where: { inviteCode },
-      relations: ['game', 'settings'],
-    });
-  }
-
-  async joinSession(inviteCode: string, joinSessionDto: JoinSessionDto) {
+  async findOne(id: string): Promise<Session> {
     const session = await this.sessionRepository.findOne({
-      where: { inviteCode },
-      relations: ['game', 'settings'],
+      where: { id },
+      relations: ['game', 'settings', 'user', 'players'],
     });
 
     if (!session) {
-      throw new NotFoundException(`Sessão com código ${inviteCode} não encontrada`);
+      throw new NotFoundException(`Session with ID ${id} not found`);
     }
 
-    // Cria o player já associado à sessão
-    const player = await this.playerService.create({
-      ...joinSessionDto,
-      session_id: session.id,
-    });
-
-    return {
-      message: 'Player entrou na sessão com sucesso',
-      session: {
-        id: session.id,
-        inviteCode: session.inviteCode,
-        roundsLimit: session.roundsLimit,
-        game: session.game,
-        settings: session.settings,
-      },
-      player: {
-        id: player.id,
-        nickname: player.nickname,
-        course: player.course,
-        age: player.age,
-        gender: player.gender,
-        profession: player.profession,
-      },
-    };
+    return session;
   }
 
-  async update(id: string, updateSessionDto: UpdateSessionDto): Promise<Session | null> {
-    await this.sessionRepository.update(id, updateSessionDto);
-    return this.findOne(id);
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.sessionRepository.delete(id);
-  }
-
-  async getResults(id: string) {
+  async findByInviteCode(codigo: string): Promise<Session> {
     const session = await this.sessionRepository.findOne({
-      where: { id },
-      relations: ['game', 'settings', 'matches', 'matches.player1', 'matches.player2'],
+      where: { codigo_convite: codigo },
+      relations: ['game', 'settings', 'user', 'players'],
     });
 
     if (!session) {
-      throw new NotFoundException(`Sessão ${id} não encontrada`);
+      throw new NotFoundException(`Session with invite code ${codigo} not found`);
     }
 
-    const matches = session.matches || [];
-
-    const summary = {
-      totalMatches: matches.length,
-      byStatus: {
-        waiting: matches.filter(m => m.status === MatchStatus.WAITING).length,
-        in_progress: matches.filter(m => m.status === MatchStatus.IN_PROGRESS).length,
-        finished: matches.filter(m => m.status === MatchStatus.FINISHED).length,
-        cancelled: matches.filter(m => m.status === MatchStatus.CANCELLED).length,
-      },
-    };
-
-    const playersMap = new Map<string, any>();
-    for (const match of matches) {
-      if (match.player1) playersMap.set(match.player1.id, match.player1);
-      if (match.player2) playersMap.set(match.player2.id, match.player2);
-    }
-
-    return {
-      session: {
-        id: session.id,
-        inviteCode: session.inviteCode,
-        roundsLimit: session.roundsLimit,
-        game: session.game,
-        settings: session.settings,
-        createdAt: session.createdAt,
-      },
-      summary,
-      players: Array.from(playersMap.values()),
-      matches: matches.map(m => ({
-        id: m.id,
-        player1: m.player1,
-        player2: m.player2,
-        moves: m.moves,
-        status: m.status,
-        matchTime: m.matchTime,
-        createdAt: m.createdAt,
-      })),
-    };
+    return session;
   }
 
+  async update(id: string, dto: UpdateSessionDto): Promise<Session> {
+    const session = await this.findOne(id);
 
-  async exportData(id: string) {
-    const session = await this.sessionRepository.findOne({
-      where: { id },
-      relations: ['game', 'matches', 'matches.player1', 'matches.player2'],
-    });
+    if (dto.isActive !== undefined) {
+      session.isActive = dto.isActive;
 
-    if (!session) {
-      throw new NotFoundException(`Sessão ${id} não encontrada`);
-    }
-
-    const matches = session.matches || [];
-
-    const headers = ['match_id', 'player1_nickname', 'player1_course', 'player2_nickname', 'player2_course', 'round', 'p1_move', 'p2_move', 'status', 'createdAt'];
-    const rows: string[][] = [];
-
-    for (const m of matches) {
-      const moves = m.moves || {};
-      const roundKeys = Object.keys(moves);
-
-      if (roundKeys.length === 0) {
-        rows.push([
-          m.id,
-          m.player1?.nickname || '',
-          m.player1?.course || '',
-          m.player2?.nickname || '',
-          m.player2?.course || '',
-          '',
-          '',
-          '',
-          m.status,
-          m.createdAt?.toISOString() || '',
-        ]);
-      } else {
-        for (const round of roundKeys) {
-          const roundData = moves[round] || {};
-          rows.push([
-            m.id,
-            m.player1?.nickname || '',
-            m.player1?.course || '',
-            m.player2?.nickname || '',
-            m.player2?.course || '',
-            round,
-            roundData.p1 || '',
-            roundData.p2 || '',
-            m.status,
-            m.createdAt?.toISOString() || '',
-          ]);
-        }
+      // If marking as inactive, set finish time
+      if (!dto.isActive && !session.finished_at) {
+        session.finished_at = new Date();
       }
     }
 
-    const csv = [
-      headers.join(','),
-      ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
-    ].join('\n');
+    return await this.sessionRepository.save(session);
+  }
+
+  async finish(id: string): Promise<Session> {
+    const session = await this.findOne(id);
+    session.isActive = false;
+    session.finished_at = new Date();
+    return await this.sessionRepository.save(session);
+  }
+
+  async remove(id: string): Promise<void> {
+    const session = await this.findOne(id);
+    await this.sessionRepository.delete(id);
+  }
+
+  async getSessionStats(id: string) {
+    const session = await this.findOne(id);
 
     return {
-      csv,
-      filename: `session_${session.inviteCode}.csv`,
+      sessionId: session.id,
+      gameId: session.jogo_id,
+      gameName: session.game.name,
+      inviteCode: session.codigo_convite,
+      totalPlayers: session.players.length,
+      isActive: session.isActive,
+      createdAt: session.created_at,
+      finishedAt: session.finished_at,
+      settings: session.settings,
     };
   }
 }

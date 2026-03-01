@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Player } from './player.entity';
@@ -17,20 +17,45 @@ export class PlayerService {
     return await this.playerRepository.save(player);
   }
 
-  async findAll(): Promise<Player[]> {
-    return await this.playerRepository.find();
+  async findAll(sessionId?: string): Promise<Player[]> {
+    if (sessionId) {
+      return await this.playerRepository.find({
+        where: { session_id: sessionId },
+        relations: ['session'],
+      });
+    }
+    return await this.playerRepository.find({ relations: ['session'] });
   }
 
-  async findOne(id: string): Promise<Player | null> {
-    return await this.playerRepository.findOne({ where: { id } });
+  async findOne(id: string): Promise<Player> {
+    const player = await this.playerRepository.findOne({
+      where: { id },
+      relations: ['session'],
+    });
+
+    if (!player) {
+      throw new NotFoundException(`Player with ID ${id} not found`);
+    }
+
+    return player;
   }
 
-  async update(id: string, updatePlayerDto: UpdatePlayerDto): Promise<Player | null> {
-    await this.playerRepository.update(id, updatePlayerDto);
-    return this.findOne(id);
+  async update(id: string, updatePlayerDto: UpdatePlayerDto): Promise<Player> {
+    const player = await this.findOne(id);
+
+    Object.assign(player, updatePlayerDto);
+
+    return await this.playerRepository.save(player);
   }
 
   async remove(id: string): Promise<void> {
     await this.playerRepository.delete(id);
+  }
+
+  async findBySession(sessionId: string): Promise<Player[]> {
+    return await this.playerRepository.find({
+      where: { session_id: sessionId },
+      relations: ['session'],
+    });
   }
 }

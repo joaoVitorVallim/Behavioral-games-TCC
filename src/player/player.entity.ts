@@ -3,11 +3,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  OneToMany,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
-import { Match } from '../match/match.entity';
 import { Session } from '../session/session.entity';
 
 @Entity('players')
@@ -15,20 +14,20 @@ export class Player {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  nickname: string;
+  @Column({ length: 255, nullable: true })
+  apelido?: string;
 
-  @Column()
-  course: string;
+  @Column({ length: 100, nullable: true })
+  curso?: string;
 
-  @Column()
-  age: number;
+  @Column({ type: 'int', nullable: true })
+  idade?: number;
 
-  @Column()
-  gender: string;
+  @Column({ length: 1, nullable: true })
+  genero?: string;
 
-  @Column()
-  profession: string;
+  @Column({ length: 255, nullable: true })
+  profissao?: string;
 
   @ManyToOne(() => Session, (session) => session.players, { nullable: false })
   @JoinColumn({ name: 'session_id' })
@@ -37,12 +36,6 @@ export class Player {
   @Column({ nullable: false })
   session_id: string;
 
-  @OneToMany(() => Match, (match) => match.player1)
-  matchesAsPlayer1: Match[];
-
-  @OneToMany(() => Match, (match) => match.player2)
-  matchesAsPlayer2: Match[];
-
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 }

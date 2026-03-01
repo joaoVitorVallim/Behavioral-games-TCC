@@ -3,23 +3,23 @@ import { IsString, IsNumber, IsOptional, IsUUID } from 'class-validator';
 export class CreatePlayerDto {
   @IsOptional()
   @IsString()
-  nickname?: string;
+  apelido?: string;
 
   @IsOptional()
   @IsString()
-  course?: string;
+  curso?: string;
 
   @IsOptional()
   @IsNumber()
-  age?: number;
+  idade?: number;
 
   @IsOptional()
   @IsString()
-  gender?: string;
+  genero?: string;
 
   @IsOptional()
   @IsString()
-  profession?: string;
+  profissao?: string;
 
   @IsUUID()
   session_id: string;

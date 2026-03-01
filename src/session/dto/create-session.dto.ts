@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsUUID, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsUUID } from 'class-validator';
 
 export class CreateSessionDto {
   @IsNotEmpty()
   @IsUUID()
-  game_id: string;
+  jogo_id: string;
 
   @IsNotEmpty()
   @IsUUID()
@@ -12,9 +12,4 @@ export class CreateSessionDto {
   @IsNotEmpty()
   @IsUUID()
   user_id: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  roundsLimit: number;
 }
-

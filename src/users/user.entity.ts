@@ -12,18 +12,18 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, nullable: false })
   name: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ length: 100, unique: true, nullable: false })
+  login: string;
 
-  @Column()
-  password: string;
+  @Column({ nullable: false })
+  password_hash: string;
 
   @OneToMany(() => Session, (session) => session.user)
   sessions: Session[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 }

@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateSessionDto } from './create-session.dto';
+import { IsOptional, IsBoolean } from 'class-validator';
 
-export class UpdateSessionDto extends PartialType(CreateSessionDto) {}
+export class UpdateSessionDto {
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}

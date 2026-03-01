@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
@@ -21,8 +22,13 @@ export class PlayerController {
   }
 
   @Get()
-  findAll() {
-    return this.playerService.findAll();
+  findAll(@Query('sessionId') sessionId?: string) {
+    return this.playerService.findAll(sessionId);
+  }
+
+  @Get('session/:sessionId')
+  findBySession(@Param('sessionId') sessionId: string) {
+    return this.playerService.findBySession(sessionId);
   }
 
   @Get(':id')
