@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Session } from './session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { GameService } from '../game/game.service';
+import { GameType } from '../game/games.enum';
 import { SettingsService } from '../settings/settings.service';
 import { UsersService } from '../users/users.service';
 
@@ -26,22 +27,52 @@ export class SessionService {
   }
 
   async create(dto: CreateSessionDto): Promise<Session> {
-    // Verify game exists
-    const game = await this.gameService.findOne(dto.jogo_id);
-    if (!game) {
-      throw new NotFoundException(`Game with ID ${dto.jogo_id} not found`);
-    }
-
-    // Verify settings exists
-    const settings = await this.settingsService.findOne(dto.settings_id);
-    if (!settings) {
-      throw new NotFoundException(`Settings with ID ${dto.settings_id} not found`);
+    // Verify game type is valid
+    if (!this.gameService.isValidGameType(dto.jogo)) {
+      throw new BadRequestException(`Invalid game type: ${dto.jogo}`);
     }
 
     // Verify user exists
     const user = await this.usersService.findOne(dto.user_id);
     if (!user) {
       throw new NotFoundException(`User with ID ${dto.user_id} not found`);
+    }
+
+    // Create settings based on the game type
+    let settings;
+    try {
+      // Infer game type from enum value
+      const gameType = dto.jogo === GameType.CARDS ? 'cards' : 'words';
+      settings = await this.settingsService.create(
+        {
+          configName: dto.settings.configName,
+          jogo: dto.jogo,
+          inputInfos: dto.settings.inputInfos,
+          userViewPoints: dto.settings.userViewPoints,
+          limitRounds: dto.settings.limitRounds,
+          // Game-specific fields
+          cardDeckSize: dto.settings.cardDeckSize,
+          allowSpecialCards: dto.settings.allowSpecialCards,
+          cardTheme: dto.settings.cardTheme,
+          wordPoolSize: dto.settings.wordPoolSize,
+          difficulty: dto.settings.difficulty,
+          includeTimerPerWord: dto.settings.includeTimerPerWord,
+          secondsPerWord: dto.settings.secondsPerWord,
+        },
+        gameType,
+      );
+    } catch (error) {
+      throw new BadRequestException(`Failed to create settings: ${error.message}`);
+    }
+
+    let sessionSettings;
+    try {
+      sessionSettings = await this.settingsService.createCopy(
+        settings.id,
+        `${dto.settings.configName} (Sessão)`,
+      );
+    } catch (error) {
+      throw new BadRequestException(`Failed to create settings snapshot: ${error.message}`);
     }
 
     // Generate unique invite code
@@ -58,8 +89,8 @@ export class SessionService {
     }
 
     const session = this.sessionRepository.create({
-      jogo_id: dto.jogo_id,
-      settings_id: dto.settings_id,
+      jogo: dto.jogo as GameType,
+      settings_id: sessionSettings.id,
       codigo_convite: inviteCode,
       user_id: dto.user_id,
       isActive: true,
@@ -68,33 +99,38 @@ export class SessionService {
     return await this.sessionRepository.save(session);
   }
 
-  async findAll(filters?: { gameId?: string; userId?: string; isActive?: boolean }): Promise<Session[]> {
-    const query = this.sessionRepository.createQueryBuilder('session');
+  async findAll(filters?: { jogo?: GameType; userId?: string; isActive?: boolean }): Promise<Session[]> {
+    const where: any = {};
 
-    if (filters?.gameId) {
-      query.andWhere('session.jogo_id = :gameId', { gameId: filters.gameId });
+    if (filters?.jogo) {
+      where.jogo = filters.jogo;
     }
 
     if (filters?.userId) {
-      query.andWhere('session.user_id = :userId', { userId: filters.userId });
+      where.user_id = filters.userId;
     }
 
     if (filters?.isActive !== undefined) {
-      query.andWhere('session.isActive = :isActive', { isActive: filters.isActive });
+      where.isActive = filters.isActive;
     }
 
-    return await query.leftJoinAndSelect('session.game', 'game')
-      .leftJoinAndSelect('session.settings', 'settings')
-      .leftJoinAndSelect('session.user', 'user')
-      .leftJoinAndSelect('session.players', 'players')
-      .orderBy('session.created_at', 'DESC')
-      .getMany();
+    const findOptions: any = {
+      relations: ['settings', 'user', 'players'],
+      order: { created_at: 'DESC' },
+    };
+
+    // Only add where clause if there are filters
+    if (Object.keys(where).length > 0) {
+      findOptions.where = where;
+    }
+
+    return await this.sessionRepository.find(findOptions);
   }
 
   async findOne(id: string): Promise<Session> {
     const session = await this.sessionRepository.findOne({
       where: { id },
-      relations: ['game', 'settings', 'user', 'players'],
+      relations: ['settings', 'user', 'players'],
     });
 
     if (!session) {
@@ -107,7 +143,7 @@ export class SessionService {
   async findByInviteCode(codigo: string): Promise<Session> {
     const session = await this.sessionRepository.findOne({
       where: { codigo_convite: codigo },
-      relations: ['game', 'settings', 'user', 'players'],
+      relations: ['settings', 'user', 'players'],
     });
 
     if (!session) {
@@ -140,23 +176,24 @@ export class SessionService {
   }
 
   async remove(id: string): Promise<void> {
-    const session = await this.findOne(id);
     await this.sessionRepository.delete(id);
   }
 
   async getSessionStats(id: string) {
     const session = await this.findOne(id);
+    const gameInfo = this.gameService.findOne(session.jogo);
 
     return {
       sessionId: session.id,
-      gameId: session.jogo_id,
-      gameName: session.game.name,
+      jogo: session.jogo,
+      jogoNome: gameInfo?.nome,
       inviteCode: session.codigo_convite,
       totalPlayers: session.players.length,
       isActive: session.isActive,
       createdAt: session.created_at,
       finishedAt: session.finished_at,
       settings: session.settings,
+      redirectUrl: this.gameService.getRedirectUrl(session.jogo, session.codigo_convite),
     };
   }
 }

@@ -21,6 +21,7 @@ export class User {
   @Column({ nullable: false })
   password_hash: string;
 
+  //VERIFICAR DEPOIS
   @OneToMany(() => Session, (session) => session.user)
   sessions: Session[];
 

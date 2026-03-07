@@ -7,7 +7,7 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
-import { Game } from '../game/game.entity';
+import { GameType } from '../game/games.enum';
 import { Settings } from '../settings/settings.entity';
 import { User } from '../users/user.entity';
 import { Player } from '../player/player.entity';
@@ -17,11 +17,8 @@ export class Session {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Game, (game) => game.sessions, { nullable: false })
-  @JoinColumn({ name: 'jogo_id' })
-  game: Game;
-  @Column({ nullable: false })
-  jogo_id: string;
+  @Column({ type: 'enum', enum: GameType, nullable: false })
+  jogo: GameType;
 
   @ManyToOne(() => Settings, (settings) => settings.sessions, { nullable: false, eager: true })
   @JoinColumn({ name: 'settings_id' })

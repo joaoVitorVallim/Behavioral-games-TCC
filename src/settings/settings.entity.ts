@@ -3,13 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
   OneToMany,
   ChildEntity,
   TableInheritance,
 } from 'typeorm';
-import { Game } from '../game/game.entity';
+import { GameType } from '../game/games.enum';
 import { Session } from '../session/session.entity';
 
 @Entity('settings')
@@ -21,12 +19,8 @@ export abstract class Settings {
   @Column({ type: 'varchar', length: 255, nullable: false })
   configName: string;
 
-  @ManyToOne(() => Game, { nullable: false })
-  @JoinColumn({ name: 'game_id' })
-  game: Game;
-
-  @Column({ nullable: false })
-  game_id: string;
+  @Column({ type: 'enum', enum: GameType, nullable: false })
+  jogo: GameType;
 
   @Column({ type: 'simple-array', nullable: true })
   inputInfos: string[];

@@ -9,30 +9,42 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new UuidValidationPipe(),
-
     new ValidationPipe({
-      whitelist: true,        // remove campos que não estão no DTO
-      forbidNonWhitelisted: true, // bloqueia campos extras
-      transform: true,        // converte tipos automaticamente
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
-
   );
 
-    const config = new DocumentBuilder()
-    .setTitle('Minha API')
-    .setDescription('Documentação da API')
-    .setVersion('1.0')
+  // Enable CORS
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
+
+  const config = new DocumentBuilder()
+    .setTitle('Behavioral Games API')
+    .setDescription('API para gerenciamento de sessões e partidas de jogos comportamentais')
+    .setVersion('1.0.0')
+    .addTag('Auth', 'Autenticação e login')
+    .addTag('Users', 'Gerenciamento de usuários/professores')
+    .addTag('Games', 'Informações dos jogos disponíveis')
+    .addTag('Settings', 'Configurações dos jogos')
+    .addTag('Sessions', 'Gerenciamento de sessões de jogo')
+    .addTag('Players', 'Gerenciamento de jogadores/alunos')
+    .addTag('Matches', 'Gerenciamento de partidas')
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
-  app.enableCors({
-    origin: true, // permite todas em desenvolvimento, produção -> especificar com uma List[str] as urls
-    credentials: true,
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, () => {
+    console.log('API rodando em http://localhost:' + port);
+    console.log('Swagger disponível em http://localhost:' + port + '/api/docs');
   });
-
-  await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
+

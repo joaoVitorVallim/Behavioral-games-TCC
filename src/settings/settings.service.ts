@@ -7,6 +7,7 @@ import { SettingsGameWords } from './settings-game-words.entity';
 import { CreateSettingsDto } from './dto/create-settings.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { GameService } from '../game/game.service';
+import { GameType } from '../game/games.enum';
 
 @Injectable()
 export class SettingsService {
@@ -20,11 +21,15 @@ export class SettingsService {
     private gameService: GameService,
   ) {}
 
-  async create(dto: CreateSettingsDto, gameType: 'cards' | 'words'): Promise<Settings> {
-    // Verify game exists
-    const game = await this.gameService.findOne(dto.game_id);
-    if (!game) {
-      throw new NotFoundException(`Game with ID ${dto.game_id} not found`);
+  async create(dto: CreateSettingsDto, gameType?: 'cards' | 'words'): Promise<Settings> {
+    // Verify game type is valid
+    if (!this.gameService.isValidGameType(dto.jogo)) {
+      throw new BadRequestException(`Invalid game type: ${dto.jogo}`);
+    }
+
+    // If gameType not provided, infer from dto.jogo
+    if (!gameType) {
+      gameType = dto.jogo === GameType.CARDS ? 'cards' : 'words';
     }
 
     let settings: Settings;
@@ -32,7 +37,7 @@ export class SettingsService {
     if (gameType === 'cards') {
       const cardsSettings = this.settingsCardsRepository.create({
         configName: dto.configName,
-        game_id: dto.game_id,
+        jogo: dto.jogo,
         inputInfos: dto.inputInfos || [],
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
@@ -44,7 +49,7 @@ export class SettingsService {
     } else if (gameType === 'words') {
       const wordsSettings = this.settingsWordsRepository.create({
         configName: dto.configName,
-        game_id: dto.game_id,
+        jogo: dto.jogo,
         inputInfos: dto.inputInfos || [],
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
@@ -61,24 +66,21 @@ export class SettingsService {
     return settings;
   }
 
-  async findAll(gameType?: 'cards' | 'words'): Promise<Settings[]> {
-    if (!gameType) {
-      return this.settingsRepository.find({ relations: ['game', 'sessions'] });
+  async findAll(jogo?: GameType): Promise<Settings[]> {
+    if (!jogo) {
+      return this.settingsRepository.find({ relations: ['sessions'] });
     }
 
-    if (gameType === 'cards') {
-      return this.settingsCardsRepository.find({ relations: ['game', 'sessions'] });
-    } else if (gameType === 'words') {
-      return this.settingsWordsRepository.find({ relations: ['game', 'sessions'] });
-    }
-
-    return [];
+    return this.settingsRepository.find({
+      where: { jogo },
+      relations: ['sessions'],
+    });
   }
 
   async findOne(id: string): Promise<Settings> {
     const settings = await this.settingsRepository.findOne({
       where: { id },
-      relations: ['game', 'sessions'],
+      relations: ['sessions'],
     });
 
     if (!settings) {
@@ -88,10 +90,10 @@ export class SettingsService {
     return settings;
   }
 
-  async findByGame(gameId: string): Promise<Settings[]> {
+  async findByGame(jogo: GameType): Promise<Settings[]> {
     return this.settingsRepository.find({
-      where: { game_id: gameId },
-      relations: ['game', 'sessions'],
+      where: { jogo },
+      relations: ['sessions'],
     });
   }
 

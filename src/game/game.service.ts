@@ -1,36 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Game } from './game.entity';
-import { CreateGameDto } from './dto/create-game.dto';
-import { UpdateGameDto } from './dto/update-game.dto';
+import { GameType, getAllGames, getGameInfo, getGameRedirectUrl } from './games.enum';
 
 @Injectable()
 export class GameService {
-  constructor(
-    @InjectRepository(Game)
-    private gameRepository: Repository<Game>,
-  ) {}
 
-  async create(createGameDto: CreateGameDto): Promise<Game> {
-    const game = this.gameRepository.create(createGameDto);
-    return await this.gameRepository.save(game);
+  findAll() {
+    return getAllGames();
   }
 
-  async findAll(): Promise<Game[]> {
-    return await this.gameRepository.find();
+
+  findOne(gameType: GameType) {
+    const gameInfo = getGameInfo(gameType);
+    if (!gameInfo) {
+      return null;
+    }
+    return {
+      id: gameType,
+      ...gameInfo,
+    };
   }
 
-  async findOne(id: string): Promise<Game | null> {
-    return await this.gameRepository.findOne({ where: { id } });
+  
+  isValidGameType(gameType: string): gameType is GameType {
+    return Object.values(GameType).includes(gameType as GameType);
   }
 
-  async update(id: string, updateGameDto: UpdateGameDto): Promise<Game | null> {
-    await this.gameRepository.update(id, updateGameDto);
-    return this.findOne(id);
-  }
 
-  async remove(id: string): Promise<void> {
-    await this.gameRepository.delete(id);
+  getRedirectUrl(gameType: GameType, sessionCode: string): string {
+    return getGameRedirectUrl(gameType, sessionCode);
   }
 }
