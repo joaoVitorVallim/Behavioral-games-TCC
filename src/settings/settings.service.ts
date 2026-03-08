@@ -8,6 +8,7 @@ import { CreateSettingsDto } from './dto/create-settings.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { GameService } from '../game/game.service';
 import { GameType } from '../game/games.enum';
+import { isValidPlayerField, PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
 
 @Injectable()
 export class SettingsService {
@@ -21,11 +22,44 @@ export class SettingsService {
     private gameService: GameService,
   ) {}
 
+  /**
+   * Valida e filtra os inputInfos para garantir que apenas campos opcionais válidos sejam incluídos
+   * @param inputInfos - Array de campos a validar
+   * @returns Array filtrado com apenas campos válidos
+   * @throws BadRequestException se houver campos inválidos
+   */
+  private validateAndFilterInputInfos(inputInfos?: string[]): string[] {
+    if (!inputInfos || inputInfos.length === 0) {
+      return [];
+    }
+
+    const invalidFields = inputInfos.filter(field => !isValidPlayerField(field));
+
+    if (invalidFields.length > 0) {
+      throw new BadRequestException(
+        `Campos inválidos em inputInfos: [${invalidFields.join(', ')}]. Campos válidos são: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`,
+      );
+    }
+
+    // Remove duplicatas
+    return Array.from(new Set(inputInfos));
+  }
+
+  /**
+   * Retorna a lista de campos opcionais válidos do Player
+   */
+  getValidPlayerFields(): string[] {
+    return [...PLAYER_OPTIONAL_FIELDS];
+  }
+
   async create(dto: CreateSettingsDto, gameType?: 'cards' | 'words'): Promise<Settings> {
     // Verify game type is valid
     if (!this.gameService.isValidGameType(dto.jogo)) {
       throw new BadRequestException(`Invalid game type: ${dto.jogo}`);
     }
+
+    // Validate and filter inputInfos
+    const validatedInputInfos = this.validateAndFilterInputInfos(dto.inputInfos);
 
     // If gameType not provided, infer from dto.jogo
     if (!gameType) {
@@ -38,7 +72,7 @@ export class SettingsService {
       const cardsSettings = this.settingsCardsRepository.create({
         configName: dto.configName,
         jogo: dto.jogo,
-        inputInfos: dto.inputInfos || [],
+        inputInfos: validatedInputInfos,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
         cardDeckSize: dto.cardDeckSize,
@@ -50,7 +84,7 @@ export class SettingsService {
       const wordsSettings = this.settingsWordsRepository.create({
         configName: dto.configName,
         jogo: dto.jogo,
-        inputInfos: dto.inputInfos || [],
+        inputInfos: validatedInputInfos,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
         wordPoolSize: dto.wordPoolSize,

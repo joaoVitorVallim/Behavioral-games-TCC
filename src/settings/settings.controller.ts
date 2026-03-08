@@ -65,6 +65,22 @@ export class SettingsController {
     return this.settingsService.findByGame(jogo);
   }
 
+  @Get('player-fields/valid')
+  @ApiOperation({
+    summary: 'Listar campos opcionais válidos do Player',
+    description: 'Retorna a lista de campos opcionais que podem ser adicionados ao inputInfos da configuração',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de campos válidos retornada com sucesso',
+    schema: {
+      example: ['apelido', 'curso', 'idade', 'genero', 'profissao'],
+    },
+  })
+  getValidPlayerFields() {
+    return this.settingsService.getValidPlayerFields();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Obter detalhes da configuração',

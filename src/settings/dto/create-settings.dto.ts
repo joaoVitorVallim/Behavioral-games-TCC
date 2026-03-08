@@ -1,6 +1,8 @@
 import { IsNotEmpty, IsString, IsOptional, IsArray, IsBoolean, IsNumber, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
+import { IsValidInputInfos } from '../../common/validators/valid-input-infos.validator';
+import { PLAYER_OPTIONAL_FIELDS, PLAYER_OPTIONAL_FIELDS_LABELS } from '../../common/constants/player-fields.constants';
 
 export class CreateSettingsDto {
   @ApiProperty({
@@ -21,13 +23,15 @@ export class CreateSettingsDto {
   jogo: GameType;
 
   @ApiProperty({
-    example: ['nome', 'profissao'],
-    description: 'Informações que o jogador deve informar',
-    type: [String],
+    example: ['apelido', 'profissao'],
+    description: `Campos opcionais do jogador que devem ser preenchidos. Campos válidos: ${PLAYER_OPTIONAL_FIELDS.join(', ')}`,
+    enum: PLAYER_OPTIONAL_FIELDS,
+    isArray: true,
     required: false,
   })
   @IsOptional()
   @IsArray()
+  @IsValidInputInfos()
   inputInfos?: string[];
 
   @ApiProperty({
