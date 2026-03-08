@@ -22,16 +22,16 @@ export class UsersController {
 
   @Post()
   @ApiOperation({
-    summary: 'Criar novo usuário',
-    description: 'Registra um novo usuário (professor/administrador) no sistema',
+    summary: 'Create new user',
+    description: 'Creates a new user (teacher/administrator) in the system',
   })
   @ApiResponse({
     status: 201,
-    description: 'Usuário criado com sucesso',
+    description: 'User created successfully',
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação - dados inválidos',
+    description: 'Validation error - invalid data',
   })
   create(@Body() dto: CreateUserDto) {
     return this.service.create(dto);
@@ -39,12 +39,12 @@ export class UsersController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todos os usuários',
-    description: 'Retorna lista de todos os usuários do sistema',
+    summary: 'List all users',
+    description: 'Returns list of all users in the system',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de usuários retornada com sucesso',
+    description: 'Users list returned successfully',
   })
   findAll() {
     return this.service.findAll();
@@ -53,21 +53,21 @@ export class UsersController {
   @Get(':id')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Obter detalhes do usuário',
-    description: 'Retorna informações completas de um usuário específico',
+    summary: 'Get user details',
+    description: 'Returns complete information of a specific user',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID do usuário',
+    description: 'User ID',
     example: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',
   })
   @ApiResponse({
     status: 200,
-    description: 'Usuário encontrado',
+    description: 'User found',
   })
   @ApiResponse({
     status: 404,
-    description: 'Usuário não encontrado',
+    description: 'User not found',
   })
   @UseGuards(AuthGuard('jwt'))
   findOne(@Param('id') id: string) {
@@ -77,21 +77,21 @@ export class UsersController {
   @Patch(':id')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Atualizar usuário',
-    description: 'Atualiza informações de um usuário existente',
+    summary: 'Update user',
+    description: 'Updates information of an existing user',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID do usuário',
+    description: 'User ID',
     example: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',
   })
   @ApiResponse({
     status: 200,
-    description: 'Usuário atualizado com sucesso',
+    description: 'User updated successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Usuário não encontrado',
+    description: 'User not found',
   })
   @UseGuards(AuthGuard('jwt'))
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
@@ -101,21 +101,21 @@ export class UsersController {
   @Delete(':id')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Deletar usuário',
-    description: 'Remove um usuário do sistema',
+    summary: 'Delete user',
+    description: 'Removes a user from the system',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID do usuário',
+    description: 'User ID',
     example: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',
   })
   @ApiResponse({
     status: 200,
-    description: 'Usuário deletado com sucesso',
+    description: 'User deleted successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Usuário não encontrado',
+    description: 'User not found',
   })
   @UseGuards(AuthGuard('jwt'))
   remove(@Param('id') id: string) {

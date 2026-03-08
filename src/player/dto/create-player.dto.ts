@@ -4,52 +4,52 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreatePlayerDto {
   @ApiProperty({
     example: 'João P.',
-    description: 'Apelido ou nome do jogador',
+    description: 'Player nickname or name',
     required: false,
   })
   @IsOptional()
   @IsString()
-  apelido?: string;
+  nickname?: string;
 
   @ApiProperty({
-    example: 'Engenharia de Software',
-    description: 'Curso do jogador',
+    example: 'Software Engineering',
+    description: "Player's course",
     required: false,
   })
   @IsOptional()
   @IsString()
-  curso?: string;
+  course?: string;
 
   @ApiProperty({
     example: 22,
-    description: 'Idade do jogador',
+    description: "Player's age",
     required: false,
   })
   @IsOptional()
   @IsNumber()
-  idade?: number;
+  age?: number;
 
   @ApiProperty({
-    example: 'Masculino',
-    description: 'Gênero do jogador',
+    example: 'Male',
+    description: "Player's gender",
     required: false,
   })
   @IsOptional()
   @IsString()
-  genero?: string;
+  gender?: string;
 
   @ApiProperty({
-    example: 'Estudante',
-    description: 'Profissão ou ocupação do jogador',
+    example: 'Student',
+    description: "Player's profession or occupation",
     required: false,
   })
   @IsOptional()
   @IsString()
-  profissao?: string;
+  profession?: string;
 
   @ApiProperty({
     example: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-    description: 'ID da sessão à qual o jogador pertence',
+    description: 'Session ID the player belongs to',
   })
   @IsUUID()
   session_id: string;

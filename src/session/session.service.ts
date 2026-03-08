@@ -28,8 +28,8 @@ export class SessionService {
 
   async create(dto: CreateSessionDto): Promise<Session> {
     // Verify game type is valid
-    if (!this.gameService.isValidGameType(dto.jogo)) {
-      throw new BadRequestException(`Invalid game type: ${dto.jogo}`);
+    if (!this.gameService.isValidGameType(dto.game)) {
+      throw new BadRequestException(`Invalid game type: ${dto.game}`);
     }
 
     // Verify user exists
@@ -42,12 +42,12 @@ export class SessionService {
     let settings;
     try {
       // Infer game type from enum value
-      const gameType = dto.jogo === GameType.CARDS ? 'cards' : 'words';
+      const gameType = dto.game === GameType.CARDS ? 'cards' : 'words';
       settings = await this.settingsService.create(
         {
           configName: dto.settings.configName,
-          jogo: dto.jogo,
-          inputInfos: dto.settings.inputInfos,
+          game: dto.game,
+          inputInfo: dto.settings.inputInfo,
           userViewPoints: dto.settings.userViewPoints,
           limitRounds: dto.settings.limitRounds,
           // Game-specific fields
@@ -69,7 +69,7 @@ export class SessionService {
     try {
       sessionSettings = await this.settingsService.createCopy(
         settings.id,
-        `${dto.settings.configName} (Sessão)`,
+        `${dto.settings.configName} (Session)`,
       );
     } catch (error) {
       throw new BadRequestException(`Failed to create settings snapshot: ${error.message}`);
@@ -78,20 +78,20 @@ export class SessionService {
     // Generate unique invite code
     let inviteCode = this.generateInviteCode();
     let codeExists = await this.sessionRepository.findOne({
-      where: { codigo_convite: inviteCode },
+      where: { inviteCode: inviteCode },
     });
 
     while (codeExists) {
       inviteCode = this.generateInviteCode();
       codeExists = await this.sessionRepository.findOne({
-        where: { codigo_convite: inviteCode },
+        where: { inviteCode: inviteCode },
       });
     }
 
     const session = this.sessionRepository.create({
-      jogo: dto.jogo as GameType,
+      game: dto.game as GameType,
       settings_id: sessionSettings.id,
-      codigo_convite: inviteCode,
+      inviteCode: inviteCode,
       user_id: dto.user_id,
       isActive: true,
     });
@@ -99,11 +99,11 @@ export class SessionService {
     return await this.sessionRepository.save(session);
   }
 
-  async findAll(filters?: { jogo?: GameType; userId?: string; isActive?: boolean }): Promise<Session[]> {
+  async findAll(filters?: { game?: GameType; userId?: string; isActive?: boolean }): Promise<Session[]> {
     const where: any = {};
 
-    if (filters?.jogo) {
-      where.jogo = filters.jogo;
+    if (filters?.game) {
+      where.game = filters.game;
     }
 
     if (filters?.userId) {
@@ -140,14 +140,14 @@ export class SessionService {
     return session;
   }
 
-  async findByInviteCode(codigo: string): Promise<Session> {
+  async findByInviteCode(code: string): Promise<Session> {
     const session = await this.sessionRepository.findOne({
-      where: { codigo_convite: codigo },
+      where: { inviteCode: code },
       relations: ['settings', 'user', 'players'],
     });
 
     if (!session) {
-      throw new NotFoundException(`Session with invite code ${codigo} not found`);
+      throw new NotFoundException(`Session with invite code ${code} not found`);
     }
 
     return session;
@@ -181,19 +181,19 @@ export class SessionService {
 
   async getSessionStats(id: string) {
     const session = await this.findOne(id);
-    const gameInfo = this.gameService.findOne(session.jogo);
+    const gameInfo = this.gameService.findOne(session.game);
 
     return {
       sessionId: session.id,
-      jogo: session.jogo,
-      jogoNome: gameInfo?.nome,
-      inviteCode: session.codigo_convite,
+      game: session.game,
+      gameName: gameInfo?.name,
+      inviteCode: session.inviteCode,
       totalPlayers: session.players.length,
       isActive: session.isActive,
       createdAt: session.created_at,
       finishedAt: session.finished_at,
       settings: session.settings,
-      redirectUrl: this.gameService.getRedirectUrl(session.jogo, session.codigo_convite),
+      redirectUrl: this.gameService.getRedirectUrl(session.game, session.inviteCode),
     };
   }
 }

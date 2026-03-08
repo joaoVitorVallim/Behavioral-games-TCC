@@ -31,18 +31,18 @@ export class SessionController {
 
   @Post()
   @ApiOperation({
-    summary: 'Criar nova sessão',
-    description: 'Cria uma nova sessão com configurações específicas do jogo',
+    summary: 'Create new session',
+    description: 'Creates a new session with game-specific configurations',
   })
   @ApiBody({ type: CreateSessionDto })
   @ApiResponse({
     status: 201,
-    description: 'Sessão criada com sucesso',
+    description: 'Session created successfully',
     schema: {
       example: {
         id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-        jogo: 'cards',
-        codigo_convite: 'F4LVTX',
+        game: 'cards',
+        inviteCode: 'F4LVTX',
         isActive: true,
         created_at: '2026-03-07T17:05:59.734Z',
       },
@@ -50,7 +50,7 @@ export class SessionController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou dados inválidos',
+    description: 'Validation error or invalid data',
   })
   create(@Body() createSessionDto: CreateSessionDto) {
     return this.sessionService.create(createSessionDto);
@@ -58,38 +58,38 @@ export class SessionController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todas as sessões',
-    description: 'Retorna lista de sessões com filtros opcionais',
+    summary: 'List all sessions',
+    description: 'Returns list of sessions with optional filters',
   })
   @ApiQuery({
-    name: 'jogo',
+    name: 'game',
     required: false,
     enum: GameType,
-    description: 'Filtrar por tipo de jogo',
+    description: 'Filter by game type',
   })
   @ApiQuery({
     name: 'userId',
     required: false,
-    description: 'Filtrar por ID do usuário criador',
+    description: 'Filter by creator user ID',
   })
   @ApiQuery({
     name: 'isActive',
     required: false,
     enum: ['true', 'false'],
-    description: 'Filtrar por status (ativo/inativo)',
+    description: 'Filter by status (active/inactive)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de sessões retornada com sucesso',
+    description: 'Sessions list returned successfully',
     isArray: true,
   })
   findAll(
-    @Query('jogo') jogo?: GameType,
+    @Query('game') game?: GameType,
     @Query('userId') userId?: string,
     @Query('isActive') isActive?: string,
   ) {
     return this.sessionService.findAll({
-      jogo,
+      game,
       userId,
       isActive: isActive !== undefined ? isActive === 'true' : undefined,
     });
@@ -97,20 +97,20 @@ export class SessionController {
 
   @Get('codigo/:codigo')
   @ApiOperation({
-    summary: 'Buscar sessão por código de convite',
-    description: 'Retorna a sessão baseada no código de convite único',
+    summary: 'Find session by invite code',
+    description: 'Returns the session based on unique invite code',
   })
   @ApiParam({
     name: 'codigo',
-    description: 'Código de convite da sessão (ex: EVRF4)',
+    description: 'Session invite code (ex: EVRF4)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Sessão encontrada',
+    description: 'Session found',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   findByInviteCode(@Param('codigo') codigo: string) {
     return this.sessionService.findByInviteCode(codigo);
@@ -118,20 +118,20 @@ export class SessionController {
 
   @Get('stats/:id')
   @ApiOperation({
-    summary: 'Obter estatísticas da sessão',
-    description: 'Retorna informações e estatísticas completas da sessão',
+    summary: 'Get session statistics',
+    description: 'Returns complete information and statistics of the session',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da sessão',
+    description: 'Session ID',
   })
   @ApiResponse({
     status: 200,
-    description: 'Estatísticas retornadas com sucesso',
+    description: 'Statistics returned successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   getStats(@Param('id') id: string) {
     return this.sessionService.getSessionStats(id);
@@ -139,20 +139,20 @@ export class SessionController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Obter detalhes da sessão',
-    description: 'Retorna informações completas de uma sessão específica',
+    summary: 'Get session details',
+    description: 'Returns complete information of a specific session',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da sessão',
+    description: 'Session ID',
   })
   @ApiResponse({
     status: 200,
-    description: 'Sessão encontrada',
+    description: 'Session found',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   findOne(@Param('id') id: string) {
     return this.sessionService.findOne(id);
@@ -160,21 +160,21 @@ export class SessionController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Atualizar sessão',
-    description: 'Atualiza dados da sessão (ex: ativar/desativar)',
+    summary: 'Update session',
+    description: 'Updates session data (e.g., activate/deactivate)',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da sessão',
+    description: 'Session ID',
   })
   @ApiBody({ type: UpdateSessionDto })
   @ApiResponse({
     status: 200,
-    description: 'Sessão atualizada com sucesso',
+    description: 'Session updated successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   update(
     @Param('id') id: string,
@@ -185,20 +185,20 @@ export class SessionController {
 
   @Post(':id/finish')
   @ApiOperation({
-    summary: 'Finalizar sessão',
-    description: 'Marca a sessão como finalizada',
+    summary: 'Finish session',
+    description: 'Marks the session as finished',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da sessão',
+    description: 'Session ID',
   })
   @ApiResponse({
     status: 201,
-    description: 'Sessão finalizada com sucesso',
+    description: 'Session finished successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   finish(@Param('id') id: string) {
     return this.sessionService.finish(id);
@@ -206,20 +206,20 @@ export class SessionController {
 
   @Delete(':id')
   @ApiOperation({
-    summary: 'Deletar sessão',
-    description: 'Remove uma sessão do sistema',
+    summary: 'Delete session',
+    description: 'Removes a session from the system',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da sessão',
+    description: 'Session ID',
   })
   @ApiResponse({
     status: 200,
-    description: 'Sessão deletada com sucesso',
+    description: 'Session deleted successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   remove(@Param('id') id: string) {
     return this.sessionService.remove(id);

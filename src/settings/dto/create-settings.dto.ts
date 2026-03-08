@@ -6,8 +6,8 @@ import { PLAYER_OPTIONAL_FIELDS, PLAYER_OPTIONAL_FIELDS_LABELS } from '../../com
 
 export class CreateSettingsDto {
   @ApiProperty({
-    example: 'Configuração Jogo de Cartas Nível 1',
-    description: 'Nome descritivo da configuração',
+    example: 'Card Game Level 1 Configuration',
+    description: 'Descriptive name of the configuration',
   })
   @IsNotEmpty()
   @IsString()
@@ -16,15 +16,15 @@ export class CreateSettingsDto {
   @ApiProperty({
     enum: GameType,
     example: 'cards',
-    description: 'Tipo de jogo (cards ou words)',
+    description: 'Game type (cards or words)',
   })
   @IsNotEmpty()
   @IsEnum(GameType)
-  jogo: GameType;
+  game: GameType;
 
   @ApiProperty({
-    example: ['apelido', 'profissao'],
-    description: `Campos opcionais do jogador que devem ser preenchidos. Campos válidos: ${PLAYER_OPTIONAL_FIELDS.join(', ')}`,
+    example: ['nickname', 'profession'],
+    description: `Optional player fields that must be filled. Valid fields: ${PLAYER_OPTIONAL_FIELDS.join(', ')}`,
     enum: PLAYER_OPTIONAL_FIELDS,
     isArray: true,
     required: false,
@@ -32,11 +32,11 @@ export class CreateSettingsDto {
   @IsOptional()
   @IsArray()
   @IsValidInputInfos()
-  inputInfos?: string[];
+  inputInfo?: string[];
 
   @ApiProperty({
     example: true,
-    description: 'Se o jogador pode visualizar pontos',
+    description: 'Whether the player can view points',
     required: false,
   })
   @IsOptional()
@@ -45,7 +45,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: 10,
-    description: 'Limite de rodadas da sessão',
+    description: 'Session round limit',
     required: false,
   })
   @IsOptional()
@@ -54,7 +54,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: 52,
-    description: 'Tamanho do baralho (apenas para Cards)',
+    description: 'Deck size (Cards only)',
     required: false,
   })
   @IsOptional()
@@ -63,7 +63,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: true,
-    description: 'Permite cartas especiais (apenas para Cards)',
+    description: 'Allow special cards (Cards only)',
     required: false,
   })
   @IsOptional()
@@ -72,7 +72,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: 'standard',
-    description: 'Tema do baralho (apenas para Cards)',
+    description: 'Deck theme (Cards only)',
     required: false,
   })
   @IsOptional()
@@ -81,7 +81,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: 100,
-    description: 'Tamanho do pool de palavras (apenas para Words)',
+    description: 'Word pool size (Words only)',
     required: false,
   })
   @IsOptional()
@@ -91,7 +91,7 @@ export class CreateSettingsDto {
   @ApiProperty({
     enum: ['easy', 'medium', 'hard'],
     example: 'medium',
-    description: 'Nível de dificuldade (apenas para Words)',
+    description: 'Difficulty level (Words only)',
     required: false,
   })
   @IsOptional()
@@ -100,7 +100,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: false,
-    description: 'Inclui timer por palavra (apenas para Words)',
+    description: 'Include timer per word (Words only)',
     required: false,
   })
   @IsOptional()
@@ -109,7 +109,7 @@ export class CreateSettingsDto {
 
   @ApiProperty({
     example: 30,
-    description: 'Segundos por palavra (apenas para Words)',
+    description: 'Seconds per word (Words only)',
     required: false,
   })
   @IsOptional()

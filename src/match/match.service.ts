@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Match, MatchStatus, Jogada } from './match.entity';
+import { Match, MatchStatus, Move } from './match.entity';
 
 @Injectable()
 export class MatchService {
@@ -11,26 +11,26 @@ export class MatchService {
   ) {}
 
   async create(
-    sessaoId: string,
+    sessionId: string,
     player1Id: string,
     player2Id: string,
   ): Promise<Match> {
     const match = this.matchRepository.create({
-      sessao_id: sessaoId,
+      session_id: sessionId,
       player1_id: player1Id,
       player2_id: player2Id,
-      jogadas: [],
-      status: MatchStatus.AGUARDANDO,
+      moves: [],
+      status: MatchStatus.WAITING,
     });
 
     return await this.matchRepository.save(match);
   }
 
-  async findAll(filters?: { sessaoId?: string; status?: MatchStatus }): Promise<Match[]> {
+  async findAll(filters?: { sessionId?: string; status?: MatchStatus }): Promise<Match[]> {
     const query = this.matchRepository.createQueryBuilder('match');
 
-    if (filters?.sessaoId) {
-      query.andWhere('match.sessao_id = :sessaoId', { sessaoId: filters.sessaoId });
+    if (filters?.sessionId) {
+      query.andWhere('match.session_id = :sessionId', { sessionId: filters.sessionId });
     }
 
     if (filters?.status) {
@@ -53,17 +53,17 @@ export class MatchService {
     return updatedMatch;
   }
 
-  async addJogada(matchId: string, jogada: Jogada): Promise<Match> {
+  async addMove(matchId: string, move: Move): Promise<Match> {
     const match = await this.matchRepository.findOne({ where: { id: matchId } });
     if (!match) {
       throw new NotFoundException(`Match with ID ${matchId} not found`);
     }
 
-    if (!match.jogadas) {
-      match.jogadas = [];
+    if (!match.moves) {
+      match.moves = [];
     }
 
-    match.jogadas.push(jogada);
+    match.moves.push(move);
     return await this.matchRepository.save(match);
   }
 

@@ -10,12 +10,12 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({
-    summary: 'Realizar login',
-    description: 'Autentica um usuário e retorna token JWT para acesso à API',
+    summary: 'User login',
+    description: 'Authenticates a user and returns JWT token for API access',
   })
   @ApiResponse({
     status: 201,
-    description: 'Login realizado com sucesso',
+    description: 'Login successful',
     example: {
       access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       user: {
@@ -27,11 +27,11 @@ export class AuthController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação - login ou senha inválidos',
+    description: 'Validation error - invalid login or password',
   })
   @ApiResponse({
     status: 401,
-    description: 'Credenciais incorretas',
+    description: 'Incorrect credentials',
   })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.login, dto.password);

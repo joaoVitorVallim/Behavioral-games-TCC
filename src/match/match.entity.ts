@@ -10,15 +10,15 @@ import { Session } from '../session/session.entity';
 import { Player } from '../player/player.entity';
 
 export enum MatchStatus {
-  AGUARDANDO = 'aguardando',
-  EM_PARTIDA = 'em_partida',
-  FINALIZADA = 'finalizada',
-  CANCELADA = 'cancelada',
+  WAITING = 'waiting',
+  IN_PROGRESS = 'in_progress',
+  FINISHED = 'finished',
+  CANCELLED = 'cancelled',
 }
 
-export interface Jogada {
-  jogador: number; // 1 ou 2
-  acao: Record<string, any>; // JSON com ação específica do jogo
+export interface Move {
+  player: number; // 1 or 2
+  action: Record<string, any>; // JSON with game-specific action
   timestamp: Date;
 }
 
@@ -28,11 +28,11 @@ export class Match {
   id: string;
 
   @ManyToOne(() => Session, { nullable: false })
-  @JoinColumn({ name: 'sessao_id' })
-  sessao: Session;
+  @JoinColumn({ name: 'session_id' })
+  session: Session;
 
   @Column({ nullable: false })
-  sessao_id: string;
+  session_id: string;
 
   @ManyToOne(() => Player, { nullable: false })
   @JoinColumn({ name: 'player1_id' })
@@ -49,15 +49,15 @@ export class Match {
   player2_id: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  jogadas?: Jogada[];
+  moves?: Move[];
 
   @Column({ type: 'int', nullable: true })
-  tempoPartidaSegundos?: number;
+  matchTimeSeconds?: number;
 
   @Column({
     type: 'enum',
     enum: MatchStatus,
-    default: MatchStatus.AGUARDANDO,
+    default: MatchStatus.WAITING,
   })
   status: MatchStatus;
 

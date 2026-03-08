@@ -24,15 +24,15 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Behavioral Games API')
-    .setDescription('API para gerenciamento de sessões e partidas de jogos comportamentais')
+    .setDescription('API for managing sessions and matches of behavioral games')
     .setVersion('1.0.0')
-    .addTag('Auth', 'Autenticação e login')
-    .addTag('Users', 'Gerenciamento de usuários/professores')
-    .addTag('Games', 'Informações dos jogos disponíveis')
-    .addTag('Settings', 'Configurações dos jogos')
-    .addTag('Sessions', 'Gerenciamento de sessões de jogo')
-    .addTag('Players', 'Gerenciamento de jogadores/alunos')
-    .addTag('Matches', 'Gerenciamento de partidas')
+    .addTag('Auth', 'Authentication and login')
+    .addTag('Users', 'User/teacher management')
+    .addTag('Games', 'Information on available games')
+    .addTag('Settings', 'Game configurations')
+    .addTag('Sessions', 'Game session management')
+    .addTag('Players', 'Player/student management')
+    .addTag('Matches', 'Match management')
     .addBearerAuth()
     .build();
 
@@ -41,8 +41,8 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port, () => {
-    console.log('API rodando em http://localhost:' + port);
-    console.log('Swagger disponível em http://localhost:' + port + '/api/docs');
+    console.log('API running at http://localhost:' + port);
+    console.log('Swagger available at http://localhost:' + port + '/api/docs');
   });
 }
 

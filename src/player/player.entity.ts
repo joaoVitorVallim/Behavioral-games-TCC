@@ -15,19 +15,19 @@ export class Player {
   id: string;
 
   @Column({ length: 255, nullable: true })
-  apelido?: string;
+  nickname?: string;
 
   @Column({ length: 100, nullable: true })
-  curso?: string;
+  course?: string;
 
   @Column({ type: 'int', nullable: true })
-  idade?: number;
+  age?: number;
 
   @Column({ length: 1, nullable: true })
-  genero?: string;
+  gender?: string;
 
   @Column({ length: 255, nullable: true })
-  profissao?: string;
+  profession?: string;
 
   @ManyToOne(() => Session, (session) => session.players, { nullable: false })
   @JoinColumn({ name: 'session_id' })

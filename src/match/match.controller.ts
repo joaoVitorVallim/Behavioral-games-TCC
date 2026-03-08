@@ -28,13 +28,13 @@ export class MatchController {
 
   @Post()
   @ApiOperation({
-    summary: 'Criar nova partida',
-    description: 'Cria uma nova partida com dois jogadores em uma sessão',
+    summary: 'Create new match',
+    description: 'Creates a new match with two players in a session',
   })
   @ApiBody({
     schema: {
       example: {
-        sessaoId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+        sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
         player1Id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
         player2Id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
       },
@@ -42,63 +42,63 @@ export class MatchController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Partida criada com sucesso',
+    description: 'Match created successfully',
   })
   async create(
     @Body()
     body: {
-      sessaoId: string;
+      sessionId: string;
       player1Id: string;
       player2Id: string;
     },
   ): Promise<Match> {
-    return await this.matchService.create(body.sessaoId, body.player1Id, body.player2Id);
+    return await this.matchService.create(body.sessionId, body.player1Id, body.player2Id);
   }
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todas as partidas',
-    description: 'Retorna lista de partidas com filtros opcionais',
+    summary: 'List all matches',
+    description: 'Returns list of matches with optional filters',
   })
   @ApiQuery({
-    name: 'sessaoId',
+    name: 'sessionId',
     required: false,
-    description: 'Filtrar por ID da sessão',
+    description: 'Filter by session ID',
   })
   @ApiQuery({
     name: 'status',
     required: false,
     enum: MatchStatus,
-    description: 'Filtrar por status da partida',
+    description: 'Filter by match status',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de partidas retornada com sucesso',
+    description: 'Matches list returned successfully',
     isArray: true,
   })
   async findAll(
-    @Query('sessaoId') sessaoId?: string,
+    @Query('sessionId') sessionId?: string,
     @Query('status') status?: MatchStatus,
   ): Promise<Match[]> {
-    return await this.matchService.findAll({ sessaoId, status });
+    return await this.matchService.findAll({ sessionId, status });
   }
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Obter detalhes da partida',
-    description: 'Retorna informações completas de uma partida específica',
+    summary: 'Get match details',
+    description: 'Returns complete information of a specific match',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da partida',
+    description: 'Match ID',
   })
   @ApiResponse({
     status: 200,
-    description: 'Partida encontrada',
+    description: 'Match found',
   })
   @ApiResponse({
     status: 404,
-    description: 'Partida não encontrada',
+    description: 'Match not found',
   })
   async findOne(@Param('id') id: string): Promise<Match | null> {
     return await this.matchService.findOne(id);
@@ -106,23 +106,23 @@ export class MatchController {
 
   @Patch(':id/status')
   @ApiOperation({
-    summary: 'Atualizar status da partida',
-    description: 'Altera o status da partida (aguardando, em partida, finalizada, cancelada)',
+    summary: 'Update match status',
+    description: 'Changes the match status (waiting, in_progress, finished, cancelled)',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da partida',
+    description: 'Match ID',
   })
   @ApiBody({
     schema: {
       example: {
-        status: 'em_partida',
+        status: 'in_progress',
       },
     },
   })
   @ApiResponse({
     status: 200,
-    description: 'Status atualizado com sucesso',
+    description: 'Status updated successfully',
   })
   async updateStatus(
     @Param('id') id: string,
@@ -133,16 +133,16 @@ export class MatchController {
 
   @Delete(':id')
   @ApiOperation({
-    summary: 'Deletar partida',
-    description: 'Remove uma partida do sistema',
+    summary: 'Delete match',
+    description: 'Removes a match from the system',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da partida',
+    description: 'Match ID',
   })
   @ApiResponse({
     status: 200,
-    description: 'Partida deletada com sucesso',
+    description: 'Match deleted successfully',
   })
   async delete(@Param('id') id: string): Promise<void> {
     return await this.matchService.delete(id);

@@ -13,16 +13,16 @@ export class SettingsController {
 
   @Post()
   @ApiOperation({
-    summary: 'Criar nova configuração de jogo',
-    description: 'Cria uma nova preset de configurações para um tipo de jogo (Cards ou Words)',
+    summary: 'Create new game configuration',
+    description: 'Creates a new configuration preset for a game type (Cards or Words)',
   })
   @ApiResponse({
     status: 201,
-    description: 'Configuração criada com sucesso',
+    description: 'Configuration created successfully',
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação - dados inválidos',
+    description: 'Validation error - invalid data',
   })
   create(@Body() createSettingsDto: CreateSettingsDto) {
     return this.settingsService.create(createSettingsDto);
@@ -30,51 +30,51 @@ export class SettingsController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todas as configurações',
-    description: 'Retorna lista de todas as configurações, opcionalmente filtradas por tipo de jogo',
+    summary: 'List all configurations',
+    description: 'Returns list of all configurations, optionally filtered by game type',
   })
   @ApiQuery({
-    name: 'jogo',
+    name: 'game',
     required: false,
     enum: ['cards', 'words'],
-    description: 'Filtrar por tipo de jogo',
+    description: 'Filter by game type',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de configurações retornada com sucesso',
+    description: 'Configurations list returned successfully',
   })
-  findAll(@Query('jogo') jogo?: GameType) {
-    return this.settingsService.findAll(jogo);
+  findAll(@Query('game') game?: GameType) {
+    return this.settingsService.findAll(game);
   }
 
-  @Get('game/:jogo')
+  @Get('game/:game')
   @ApiOperation({
-    summary: 'Listar configurações por tipo de jogo',
-    description: 'Retorna todas as configurações para um tipo de jogo específico',
+    summary: 'List configurations by game type',
+    description: 'Returns all configurations for a specific game type',
   })
   @ApiParam({
-    name: 'jogo',
+    name: 'game',
     enum: ['cards', 'words'],
-    description: 'Tipo do jogo',
+    description: 'Game type',
   })
   @ApiResponse({
     status: 200,
-    description: 'Configurações retornadas com sucesso',
+    description: 'Configurations returned successfully',
   })
-  findByGame(@Param('jogo') jogo: GameType) {
-    return this.settingsService.findByGame(jogo);
+  findByGame(@Param('game') game: GameType) {
+    return this.settingsService.findByGame(game);
   }
 
   @Get('player-fields/valid')
   @ApiOperation({
-    summary: 'Listar campos opcionais válidos do Player',
-    description: 'Retorna a lista de campos opcionais que podem ser adicionados ao inputInfos da configuração',
+    summary: 'List valid optional Player fields',
+    description: 'Returns the list of optional fields that can be added to the configuration inputInfo',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de campos válidos retornada com sucesso',
+    description: 'Valid fields list returned successfully',
     schema: {
-      example: ['apelido', 'curso', 'idade', 'genero', 'profissao'],
+      example: ['nickname', 'course', 'age', 'gender', 'profession'],
     },
   })
   getValidPlayerFields() {
@@ -83,21 +83,21 @@ export class SettingsController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Obter detalhes da configuração',
-    description: 'Retorna informações completas de uma configuração específica',
+    summary: 'Get configuration details',
+    description: 'Returns complete information of a specific configuration',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da configuração',
+    description: 'Configuration ID',
     example: 'c7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Configuração encontrada',
+    description: 'Configuration found',
   })
   @ApiResponse({
     status: 404,
-    description: 'Configuração não encontrada',
+    description: 'Configuration not found',
   })
   findOne(@Param('id') id: string) {
     return this.settingsService.findOne(id);
@@ -105,21 +105,21 @@ export class SettingsController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Atualizar configuração',
-    description: 'Atualiza parâmetros de uma configuração existente',
+    summary: 'Update configuration',
+    description: 'Updates parameters of an existing configuration',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da configuração',
+    description: 'Configuration ID',
     example: 'c7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Configuração atualizada com sucesso',
+    description: 'Configuration updated successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Configuração não encontrada',
+    description: 'Configuration not found',
   })
   update(
     @Param('id') id: string,
@@ -130,21 +130,21 @@ export class SettingsController {
 
   @Post(':id/copy')
   @ApiOperation({
-    summary: 'Duplicar configuração',
-    description: 'Cria uma cópia de uma configuração existente com novo nome',
+    summary: 'Duplicate configuration',
+    description: 'Creates a copy of an existing configuration with a new name',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da configuração a ser copiada',
+    description: 'ID of the configuration to be copied',
     example: 'c7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 201,
-    description: 'Configuração copiada com sucesso',
+    description: 'Configuration copied successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Configuração não encontrada',
+    description: 'Configuration not found',
   })
   createCopy(
     @Param('id') id: string,
@@ -155,21 +155,21 @@ export class SettingsController {
 
   @Delete(':id')
   @ApiOperation({
-    summary: 'Deletar configuração',
-    description: 'Remove uma configuração do sistema',
+    summary: 'Delete configuration',
+    description: 'Removes a configuration from the system',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID da configuração',
+    description: 'Configuration ID',
     example: 'c7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Configuração deletada com sucesso',
+    description: 'Configuration deleted successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Configuração não encontrada',
+    description: 'Configuration not found',
   })
   remove(@Param('id') id: string) {
     return this.settingsService.remove(id);

@@ -20,11 +20,11 @@ export abstract class Settings {
   configName: string;
 
   @Column({ type: 'enum', enum: GameType, nullable: false })
-  jogo: GameType;
+  game: GameType;
 
   @Column({ type: 'simple-array', nullable: true })
-  inputInfos: string[];
-
+  inputInfo: string[];
+ 
   @Column({ type: 'boolean', default: false })
   userViewPoints: boolean;
 

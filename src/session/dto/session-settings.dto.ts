@@ -3,32 +3,32 @@ import { ApiProperty } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
 
 /**
- * DTO para as configurações da sessão
- * Pode ser estendido com campos específicos de cada jogo
+ * DTO for session configurations
+ * Can be extended with game-specific fields
  */
 export class SessionSettingsDto {
   @ApiProperty({
-    example: 'Config Jogo de Cartas',
-    description: 'Nome da configuração',
+    example: 'Card Game Configuration',
+    description: 'Configuration name',
   })
   @IsNotEmpty()
   @IsString()
   configName: string;
 
   @ApiProperty({
-    example: ['nome', 'profissao'],
+    example: ['nickname', 'profession'],
     isArray: true,
     required: false,
-    description: 'Informações que o jogador deve informar',
+    description: 'Information that the player must provide',
   })
   @IsOptional()
   @IsArray()
-  inputInfos?: string[];
+  inputInfo?: string[];
 
   @ApiProperty({
     example: true,
     required: false,
-    description: 'Se o jogador pode visualizar pontos',
+    description: 'Whether the player can view points',
   })
   @IsOptional()
   @IsBoolean()
@@ -37,7 +37,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: 10,
     required: false,
-    description: 'Limite de rodadas da sessão',
+    description: 'Session round limit',
   })
   @IsOptional()
   @IsNumber()
@@ -47,7 +47,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: 52,
     required: false,
-    description: 'Tamanho do baralho (Cards)',
+    description: 'Deck size (Cards)',
   })
   @IsOptional()
   @IsNumber()
@@ -56,7 +56,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: true,
     required: false,
-    description: 'Permite cartas especiais (Cards)',
+    description: 'Allow special cards (Cards)',
   })
   @IsOptional()
   @IsBoolean()
@@ -65,7 +65,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: 'standard',
     required: false,
-    description: 'Tema do baralho (Cards)',
+    description: 'Deck theme (Cards)',
   })
   @IsOptional()
   @IsString()
@@ -75,7 +75,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: 100,
     required: false,
-    description: 'Tamanho do pool de palavras (Words)',
+    description: 'Word pool size (Words)',
   })
   @IsOptional()
   @IsNumber()
@@ -85,7 +85,7 @@ export class SessionSettingsDto {
     example: 'medium',
     required: false,
     enum: ['easy', 'medium', 'hard'],
-    description: 'Nível de dificuldade (Words)',
+    description: 'Difficulty level (Words)',
   })
   @IsOptional()
   @IsString()
@@ -94,7 +94,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: false,
     required: false,
-    description: 'Inclui timer por palavra (Words)',
+    description: 'Include timer per word (Words)',
   })
   @IsOptional()
   @IsBoolean()
@@ -103,7 +103,7 @@ export class SessionSettingsDto {
   @ApiProperty({
     example: 30,
     required: false,
-    description: 'Segundos por palavra (Words)',
+    description: 'Seconds per word (Words)',
   })
   @IsOptional()
   @IsNumber()

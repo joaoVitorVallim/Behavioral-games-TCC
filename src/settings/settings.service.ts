@@ -23,30 +23,30 @@ export class SettingsService {
   ) {}
 
   /**
-   * Valida e filtra os inputInfos para garantir que apenas campos opcionais válidos sejam incluídos
-   * @param inputInfos - Array de campos a validar
-   * @returns Array filtrado com apenas campos válidos
-   * @throws BadRequestException se houver campos inválidos
+   * Validates and filters inputInfo to ensure only valid optional fields are included
+   * @param inputInfo - Array of fields to validate
+   * @returns Filtered array with valid fields only
+   * @throws BadRequestException if there are invalid fields
    */
-  private validateAndFilterInputInfos(inputInfos?: string[]): string[] {
-    if (!inputInfos || inputInfos.length === 0) {
+  private validateAndFilterInputInfo(inputInfo?: string[]): string[] {
+    if (!inputInfo || inputInfo.length === 0) {
       return [];
     }
 
-    const invalidFields = inputInfos.filter(field => !isValidPlayerField(field));
+    const invalidFields = inputInfo.filter(field => !isValidPlayerField(field));
 
     if (invalidFields.length > 0) {
       throw new BadRequestException(
-        `Campos inválidos em inputInfos: [${invalidFields.join(', ')}]. Campos válidos são: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`,
+        `Invalid fields in inputInfo: [${invalidFields.join(', ')}]. Valid fields are: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`,
       );
     }
 
-    // Remove duplicatas
-    return Array.from(new Set(inputInfos));
+    // Remove duplicates
+    return Array.from(new Set(inputInfo));
   }
 
   /**
-   * Retorna a lista de campos opcionais válidos do Player
+   * Returns the list of valid optional Player fields
    */
   getValidPlayerFields(): string[] {
     return [...PLAYER_OPTIONAL_FIELDS];
@@ -54,16 +54,16 @@ export class SettingsService {
 
   async create(dto: CreateSettingsDto, gameType?: 'cards' | 'words'): Promise<Settings> {
     // Verify game type is valid
-    if (!this.gameService.isValidGameType(dto.jogo)) {
-      throw new BadRequestException(`Invalid game type: ${dto.jogo}`);
+    if (!this.gameService.isValidGameType(dto.game)) {
+      throw new BadRequestException(`Invalid game type: ${dto.game}`);
     }
 
-    // Validate and filter inputInfos
-    const validatedInputInfos = this.validateAndFilterInputInfos(dto.inputInfos);
+    // Validate and filter inputInfo
+    const validatedInputInfo = this.validateAndFilterInputInfo(dto.inputInfo);
 
-    // If gameType not provided, infer from dto.jogo
+    // If gameType not provided, infer from dto.game
     if (!gameType) {
-      gameType = dto.jogo === GameType.CARDS ? 'cards' : 'words';
+      gameType = dto.game === GameType.CARDS ? 'cards' : 'words';
     }
 
     let settings: Settings;
@@ -71,8 +71,8 @@ export class SettingsService {
     if (gameType === 'cards') {
       const cardsSettings = this.settingsCardsRepository.create({
         configName: dto.configName,
-        jogo: dto.jogo,
-        inputInfos: validatedInputInfos,
+        game: dto.game,
+        inputInfo: validatedInputInfo,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
         cardDeckSize: dto.cardDeckSize,
@@ -83,8 +83,8 @@ export class SettingsService {
     } else if (gameType === 'words') {
       const wordsSettings = this.settingsWordsRepository.create({
         configName: dto.configName,
-        jogo: dto.jogo,
-        inputInfos: validatedInputInfos,
+        game: dto.game,
+        inputInfo: validatedInputInfo,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
         wordPoolSize: dto.wordPoolSize,
@@ -100,13 +100,13 @@ export class SettingsService {
     return settings;
   }
 
-  async findAll(jogo?: GameType): Promise<Settings[]> {
-    if (!jogo) {
+  async findAll(game?: GameType): Promise<Settings[]> {
+    if (!game) {
       return this.settingsRepository.find({ relations: ['sessions'] });
     }
 
     return this.settingsRepository.find({
-      where: { jogo },
+      where: { game },
       relations: ['sessions'],
     });
   }
@@ -124,9 +124,9 @@ export class SettingsService {
     return settings;
   }
 
-  async findByGame(jogo: GameType): Promise<Settings[]> {
+  async findByGame(game: GameType): Promise<Settings[]> {
     return this.settingsRepository.find({
-      where: { jogo },
+      where: { game },
       relations: ['sessions'],
     });
   }
@@ -136,7 +136,7 @@ export class SettingsService {
 
     // Update common fields
     if (dto.configName) settings.configName = dto.configName;
-    if (dto.inputInfos) settings.inputInfos = dto.inputInfos;
+    if (dto.inputInfo) settings.inputInfo = dto.inputInfo;
     if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
     if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
 

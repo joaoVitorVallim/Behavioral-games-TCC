@@ -10,24 +10,24 @@ export class GameController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todos os jogos disponíveis',
-    description: 'Retorna informações de todos os jogos implementados no sistema',
+    summary: 'List all available games',
+    description: 'Returns information about all games implemented in the system',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de jogos retornada com sucesso',
+    description: 'Games list returned successfully',
     schema: {
       example: [
         {
           id: 'cards',
-          nome: 'Jogo de Cartas',
-          descricao: 'Um jogo de cartas estratégico e educativo',
+          name: 'Card Game',
+          description: 'A strategic and educational card game',
           redirectUrl: 'https://cards-game.example.com',
         },
         {
           id: 'words',
-          nome: 'Jogo de Palavras',
-          descricao: 'Um jogo de palavras para desenvolvimento de vocabulário',
+          name: 'Word Game',
+          description: 'A word game for vocabulary development',
           redirectUrl: 'https://words-game.example.com',
         },
       ],
@@ -39,29 +39,29 @@ export class GameController {
 
   @Get(':game_name')
   @ApiOperation({
-    summary: 'Obter informações de um jogo específico',
-    description: 'Retorna detalhes e URL de redirecionamento para um jogo',
+    summary: 'Get specific game information',
+    description: 'Returns details and redirect URL for a game',
   })
   @ApiParam({
     name: 'game_name',
     enum: ['cards', 'words'],
-    description: 'Tipo do jogo',
+    description: 'Game type',
   })
   @ApiResponse({
     status: 200,
-    description: 'Informações do jogo retornadas com sucesso',
+    description: 'Game information returned successfully',
     schema: {
       example: {
         id: 'cards',
-        nome: 'Jogo de Cartas',
-        descricao: 'Um jogo de cartas estratégico e educativo',
+        name: 'Card Game',
+        description: 'A strategic and educational card game',
         redirectUrl: 'https://cards-game.example.com',
       },
     },
   })
   @ApiResponse({
     status: 400,
-    description: 'Tipo de jogo inválido',
+    description: 'Invalid game type',
   })
   findOne(@Param('game_name') id: string) {
     if (!this.gameService.isValidGameType(id)) {

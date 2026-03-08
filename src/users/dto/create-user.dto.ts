@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateUserDto {
   @ApiProperty({
     example: 'João Silva',
-    description: 'Nome completo do usuário/professor',
+    description: 'Full name of the user/teacher',
   })
   @IsNotEmpty()
   @IsString()
@@ -12,7 +12,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'joao.silva',
-    description: 'Nome de usuário para login',
+    description: 'Username for login',
   })
   @IsNotEmpty()
   @IsString()
@@ -20,7 +20,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'senha123',
-    description: 'Senha (mínimo 6 caracteres)',
+    description: 'Password (minimum 6 characters)',
   })
   @IsNotEmpty()
   @MinLength(6)

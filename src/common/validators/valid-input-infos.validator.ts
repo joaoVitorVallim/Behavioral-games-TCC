@@ -19,17 +19,17 @@ export class IsValidInputInfosConstraint
       return false;
     }
 
-    // Se array vazio é válido
+    // If array is empty it is valid
     if (value.length === 0) {
       return true;
     }
 
-    // Verifica se todos os elementos são strings
+    // Check if all elements are strings
     if (!value.every((item) => typeof item === 'string')) {
       return false;
     }
 
-    // Verifica se todos os elementos são campos válidos
+    // Check if all elements are valid fields
     return value.every((field) => isValidPlayerField(field));
   }
 
@@ -39,21 +39,21 @@ export class IsValidInputInfosConstraint
     );
 
     if ((args.value || []).some((item) => typeof item !== 'string')) {
-      return 'inputInfos deve conter apenas strings';
+      return 'inputInfo must contain only strings';
     }
 
-    return `Campos inválidos em inputInfos: [${invalidFields.join(', ')}]. Campos válidos são: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`;
+    return `Invalid fields in inputInfo: [${invalidFields.join(', ')}]. Valid fields are: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`;
   }
 }
 
 /**
- * Decorator para validar inputInfos
- * Garante que apenas campos opcionais válidos do Player sejam incluídos
+ * Decorator to validate inputInfo
+ * Ensures only valid optional Player fields are included
  *
  * @example
  * ```ts
  * @IsValidInputInfos()
- * inputInfos?: string[];
+ * inputInfo?: string[];
  * ```
  */
 export function IsValidInputInfos(options?: ValidationOptions) {

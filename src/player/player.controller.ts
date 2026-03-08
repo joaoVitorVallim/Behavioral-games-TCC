@@ -21,16 +21,16 @@ export class PlayerController {
 
   @Post()
   @ApiOperation({
-    summary: 'Criar novo jogador',
-    description: 'Registra um novo jogador/aluno em uma sessão',
+    summary: 'Create new player',
+    description: 'Registers a new player/student in a session',
   })
   @ApiResponse({
     status: 201,
-    description: 'Jogador criado com sucesso',
+    description: 'Player created successfully',
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação - session_id inválido',
+    description: 'Validation error - invalid session_id',
   })
   create(@Body() createPlayerDto: CreatePlayerDto) {
     return this.playerService.create(createPlayerDto);
@@ -38,21 +38,21 @@ export class PlayerController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Obter detalhes do jogador',
-    description: 'Retorna informações completas de um jogador específico',
+    summary: 'Get player details',
+    description: 'Returns complete information of a specific player',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID do jogador',
+    description: 'Player ID',
     example: 'e7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Jogador encontrado',
+    description: 'Player found',
   })
   @ApiResponse({
     status: 404,
-    description: 'Jogador não encontrado',
+    description: 'Player not found',
   })
   findOne(@Param('id') id: string) {
     return this.playerService.findOne(id);
@@ -60,21 +60,21 @@ export class PlayerController {
   
   @Patch(':id')
   @ApiOperation({
-    summary: 'Atualizar jogador',
-    description: 'Atualiza informações de um jogador existente',
+    summary: 'Update player',
+    description: 'Updates information of an existing player',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID do jogador',
+    description: 'Player ID',
     example: 'e7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Jogador atualizado com sucesso',
+    description: 'Player updated successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Jogador não encontrado',
+    description: 'Player not found',
   })
   update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
     return this.playerService.update(id, updatePlayerDto);
@@ -82,21 +82,21 @@ export class PlayerController {
   
   @Delete(':id')
   @ApiOperation({
-    summary: 'Deletar jogador',
-    description: 'Remove um jogador do sistema',
+    summary: 'Delete player',
+    description: 'Removes a player from the system',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID do jogador',
+    description: 'Player ID',
     example: 'e7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Jogador deletado com sucesso',
+    description: 'Player deleted successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Jogador não encontrado',
+    description: 'Player not found',
   })
   remove(@Param('id') id: string) {
     return this.playerService.remove(id);
@@ -104,17 +104,17 @@ export class PlayerController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todos os jogadores',
-    description: 'Retorna lista de jogadores, opcionalmente filtrados por sessão',
+    summary: 'List all players',
+    description: 'Returns list of players, optionally filtered by session',
   })
   @ApiQuery({
     name: 'sessionId',
     required: false,
-    description: 'Filtrar por ID da sessão',
+    description: 'Filter by session ID',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de jogadores retornada com sucesso',
+    description: 'List of players returned successfully',
   })
   findAll(@Query('sessionId') sessionId?: string) {
     return this.playerService.findAll(sessionId);
@@ -122,21 +122,21 @@ export class PlayerController {
 
   @Get('session/:sessionId')
   @ApiOperation({
-    summary: 'Listar jogadores de uma sessão',
-    description: 'Retorna todos os jogadores participantes de uma sessão específica',
+    summary: 'List players in a session',
+    description: 'Returns all players participating in a specific session',
   })
   @ApiParam({
     name: 'sessionId',
-    description: 'ID da sessão',
+    description: 'Session ID',
     example: 'd7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiResponse({
     status: 200,
-    description: 'Jogadores da sessão retornados com sucesso',
+    description: 'Session players returned successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Sessão não encontrada',
+    description: 'Session not found',
   })
   findBySession(@Param('sessionId') sessionId: string) {
     return this.playerService.findBySession(sessionId);

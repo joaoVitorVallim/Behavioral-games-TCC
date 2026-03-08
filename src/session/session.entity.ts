@@ -18,7 +18,7 @@ export class Session {
   id: string;
 
   @Column({ type: 'enum', enum: GameType, nullable: false })
-  jogo: GameType;
+  game: GameType;
 
   @ManyToOne(() => Settings, (settings) => settings.sessions, { nullable: false, eager: true })
   @JoinColumn({ name: 'settings_id' })
@@ -27,7 +27,7 @@ export class Session {
   settings_id: string;
 
   @Column({ type: 'varchar', length: 10, unique: true, nullable: false })
-  codigo_convite: string;
+  inviteCode: string;
 
   @ManyToOne(() => User, (user) => user.sessions, { nullable: false })
   @JoinColumn({ name: 'user_id' })

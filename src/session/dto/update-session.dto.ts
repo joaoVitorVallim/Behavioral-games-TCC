@@ -5,7 +5,7 @@ export class UpdateSessionDto {
   @ApiProperty({
     example: false,
     required: false,
-    description: 'Status da sessão (ativa/inativa)',
+    description: 'Session status (active/inactive)',
   })
   @IsOptional()
   @IsBoolean()

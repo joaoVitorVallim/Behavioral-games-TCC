@@ -8,14 +8,14 @@ export class CreateSessionDto {
   @ApiProperty({
     enum: GameType,
     example: 'cards',
-    description: 'Tipo de jogo (cards ou words)',
+    description: 'Game type (cards or words)',
   })
   @IsNotEmpty()
   @IsEnum(GameType)
-  jogo: GameType;
+  game: GameType;
 
   @ApiProperty({
-    description: 'Configurações da sessão',
+    description: 'Session configurations',
     type: SessionSettingsDto,
   })
   @IsNotEmpty()
@@ -25,7 +25,7 @@ export class CreateSessionDto {
 
   @ApiProperty({
     example: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',
-    description: 'ID do usuário/professor criador da sessão',
+    description: 'ID of the user/teacher creating the session',
   })
   @IsNotEmpty()
   user_id: string;
