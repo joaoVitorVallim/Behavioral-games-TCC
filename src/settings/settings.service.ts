@@ -52,6 +52,43 @@ export class SettingsService {
     return [...PLAYER_OPTIONAL_FIELDS];
   }
 
+  /**
+   * Returns the field structure for each game configuration.
+   * Used by the frontend to know which fields and types to request from users.
+   */
+  getGameConfigFields(game?: 'cards' | 'words') {
+    const common = [
+      { name: 'configName', type: 'string' },
+      { name: 'game', type: 'enum(GameType)' },
+      { name: 'inputInfo', type: 'string[]' },
+      { name: 'userViewPoints', type: 'boolean' },
+      { name: 'limitRounds', type: 'number' },
+    ];
+
+    const cards = [
+      { name: 'cardDeckSize', type: 'number' },
+      { name: 'allowSpecialCards', type: 'boolean' },
+      { name: 'cardTheme', type: 'string' },
+    ];
+
+    const words = [
+      { name: 'wordPoolSize', type: 'number' },
+      { name: 'difficulty', type: 'string' },
+      { name: 'includeTimerPerWord', type: 'boolean' },
+      { name: 'secondsPerWord', type: 'number' },
+    ];
+
+    if (game === 'cards') {
+      return { common, cards };
+    }
+
+    if (game === 'words') {
+      return { common, words };
+    }
+
+    return { common, cards, words };
+  }
+
   async create(dto: CreateSettingsDto, gameType?: 'cards' | 'words'): Promise<Settings> {
     // Verify game type is valid
     if (!this.gameService.isValidGameType(dto.game)) {

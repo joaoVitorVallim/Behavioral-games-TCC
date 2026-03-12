@@ -81,6 +81,47 @@ export class SettingsController {
     return this.settingsService.getValidPlayerFields();
   }
 
+  @Get('game-config/fields')
+  @ApiOperation({
+    summary: 'Get game config field structure',
+    description: 'Returns field names and types for Cards and Words configurations',
+  })
+  @ApiQuery({
+    name: 'game',
+    required: false,
+    enum: ['cards', 'words'],
+    description: 'Filter by game type',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Field structure returned successfully',
+    schema: {
+      example: {
+        common: [
+          { name: 'configName', type: 'string' },
+          { name: 'game', type: 'enum(GameType)' },
+          { name: 'inputInfo', type: 'string[]' },
+          { name: 'userViewPoints', type: 'boolean' },
+          { name: 'limitRounds', type: 'number' },
+        ],
+        cards: [
+          { name: 'cardDeckSize', type: 'number' },
+          { name: 'allowSpecialCards', type: 'boolean' },
+          { name: 'cardTheme', type: 'string' },
+        ],
+        words: [
+          { name: 'wordPoolSize', type: 'number' },
+          { name: 'difficulty', type: 'string' },
+          { name: 'includeTimerPerWord', type: 'boolean' },
+          { name: 'secondsPerWord', type: 'number' },
+        ],
+      },
+    },
+  })
+  getGameConfigFields(@Query('game') game?: 'cards' | 'words') {
+    return this.settingsService.getGameConfigFields(game);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get configuration details',
