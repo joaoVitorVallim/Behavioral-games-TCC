@@ -1,5 +1,5 @@
 export interface LoginRequest {
-  email: string
+  login: string
   password: string
 }
 
@@ -9,7 +9,7 @@ export interface LoginResponse {
 
 export interface User {
   id: string
-  email: string
+  login: string
 }
 
 export interface AuthState {

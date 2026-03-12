@@ -25,7 +25,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Verifica se token expirou
       if (authService.isTokenExpired(stored_token)) {
-        console.warn('Token expirado. Fazendo logout automático.')
         authService.removeToken()
         setIsLoading(false)
         return
@@ -35,7 +34,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const decoded_user = authService.decodeToken(stored_token)
 
       if (!decoded_user) {
-        console.error('Falha ao decodificar token armazenado')
         authService.removeToken()
         setIsLoading(false)
         return

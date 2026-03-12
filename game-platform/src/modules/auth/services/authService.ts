@@ -7,9 +7,9 @@ export const authService = {
   /**
    * Realiza login e retorna access_token
    */
-  login: async (email: string, password: string): Promise<LoginResponse> => {
+  login: async (login: string, password: string): Promise<LoginResponse> => {
     const response = await api_client.post<LoginResponse>('/auth/login', {
-      email,
+      login,
       password
     } as LoginRequest)
     
@@ -46,7 +46,6 @@ export const authService = {
       // Valida formato JWT (3 partes separadas por .)
       const parts = token.split('.')
       if (parts.length !== 3) {
-        console.error('Token inválido: formato incorreto')
         return null
       }
 
@@ -54,18 +53,16 @@ export const authService = {
       const payload = JSON.parse(atob(parts[1]))
 
       // Valida campos obrigatórios
-      if (!payload.sub || !payload.email) {
-        console.error('Token inválido: campos obrigatórios ausentes')
+      if (!payload.sub || !payload.login) {
         return null
       }
 
       // Retorna user extraído
       return {
         id: payload.sub,
-        email: payload.email
+        login: payload.login
       }
-    } catch (error) {
-      console.error('Erro ao decodificar token:', error)
+    } catch {
       return null
     }
   },

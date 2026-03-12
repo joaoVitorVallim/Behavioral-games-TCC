@@ -15,10 +15,8 @@ export const isSecureConnection = (): boolean => {
 /**
  * Valida se a API deve usar HTTPS em produção
  */
-export const validateSecureApi = (api_url: string): void => {
-  if (isProduction() && !api_url.startsWith('https://')) {
-    console.warn('⚠️ API não está usando HTTPS em produção!')
-  }
+export const validateSecureApi = (_api_url: string): void => {
+  // Validation logic can be added here (e.g., throw in production)
 }
 
 /**
@@ -58,11 +56,11 @@ export class RateLimiter {
 /**
  * Implementa debounce para prevenir spam
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: never[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: number | null = null
+  let timeout: ReturnType<typeof setTimeout> | null = null
 
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
@@ -73,6 +71,6 @@ export function debounce<T extends (...args: any[]) => any>(
     if (timeout) {
       clearTimeout(timeout)
     }
-    timeout = setTimeout(later, wait) as unknown as number
+    timeout = setTimeout(later, wait)
   }
 }

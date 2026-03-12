@@ -19,13 +19,17 @@ export const SessionCard = ({ session, onEnter }: SessionCardProps) => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-card-foreground font-semibold text-base leading-tight mb-1">{session.title}</h3>
-          <p className="text-muted-foreground text-xs">{session.subtitle}</p>
+          <h3 className="text-card-foreground font-semibold text-base leading-tight mb-1">
+            {session.settings.configName}
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            {session.game}
+          </p>
         </div>
       </div>
 
       <p className="text-muted-foreground text-xs leading-relaxed mb-6">
-        {session.description}
+        Criado por {session.user.name} • {session.players.length} jogadores
       </p>
 
       <div className="flex items-center justify-between">
@@ -37,7 +41,7 @@ export const SessionCard = ({ session, onEnter }: SessionCardProps) => {
               <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2" strokeLinecap="round"/>
               <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2"/>
             </svg>
-            {session.date}
+            {new Date(session.created_at).toLocaleDateString('pt-BR')}
           </span>
         </div>
         

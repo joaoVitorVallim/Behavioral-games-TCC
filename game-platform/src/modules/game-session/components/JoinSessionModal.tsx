@@ -58,9 +58,8 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
       } else {
         setValidationError('Código inválido')
       }
-    } catch (error) {
+    } catch {
       setValidationError('Não foi possível validar o código. Tente novamente.')
-      console.error('Validation error:', error)
     } finally {
       setIsValidating(false)
     }
@@ -119,6 +118,9 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
   return (
     <div 
       className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Entrar na Sessão"
       onClick={onClose}
     >
       <div 
@@ -128,6 +130,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-muted-foreground hover:text-foreground hover:scale-125 transition-all text-xl w-6 h-6 flex items-center justify-center leading-none"
+          aria-label="Fechar"
         >
           ✕
         </button>
@@ -138,10 +141,11 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
             <p className="text-muted-foreground text-sm mb-6">Digite o código fornecido pelo professor</p>
 
             <div className="mb-5">
-              <label className="block text-sm font-medium text-popover-foreground mb-2.5">
+              <label htmlFor="session-code" className="block text-sm font-medium text-popover-foreground mb-2.5">
                 Código da Sessão
               </label>
               <input
+                id="session-code"
                 type="text"
                 value={code}
                 onChange={(e) => {
@@ -173,10 +177,11 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
             <div className="space-y-4 mb-5">
               {requirements.map((req) => (
                 <div key={req.field}>
-                  <label className="block text-sm font-medium text-popover-foreground mb-2">
+                  <label htmlFor={`req-${req.field}`} className="block text-sm font-medium text-popover-foreground mb-2">
                     {req.label} {req.required && <span className="text-destructive">*</span>}
                   </label>
                   <input
+                    id={`req-${req.field}`}
                     type={req.type}
                     value={form_data[req.field] || ''}
                     onChange={(e) => handleInputChange(req.field, e.target.value)}

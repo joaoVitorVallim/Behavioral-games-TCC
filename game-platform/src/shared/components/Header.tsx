@@ -1,42 +1,35 @@
-import { useState, useRef, useEffect } from 'react'
-import { Brain, User, LogOut, FileText, PlusCircle } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Brain, PlusCircle, FileText, Menu, X, UserCircle, LogOut } from 'lucide-react'
 import { useAuth } from '../../modules/auth/hooks/useAuth'
 import { LoginModal } from '../../modules/auth/components/LoginModal'
+import { useClickOutside } from '../hooks/useClickOutside'
 
 export function Header() {
   const navigate = useNavigate()
-  const { user, is_authenticated, logout } = useAuth()
+  const { is_authenticated, logout } = useAuth()
   const [show_login_modal, setShowLoginModal] = useState(false)
   const [show_profile_dropdown, setShowProfileDropdown] = useState(false)
+  const [show_mobile_menu, setShowMobileMenu] = useState(false)
   const dropdown_ref = useRef<HTMLDivElement>(null)
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdown_ref.current && !dropdown_ref.current.contains(event.target as Node)) {
-        setShowProfileDropdown(false)
-      }
-    }
-
-    if (show_profile_dropdown) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [show_profile_dropdown])
+  useClickOutside(
+    dropdown_ref,
+    useCallback(() => setShowProfileDropdown(false), []),
+    show_profile_dropdown
+  )
 
   const handleLogout = () => {
     logout()
     setShowProfileDropdown(false)
+    setShowMobileMenu(false)
     navigate('/')
   }
 
   return (
     <>
-      <header className="w-full max-w-6xl mx-auto p-6 flex justify-between items-center z-10 bg-background border-b border-border">
+      <header className="relative w-full px-6 md:px-8 py-4 flex justify-between items-center z-50 bg-background border-b border-border">
+        {/* Logo */}
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-3 hover:scale-105 transition-transform"
@@ -45,10 +38,10 @@ export function Header() {
           <span className="text-xl font-bold tracking-tight">BehaviorLab</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        {/* Desktop menu */}
+        <nav className="hidden md:flex items-center gap-3" aria-label="Navegação principal">
           {is_authenticated ? (
             <>
-              {/* Create Session Button */}
               <button
                 onClick={() => navigate('/create-session')}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition-all"
@@ -57,7 +50,6 @@ export function Header() {
                 Criar Sessão
               </button>
 
-              {/* Reports Button */}
               <button
                 onClick={() => navigate('/reports')}
                 className="flex items-center gap-2 px-4 py-2 bg-card text-foreground border border-border rounded-lg text-sm font-semibold hover:scale-105 transition-all"
@@ -66,28 +58,23 @@ export function Header() {
                 Relatórios
               </button>
 
-              {/* Profile Dropdown */}
+              {/* Profile dropdown */}
               <div className="relative" ref={dropdown_ref}>
                 <button
                   onClick={() => setShowProfileDropdown(!show_profile_dropdown)}
-                  className="p-2 bg-card text-foreground border border-border rounded-full hover:scale-105 transition-all"
-                  aria-label="Profile menu"
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-card border border-transparent hover:border-border transition-all"
                 >
-                  <User className="w-5 h-5" />
+                  <UserCircle className="w-6 h-6 text-muted-foreground" />
                 </button>
 
                 {show_profile_dropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-xs text-muted-foreground">Conectado como</p>
-                      <p className="text-sm font-medium text-foreground truncate">{user?.email}</p>
-                    </div>
+                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-lg py-1 z-100">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-destructive hover:bg-muted transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
-                      Sair
+                      Sair da conta
                     </button>
                   </div>
                 )}
@@ -96,13 +83,61 @@ export function Header() {
           ) : (
             <button
               onClick={() => setShowLoginModal(true)}
-              className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 hover:text-background transition-all"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition-all"
             >
-              Sou Docente
+              Entrar
             </button>
           )}
-        </div>
+        </nav>
+
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden p-2 rounded-lg hover:bg-card transition-colors"
+          onClick={() => setShowMobileMenu(!show_mobile_menu)}
+        >
+          {show_mobile_menu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </header>
+
+      {/* Mobile menu dropdown */}
+      {show_mobile_menu && (
+        <nav className="md:hidden w-full bg-background border-b border-border px-6 py-4 flex flex-col gap-3 z-10" aria-label="Navegação móvel">
+          {is_authenticated ? (
+            <>
+              <button
+                onClick={() => { navigate('/create-session'); setShowMobileMenu(false) }}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Criar Sessão
+              </button>
+
+              <button
+                onClick={() => { navigate('/reports'); setShowMobileMenu(false) }}
+                className="flex items-center gap-2 px-4 py-2 bg-card text-foreground border border-border rounded-lg text-sm font-semibold"
+              >
+                <FileText className="w-4 h-4" />
+                Relatórios
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-red-500 border border-red-500/30 bg-red-500/10 rounded-lg text-sm font-semibold"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair da conta
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { setShowLoginModal(true); setShowMobileMenu(false) }}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold"
+            >
+              Entrar
+            </button>
+          )}
+        </nav>
+      )}
 
       {show_login_modal && (
         <LoginModal onClose={() => setShowLoginModal(false)} />

@@ -6,11 +6,10 @@ export const useSessions = () => {
     queryKey: ['sessions'],
     queryFn: async () => {
       const sessions = await sessionService.getAllSessions()
-      console.log('[useSessions] GET /sessions:', sessions)
       return sessions
     },
-    staleTime: 0, // Força refetch a sempre buscar dados novos
-    gcTime: 0 // Não mantém cache (antes era cacheTime)
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000
   })
 
   return {

@@ -6,7 +6,12 @@ import { QueryProvider } from './app/providers/QueryProvider'
 import { router } from './app/router'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const root_element = document.getElementById('root')
+if (!root_element) {
+  throw new Error('Root element not found. Ensure index.html contains <div id="root"></div>.')
+}
+
+ReactDOM.createRoot(root_element).render(
   <React.StrictMode>
     <AuthProvider>
       <QueryProvider>

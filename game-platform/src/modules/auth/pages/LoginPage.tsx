@@ -7,17 +7,6 @@ export function LoginPage() {
 
   return (
     <>
-      {/* GLOBAL RESET */}
-      <style>{`
-        html, body, #root {
-          margin: 0;
-          padding: 0;
-          width: 100%;
-          height: 100%;
-          overflow-x: hidden;
-        }
-      `}</style>
-
       {/* APP CONTAINER */}
       <div className="min-h-screen flex flex-col bg-background text-foreground font-sans relative">
 
@@ -52,7 +41,7 @@ export function LoginPage() {
             {/* CTA */}
             <button
               onClick={() => navigate('/sessions')}
-              className="w-full max-w-[500px] mx-auto py-4 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 hover:text-background transition-all block"
+              className="w-full max-w-125 mx-auto py-4 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 hover:text-background transition-all block"
             >
               Ver Sessões Disponíveis
             </button>

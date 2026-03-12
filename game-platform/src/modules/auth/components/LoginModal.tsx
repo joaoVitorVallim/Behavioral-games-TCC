@@ -60,7 +60,6 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
       } else {
         setErro("Erro inesperado. Tente novamente.")
       }
-      console.error('Erro no login:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -69,6 +68,9 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
   return (
     <div 
       className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Login Docente"
       onClick={onClose}
     >
       <div 
@@ -92,9 +94,12 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
             </p>
           </div>
 
-          <input
-            type="email"
-            placeholder="docente@fho.edu.br"
+          <div>
+            <label htmlFor="login-email" className="sr-only">E-mail</label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="docente@fho.edu.br"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)
@@ -103,9 +108,13 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
             disabled={is_submitting}
             className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           />
+          </div>
 
-          <input
-            type="password"
+          <div>
+            <label htmlFor="login-password" className="sr-only">Senha</label>
+            <input
+              id="login-password"
+              type="password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => {
@@ -115,6 +124,7 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
             disabled={is_submitting}
             className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           />
+          </div>
 
           {erro && (
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-xs text-center">

@@ -1,64 +1,96 @@
-import type { Session } from '../types'
+import type { Session, ValidateCodeResponse } from '../types'
 
 export const mock_sessions: Session[] = [
   {
     id: '1',
-    title: 'Dilema do Prisioneiro',
-    subtitle: 'Laboratório de Psicologia',
-    description: 'Experimento de análise comportamental com 20 duplas, durante 10 rodadas.',
-    room: 'Sala 102',
-    date: '2025.1',
-    team: 'Turma A',
-    category: 'Gênero, Idade',
-    status: 'active'
+    session_name: 'Dilema do Prisioneiro — Turma A',
+    game: 'cards',
+    inputInfo: ['nickname', 'age', 'gender'],
+    settings: {
+      id: 'cfg-1',
+      configName: 'Configuração Padrão Cards',
+      game: 'cards',
+      userViewPoints: true,
+      limitRounds: 10,
+      createdAt: '2025-03-01T10:00:00Z',
+      cardDeckSize: 52,
+      allowSpecialCards: true,
+      cardTheme: 'standard',
+      wordPoolSize: 100,
+      difficulty: 'medium',
+      includeTimerPerWord: false,
+      secondsPerWord: 30
+    },
+    settings_id: 'cfg-1',
+    inviteCode: 'ABC123',
+    user: { id: 'u1', name: 'Prof. Silva', login: 'silva@fho.edu.br' },
+    user_id: 'u1',
+    players: ['player-1', 'player-2'],
+    isActive: true,
+    created_at: '2025-03-01T10:00:00Z',
+    finished_at: null
   },
   {
     id: '2',
-    title: 'Jogo da equivalência',
-    subtitle: 'Sala 102',
-    description: 'Experimento de equivalência de estímulos e relações condicionais.',
-    room: 'Sala 102',
-    date: '2025.1',
-    team: 'Turma B',
-    category: 'Gênero, Idade',
-    status: 'active'
+    session_name: 'Jogo da Equivalência — Turma B',
+    game: 'words',
+    inputInfo: ['nickname', 'email'],
+    settings: {
+      id: 'cfg-2',
+      configName: 'Configuração Padrão Words',
+      game: 'words',
+      userViewPoints: true,
+      limitRounds: 15,
+      createdAt: '2025-03-05T14:00:00Z',
+      cardDeckSize: 52,
+      allowSpecialCards: false,
+      cardTheme: 'standard',
+      wordPoolSize: 200,
+      difficulty: 'easy',
+      includeTimerPerWord: true,
+      secondsPerWord: 20
+    },
+    settings_id: 'cfg-2',
+    inviteCode: 'XYZ789',
+    user: { id: 'u1', name: 'Prof. Silva', login: 'silva@fho.edu.br' },
+    user_id: 'u1',
+    players: [],
+    isActive: true,
+    created_at: '2025-03-05T14:00:00Z',
+    finished_at: null
   },
   {
     id: '3',
-    title: 'Terceiro jogo',
-    subtitle: 'Sala 103',
-    description: 'Experimento de análise comportamental aplicada.',
-    room: 'Sala 103',
-    date: '2025.1',
-    team: 'Turma C',
-    category: 'Anônima',
-    status: 'active'
-  },
-  {
-    id: '4',
-    title: 'Estudo de Cooperação',
-    subtitle: 'Laboratório de Comportamento',
-    description: 'Análise de comportamento cooperativo em grupos de 4 pessoas durante 8 rodadas.',
-    room: 'Sala 201',
-    date: '2025.2',
-    team: 'Turma D',
-    category: 'Gênero, Idade',
-    status: 'upcoming'
-  },
-  {
-    id: '5',
-    title: 'Tomada de Decisão',
-    subtitle: 'Sala 105',
-    description: 'Experimento sobre processos de tomada de decisão sob incerteza.',
-    room: 'Sala 105',
-    date: '2025.2',
-    team: 'Turma E',
-    category: 'Anônima',
-    status: 'upcoming'
+    session_name: 'Estudo de Cooperação — Turma C',
+    game: 'cards',
+    inputInfo: ['name', 'age', 'profession'],
+    settings: {
+      id: 'cfg-3',
+      configName: 'Cards Difícil',
+      game: 'cards',
+      userViewPoints: false,
+      limitRounds: 20,
+      createdAt: '2025-03-10T09:00:00Z',
+      cardDeckSize: 104,
+      allowSpecialCards: true,
+      cardTheme: 'modern',
+      wordPoolSize: 100,
+      difficulty: 'hard',
+      includeTimerPerWord: false,
+      secondsPerWord: 30
+    },
+    settings_id: 'cfg-3',
+    inviteCode: 'QWE456',
+    user: { id: 'u2', name: 'Prof. Costa', login: 'costa@fho.edu.br' },
+    user_id: 'u2',
+    players: ['player-3', 'player-4', 'player-5'],
+    isActive: false,
+    created_at: '2025-03-10T09:00:00Z',
+    finished_at: '2025-03-10T11:30:00Z'
   }
 ]
 
-export const mock_validate_code_response = {
+export const mock_validate_code_response: ValidateCodeResponse = {
   valid: true,
   requirements: [
     {
