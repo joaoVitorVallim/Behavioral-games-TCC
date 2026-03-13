@@ -14,11 +14,12 @@ import {
   ApiResponse,
   ApiQuery,
   ApiParam,
-  ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { MatchService } from './match.service';
 import { Match, MatchStatus } from './match.entity';
+import { CreateMatchDto } from './dto/create-match.dto';
+import { UpdateMatchStatusDto } from './dto/update-match-status.dto';
 
 @ApiTags('Matches')
 @ApiBearerAuth()
@@ -31,28 +32,12 @@ export class MatchController {
     summary: 'Create new match',
     description: 'Creates a new match with two players in a session',
   })
-  @ApiBody({
-    schema: {
-      example: {
-        sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-        player1Id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
-        player2Id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
-      },
-    },
-  })
   @ApiResponse({
     status: 201,
     description: 'Match created successfully',
   })
-  async create(
-    @Body()
-    body: {
-      sessionId: string;
-      player1Id: string;
-      player2Id: string;
-    },
-  ): Promise<Match> {
-    return await this.matchService.create(body.sessionId, body.player1Id, body.player2Id);
+  async create(@Body() body: CreateMatchDto): Promise<Match> {
+    return await this.matchService.create(body);
   }
 
   @Get()
@@ -107,18 +92,11 @@ export class MatchController {
   @Patch(':id/status')
   @ApiOperation({
     summary: 'Update match status',
-    description: 'Changes the match status (waiting, in_progress, finished, cancelled)',
+    description: 'Changes the match status (aguardando, em_partida, finalizada, cancelada)',
   })
   @ApiParam({
     name: 'id',
     description: 'Match ID',
-  })
-  @ApiBody({
-    schema: {
-      example: {
-        status: 'in_progress',
-      },
-    },
   })
   @ApiResponse({
     status: 200,
@@ -126,7 +104,7 @@ export class MatchController {
   })
   async updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: MatchStatus },
+    @Body() body: UpdateMatchStatusDto,
   ): Promise<Match> {
     return await this.matchService.updateStatus(id, body.status);
   }

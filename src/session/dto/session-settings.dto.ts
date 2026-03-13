@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsArray, IsBoolean, IsNumber, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
 
@@ -14,16 +14,6 @@ export class SessionSettingsDto {
   @IsNotEmpty()
   @IsString()
   configName: string;
-
-  @ApiProperty({
-    example: ['nickname', 'profession'],
-    isArray: true,
-    required: false,
-    description: 'Information that the player must provide',
-  })
-  @IsOptional()
-  @IsArray()
-  inputInfo?: string[];
 
   @ApiProperty({
     example: true,

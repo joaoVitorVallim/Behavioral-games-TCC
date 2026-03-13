@@ -10,10 +10,10 @@ import { Session } from '../session/session.entity';
 import { Player } from '../player/player.entity';
 
 export enum MatchStatus {
-  WAITING = 'waiting',
-  IN_PROGRESS = 'in_progress',
-  FINISHED = 'finished',
-  CANCELLED = 'cancelled',
+  AGUARDANDO = 'aguardando',
+  EM_PARTIDA = 'em_partida',
+  FINALIZADA = 'finalizada',
+  CANCELADA = 'cancelada',
 }
 
 export interface Move {
@@ -52,12 +52,12 @@ export class Match {
   moves?: Move[];
 
   @Column({ type: 'int', nullable: true })
-  matchTimeSeconds?: number;
+  matchTime?: number;
 
   @Column({
     type: 'enum',
     enum: MatchStatus,
-    default: MatchStatus.WAITING,
+    default: MatchStatus.AGUARDANDO,
   })
   status: MatchStatus;
 

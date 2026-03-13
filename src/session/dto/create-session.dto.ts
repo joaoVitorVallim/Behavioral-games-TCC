@@ -1,8 +1,10 @@
-import { IsNotEmpty, IsEnum, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsEnum, ValidateNested, IsOptional, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
 import { SessionSettingsDto } from './session-settings.dto';
+import { IsValidInputInfos } from '../../common/validators/valid-input-infos.validator';
+import { PLAYER_OPTIONAL_FIELDS } from '../../common/constants/player-fields.constants';
 
 export class CreateSessionDto {
   @ApiProperty({
@@ -22,6 +24,18 @@ export class CreateSessionDto {
   @ValidateNested()
   @Type(() => SessionSettingsDto)
   settings: SessionSettingsDto;
+
+  @ApiProperty({
+    example: ['nickname', 'profession'],
+    isArray: true,
+    required: false,
+    description: `Information that the player must provide. Valid fields: ${PLAYER_OPTIONAL_FIELDS.join(', ')}`,
+    enum: PLAYER_OPTIONAL_FIELDS,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsValidInputInfos()
+  inputInfo?: string[];
 
   @ApiProperty({
     example: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',

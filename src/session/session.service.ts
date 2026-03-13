@@ -8,6 +8,7 @@ import { GameService } from '../game/game.service';
 import { GameType } from '../game/games.enum';
 import { SettingsService } from '../settings/settings.service';
 import { UsersService } from '../users/users.service';
+import { isValidPlayerField, PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
 
 @Injectable()
 export class SessionService {
@@ -26,6 +27,29 @@ export class SessionService {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
+  /**
+   * Validates and filters inputInfo to ensure only valid optional fields are included
+   * @param inputInfo - Array of fields to validate
+   * @returns Filtered array with valid fields only
+   * @throws BadRequestException if there are invalid fields
+   */
+  private validateAndFilterInputInfo(inputInfo?: string[]): string[] {
+    if (!inputInfo || inputInfo.length === 0) {
+      return [];
+    }
+
+    const invalidFields = inputInfo.filter((field) => !isValidPlayerField(field));
+
+    if (invalidFields.length > 0) {
+      throw new BadRequestException(
+        `Invalid fields in inputInfo: [${invalidFields.join(', ')}]. Valid fields are: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`,
+      );
+    }
+
+    // Remove duplicates
+    return Array.from(new Set(inputInfo));
+  }
+
   async create(dto: CreateSessionDto): Promise<Session> {
     // Verify game type is valid
     if (!this.gameService.isValidGameType(dto.game)) {
@@ -38,6 +62,9 @@ export class SessionService {
       throw new NotFoundException(`User with ID ${dto.user_id} not found`);
     }
 
+    // Validate and normalize inputInfo for the session
+    const validatedInputInfo = this.validateAndFilterInputInfo(dto.inputInfo);
+
     // Create settings based on the game type
     let settings;
     try {
@@ -47,7 +74,6 @@ export class SessionService {
         {
           configName: dto.settings.configName,
           game: dto.game,
-          inputInfo: dto.settings.inputInfo,
           userViewPoints: dto.settings.userViewPoints,
           limitRounds: dto.settings.limitRounds,
           // Game-specific fields
@@ -93,6 +119,7 @@ export class SessionService {
       settings_id: sessionSettings.id,
       inviteCode: inviteCode,
       user_id: dto.user_id,
+      inputInfo: validatedInputInfo,
       isActive: true,
     });
 

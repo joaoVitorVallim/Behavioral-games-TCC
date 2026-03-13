@@ -42,6 +42,7 @@ export class SessionController {
       example: {
         id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
         game: 'cards',
+        inputInfo: ['nickname', 'profession'],
         inviteCode: 'F4LVTX',
         isActive: true,
         created_at: '2026-03-07T17:05:59.734Z',

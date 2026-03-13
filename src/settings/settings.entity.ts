@@ -22,9 +22,6 @@ export abstract class Settings {
   @Column({ type: 'enum', enum: GameType, nullable: false })
   game: GameType;
 
-  @Column({ type: 'simple-array', nullable: true })
-  inputInfo: string[];
- 
   @Column({ type: 'boolean', default: false })
   userViewPoints: boolean;
 

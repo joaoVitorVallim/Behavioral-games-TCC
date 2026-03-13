@@ -68,7 +68,7 @@ export class SettingsController {
   @Get('player-fields/valid')
   @ApiOperation({
     summary: 'List valid optional Player fields',
-    description: 'Returns the list of optional fields that can be added to the configuration inputInfo',
+    description: 'Returns the list of optional fields that can be added to the session inputInfo',
   })
   @ApiResponse({
     status: 200,
@@ -100,7 +100,6 @@ export class SettingsController {
         common: [
           { name: 'configName', type: 'string' },
           { name: 'game', type: 'enum(GameType)' },
-          { name: 'inputInfo', type: 'string[]' },
           { name: 'userViewPoints', type: 'boolean' },
           { name: 'limitRounds', type: 'number' },
         ],

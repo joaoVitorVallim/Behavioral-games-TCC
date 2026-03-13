@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match, MatchStatus, Move } from './match.entity';
+import { CreateMatchDto } from './dto/create-match.dto';
 
 @Injectable()
 export class MatchService {
@@ -10,17 +11,19 @@ export class MatchService {
     private matchRepository: Repository<Match>,
   ) {}
 
-  async create(
-    sessionId: string,
-    player1Id: string,
-    player2Id: string,
-  ): Promise<Match> {
+  async create(dto: CreateMatchDto): Promise<Match> {
+    const moves = dto.moves?.map((move) => ({
+      ...move,
+      timestamp: new Date(move.timestamp),
+    }));
+
     const match = this.matchRepository.create({
-      session_id: sessionId,
-      player1_id: player1Id,
-      player2_id: player2Id,
-      moves: [],
-      status: MatchStatus.WAITING,
+      session_id: dto.sessionId,
+      player1_id: dto.player1Id,
+      player2_id: dto.player2Id,
+      moves: moves ?? [],
+      status: dto.status ?? MatchStatus.AGUARDANDO,
+      matchTime: dto.matchTime,
     });
 
     return await this.matchRepository.save(match);

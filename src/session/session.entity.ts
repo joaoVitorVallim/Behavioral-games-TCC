@@ -29,6 +29,9 @@ export class Session {
   @Column({ type: 'varchar', length: 10, unique: true, nullable: false })
   inviteCode: string;
 
+  @Column({ type: 'simple-array', nullable: true })
+  inputInfo?: string[];
+
   @ManyToOne(() => User, (user) => user.sessions, { nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: User;

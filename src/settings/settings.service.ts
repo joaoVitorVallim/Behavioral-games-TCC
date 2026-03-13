@@ -8,7 +8,7 @@ import { CreateSettingsDto } from './dto/create-settings.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { GameService } from '../game/game.service';
 import { GameType } from '../game/games.enum';
-import { isValidPlayerField, PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
+import { PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
 
 @Injectable()
 export class SettingsService {
@@ -21,29 +21,6 @@ export class SettingsService {
     private settingsWordsRepository: Repository<SettingsGameWords>,
     private gameService: GameService,
   ) {}
-
-  /**
-   * Validates and filters inputInfo to ensure only valid optional fields are included
-   * @param inputInfo - Array of fields to validate
-   * @returns Filtered array with valid fields only
-   * @throws BadRequestException if there are invalid fields
-   */
-  private validateAndFilterInputInfo(inputInfo?: string[]): string[] {
-    if (!inputInfo || inputInfo.length === 0) {
-      return [];
-    }
-
-    const invalidFields = inputInfo.filter(field => !isValidPlayerField(field));
-
-    if (invalidFields.length > 0) {
-      throw new BadRequestException(
-        `Invalid fields in inputInfo: [${invalidFields.join(', ')}]. Valid fields are: [${PLAYER_OPTIONAL_FIELDS.join(', ')}]`,
-      );
-    }
-
-    // Remove duplicates
-    return Array.from(new Set(inputInfo));
-  }
 
   /**
    * Returns the list of valid optional Player fields
@@ -60,7 +37,6 @@ export class SettingsService {
     const common = [
       { name: 'configName', type: 'string' },
       { name: 'game', type: 'enum(GameType)' },
-      { name: 'inputInfo', type: 'string[]' },
       { name: 'userViewPoints', type: 'boolean' },
       { name: 'limitRounds', type: 'number' },
     ];
@@ -95,9 +71,6 @@ export class SettingsService {
       throw new BadRequestException(`Invalid game type: ${dto.game}`);
     }
 
-    // Validate and filter inputInfo
-    const validatedInputInfo = this.validateAndFilterInputInfo(dto.inputInfo);
-
     // If gameType not provided, infer from dto.game
     if (!gameType) {
       gameType = dto.game === GameType.CARDS ? 'cards' : 'words';
@@ -109,7 +82,6 @@ export class SettingsService {
       const cardsSettings = this.settingsCardsRepository.create({
         configName: dto.configName,
         game: dto.game,
-        inputInfo: validatedInputInfo,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
         cardDeckSize: dto.cardDeckSize,
@@ -121,7 +93,6 @@ export class SettingsService {
       const wordsSettings = this.settingsWordsRepository.create({
         configName: dto.configName,
         game: dto.game,
-        inputInfo: validatedInputInfo,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
         wordPoolSize: dto.wordPoolSize,
@@ -173,7 +144,6 @@ export class SettingsService {
 
     // Update common fields
     if (dto.configName) settings.configName = dto.configName;
-    if (dto.inputInfo) settings.inputInfo = dto.inputInfo;
     if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
     if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
 
