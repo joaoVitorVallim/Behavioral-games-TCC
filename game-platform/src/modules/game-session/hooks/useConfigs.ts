@@ -23,6 +23,13 @@ export const useConfigs = (game: string) => {
     }
   })
 
+  const delete_mutation = useMutation({
+    mutationFn: (id: string) => sessionService.deleteConfig(id),
+    onSuccess: () => {
+      query_client.invalidateQueries({ queryKey: ['configs', game] })
+    }
+  })
+
   return {
     configs: configs_query.data ?? [],
     is_loading: configs_query.isLoading || configs_query.isFetching,
@@ -30,6 +37,10 @@ export const useConfigs = (game: string) => {
     refetch: configs_query.refetch,
     createConfig: create_mutation.mutateAsync,
     is_creating: create_mutation.isPending,
-    create_error: create_mutation.error
+    create_error: create_mutation.error,
+    deleteConfig: delete_mutation.mutateAsync,
+    is_deleting: delete_mutation.isPending,
+    deleting_id: delete_mutation.variables ?? null,
+    delete_error: delete_mutation.error
   }
 }

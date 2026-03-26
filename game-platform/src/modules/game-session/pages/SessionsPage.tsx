@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { SessionCard } from '../components/SessionCard'
 import { SessionCardSkeleton } from '../components/SessionCardSkeleton'
 import { JoinSessionModal } from '../components/JoinSessionModal'
@@ -7,8 +8,21 @@ import { useSessions } from '../hooks/useSessions'
 import type { Session } from '../types'
 
 export const SessionsPage = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const { sessions, is_loading, refetch } = useSessions()
   const [selected_session, setSelectedSession] = useState<Session | null>(null)
+
+  useEffect(() => {
+    if (!location.state || typeof location.state !== 'object') return
+
+    const refresh_sessions = (location.state as { refresh_sessions?: boolean }).refresh_sessions
+
+    if (!refresh_sessions) return
+
+    void refetch()
+    navigate('/sessions', { replace: true })
+  }, [location.state, refetch, navigate])
 
   const handleEnterSession = (session: Session) => {
     setSelectedSession(session)

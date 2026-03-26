@@ -1,6 +1,5 @@
 import { PlusCircle, Settings } from 'lucide-react'
 import type { CreateConfigPayload } from '../types'
-import type { SessionAction } from '../hooks/useSessionCreation'
 
 interface SessionSummaryProps {
   session_name: string
@@ -9,7 +8,9 @@ interface SessionSummaryProps {
   active_config: CreateConfigPayload | null
   config_mode: 'select' | 'create'
   can_create_session: boolean
-  dispatch: React.Dispatch<SessionAction>
+  is_creating: boolean
+  create_error: string | null
+  onCreateSession: () => void
 }
 
 export function SessionSummary({
@@ -19,7 +20,9 @@ export function SessionSummary({
   active_config,
   config_mode,
   can_create_session,
-  dispatch
+  is_creating,
+  create_error,
+  onCreateSession
 }: SessionSummaryProps) {
   return (
     <section
@@ -59,7 +62,7 @@ export function SessionSummary({
             <p className="text-xs text-muted-foreground">Configuração da Partida</p>
             <p className="text-foreground font-medium">
               {active_config
-                ? `${active_config.configName} — ${active_config.difficulty}`
+                ? active_config.configName
                 : config_mode === 'select'
                   ? 'Selecione uma configuração existente'
                   : 'Preencha o nome da configuração'}
@@ -71,13 +74,16 @@ export function SessionSummary({
       {/* Create Button */}
       <button
         type="button"
-        onClick={() => dispatch({ type: 'CREATE_SESSION' })}
-        disabled={!can_create_session}
+        onClick={onCreateSession}
+        disabled={!can_create_session || is_creating}
         className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold text-lg hover:scale-105 hover:text-background transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground flex items-center justify-center gap-2"
       >
         <Settings className="w-5 h-5" />
-        Criar Sessão
+        {is_creating ? 'Criando Sessao...' : 'Criar Sessão'}
       </button>
+      {create_error && (
+        <p className="text-sm text-destructive mt-3">{create_error}</p>
+      )}
     </section>
   )
 }

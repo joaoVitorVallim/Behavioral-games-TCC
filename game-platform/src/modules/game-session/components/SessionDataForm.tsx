@@ -1,10 +1,14 @@
 import { ChevronDown, Users } from 'lucide-react'
-import { PLAYER_INFO_OPTIONS, GAME_OPTIONS } from '../types'
+import { PLAYER_INFO_OPTIONS } from '../types'
+import type { GameCatalogItem } from '../types'
 import type { SessionAction } from '../hooks/useSessionCreation'
 
 interface SessionDataFormProps {
   session_name: string
   selected_game: string
+  games: GameCatalogItem[]
+  games_loading: boolean
+  games_error: boolean
   input_info: string[]
   dispatch: React.Dispatch<SessionAction>
 }
@@ -12,6 +16,9 @@ interface SessionDataFormProps {
 export function SessionDataForm({
   session_name,
   selected_game,
+  games,
+  games_loading,
+  games_error,
   input_info,
   dispatch
 }: SessionDataFormProps) {
@@ -53,16 +60,31 @@ export function SessionDataForm({
               id="session-game"
               value={selected_game}
               onChange={(e) => dispatch({ type: 'SET_GAME', payload: e.target.value })}
+              disabled={games_loading || games_error || games.length === 0}
               className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:border-primary transition-colors appearance-none"
             >
-              {GAME_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
+              {games_loading && <option value="">Carregando jogos...</option>}
+              {!games_loading && games.length > 0 && (
+                <option value="" disabled>
+                  Selecione um jogo
+                </option>
+              )}
+              {!games_loading && games.length === 0 && (
+                <option value="">Nenhum jogo disponível</option>
+              )}
+              {!games_loading && games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.name}
                 </option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
           </div>
+          {games_error && (
+            <p className="text-xs text-destructive mt-2">
+              Nao foi possivel carregar os jogos no momento.
+            </p>
+          )}
         </div>
 
         {/* Player Info (session-level) */}

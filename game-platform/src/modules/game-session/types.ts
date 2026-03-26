@@ -11,10 +11,30 @@ export const PLAYER_INFO_OPTIONS: { value: PlayerInfoField; label: string }[] = 
   { value: 'email', label: 'E-mail' }
 ]
 
-export const GAME_OPTIONS = [
-  { value: 'cards', label: 'Cards' },
-  { value: 'words', label: 'Words' }
-] as const
+// -- Game Catalog (from API) --
+
+export interface GameCatalogItem {
+  id: string
+  name: string
+  description: string
+  redirectUrl: string
+}
+
+// -- Dynamic Game Config Fields (from API) --
+
+export type GameConfigFieldType = 'string' | 'number' | 'boolean' | `enum(${string})`
+
+export interface GameConfigFieldDefinition {
+  name: string
+  type: GameConfigFieldType | string
+}
+
+export interface GameConfigFieldsResponse {
+  common: GameConfigFieldDefinition[]
+  [game: string]: GameConfigFieldDefinition[]
+}
+
+export type ConfigPrimitiveValue = string | number | boolean
 
 // -- Session Settings (game config stored in DB) --
 
@@ -22,16 +42,8 @@ export interface SessionSettings {
   id: string
   configName: string
   game: string
-  userViewPoints: boolean
-  limitRounds: number
   createdAt: string
-  cardDeckSize: number
-  allowSpecialCards: boolean
-  cardTheme: string
-  wordPoolSize: number
-  difficulty: string
-  includeTimerPerWord: boolean
-  secondsPerWord: number
+  [key: string]: ConfigPrimitiveValue | string
 }
 
 export interface SessionUser {
@@ -62,46 +74,32 @@ export interface GameConfig {
   id: string
   configName: string
   game: string
-  userViewPoints: boolean
-  limitRounds: number
-  cardDeckSize: number
-  allowSpecialCards: boolean
-  cardTheme: string
-  wordPoolSize: number
-  difficulty: string
-  includeTimerPerWord: boolean
-  secondsPerWord: number
   createdAt?: string
+  [key: string]: ConfigPrimitiveValue | string | undefined
 }
 
 export interface CreateConfigPayload {
   configName: string
   game: string
-  userViewPoints: boolean
-  limitRounds: number
-  cardDeckSize: number
-  allowSpecialCards: boolean
-  cardTheme: string
-  wordPoolSize: number
-  difficulty: string
-  includeTimerPerWord: boolean
-  secondsPerWord: number
+  [key: string]: ConfigPrimitiveValue | string
 }
 
 // -- Session Creation Types --
 
 export interface CreateSessionPayload {
-  session_name: string
   game: string
   inputInfo: string[]
-  settings: CreateConfigPayload
+  settings: Omit<CreateConfigPayload, 'game'>
   user_id: string
 }
 
-export interface CreateSessionResponse {
-  session: Session
-  invite_code: string
-}
+export type CreateSessionResponse =
+  | Session
+  | {
+      session: Session
+      invite_code?: string
+      inviteCode?: string
+    }
 
 // -- Join Session Types --
 

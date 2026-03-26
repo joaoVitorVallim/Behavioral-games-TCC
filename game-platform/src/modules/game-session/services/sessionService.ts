@@ -4,12 +4,27 @@ import type {
   ValidateCodeResponse,
   JoinSessionPayload,
   GameConfig,
+  GameCatalogItem,
+  GameConfigFieldsResponse,
   CreateConfigPayload,
   CreateSessionPayload,
   CreateSessionResponse
 } from '../types'
 
 export const sessionService = {
+  // Game catalog endpoints
+  getGames: async (): Promise<GameCatalogItem[]> => {
+    const response = await api_client.get('/games')
+    return response.data
+  },
+
+  getGameConfigFields: async (game: string): Promise<GameConfigFieldsResponse> => {
+    const response = await api_client.get('/settings/game-config/fields', {
+      params: { game }
+    })
+    return response.data
+  },
+
   // Session endpoints
   getAllSessions: async (): Promise<Session[]> => {
     const response = await api_client.get('/sessions')
@@ -39,5 +54,9 @@ export const sessionService = {
   createConfig: async (payload: CreateConfigPayload): Promise<GameConfig> => {
     const response = await api_client.post('/settings', payload)
     return response.data
+  },
+
+  deleteConfig: async (id: string): Promise<void> => {
+    await api_client.delete(`/settings/${id}`)
   }
 }
