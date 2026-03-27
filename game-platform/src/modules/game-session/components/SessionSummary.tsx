@@ -26,18 +26,17 @@ export function SessionSummary({
 }: SessionSummaryProps) {
   return (
     <section
-      className="bg-card border border-border rounded-2xl p-8 shadow-lg"
+      className="surface-panel p-8"
       aria-labelledby="section-create"
     >
       <div className="flex items-center gap-3 mb-6">
         <PlusCircle className="w-6 h-6 text-primary" />
-        <h2 id="section-create" className="text-2xl font-bold text-foreground">
+        <h2 id="section-create" className="text-3xl text-foreground">
           Criar Sessão
         </h2>
       </div>
 
-      {/* Summary */}
-      <div className="mb-6 p-5 bg-background border border-border rounded-xl space-y-3">
+      <div className="surface-subtle mb-6 space-y-3 p-5">
         <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
           Resumo
         </p>
@@ -71,12 +70,11 @@ export function SessionSummary({
         </div>
       </div>
 
-      {/* Create Button */}
       <button
         type="button"
         onClick={onCreateSession}
         disabled={!can_create_session || is_creating}
-        className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold text-lg hover:scale-105 hover:text-background transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground flex items-center justify-center gap-2"
+        className="btn-primary w-full py-4 text-lg disabled:cursor-not-allowed"
       >
         <Settings className="w-5 h-5" />
         {is_creating ? 'Criando Sessao...' : 'Criar Sessão'}

@@ -1,60 +1,95 @@
-import { GraduationCap } from "lucide-react"
+import { useEffect, useRef } from 'react'
+import { gsap } from 'gsap'
+import { GraduationCap, FlaskConical, ArrowRight } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
 import { Header } from "../../../shared/components/Header"
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const root_ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '[data-intro="kicker"], [data-intro="title"], [data-intro="text"], [data-intro="cta"], [data-intro="meta"]',
+        { y: 22, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: 'power2.out',
+          stagger: 0.1
+        }
+      )
+    }, root_ref)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <>
-      {/* APP CONTAINER */}
-      <div className="min-h-screen flex flex-col bg-background text-foreground font-sans relative">
-
-        {/* HEADER */}
+    <div ref={root_ref} className="app-shell flex flex-col text-foreground">
         <Header />
 
-        {/* MAIN */}
-        <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 z-10 bg-background">
-          <div className="w-full max-w-4xl text-center space-y-12">
+      <main className="relative z-10 flex flex-1 items-center px-4 py-10 md:px-8 md:py-14">
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.85fr] lg:items-center">
+          <section className="surface-panel p-7 md:p-10 lg:p-12">
+            <p data-intro="kicker" className="heading-kicker mb-4">Plataforma oficial de experimentacao</p>
+            <h1 data-intro="title" className="max-w-3xl text-4xl leading-tight text-foreground md:text-5xl">
+              Pesquisa comportamental com experiencia profissional, estavel e orientada por dados.
+            </h1>
+            <p data-intro="text" className="mt-5 max-w-3xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              Esta plataforma foi desenvolvida em parceria com a Fundacao Herminio Ometto para apoiar atividades academicas em Analise Comportamental com fluxo seguro para docentes e participantes.
+            </p>
 
-            {/* HERO */}
-            <div className="space-y-8">
-              <div className="flex justify-center">
-                <div className="p-5 bg-card rounded-2xl border border-border shadow-xl">
-                  <GraduationCap className="w-10 h-10 text-primary" />
+            <div data-intro="cta" className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                onClick={() => navigate('/sessions')}
+                className="btn-primary w-full sm:w-auto"
+              >
+                Ver sessoes disponiveis
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <div className="surface-subtle flex items-center gap-3 px-4 py-3">
+                <div className="rounded-lg border border-primary/30 bg-primary/10 p-2 text-primary">
+                  <FlaskConical className="h-4 w-4" />
                 </div>
+                <p className="text-sm text-muted-foreground">Ambiente validado para uso em sala e laboratorio.</p>
               </div>
+            </div>
+          </section>
 
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                  Desenvolvido em Parceria com a FHO
-                </h1>
-                <p className="max-w-3xl mx-auto text-muted-foreground text-lg font-light">
-                  Esta plataforma foi desenvolvida como TCC em parceria com a{" "}
-                  <strong className="text-primary font-medium">
-                    Fundação Hermínio Ometto
-                  </strong>, unindo tecnologia e educação para inovar no ensino de Análise Comportamental.
-                </p>
+          <aside data-intro="meta" className="surface-panel p-7 md:p-9">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl border border-primary/35 bg-primary/10 p-3 text-primary">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="heading-kicker mb-1">Institucional</p>
+                <h2 className="text-2xl leading-tight text-foreground">Desenvolvido em parceria com a FHO</h2>
               </div>
             </div>
 
-            {/* CTA */}
-            <button
-              onClick={() => navigate('/sessions')}
-              className="w-full max-w-125 mx-auto py-4 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 hover:text-background transition-all block"
-            >
-              Ver Sessões Disponíveis
-            </button>
-          </div>
-        </main>
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <div className="surface-subtle p-4">
+                <p className="heading-kicker mb-2">Foco</p>
+                <p>Engajar estudantes com dinâmicas gamificadas sem perder rigor academico.</p>
+              </div>
+              <div className="surface-subtle p-4">
+                <p className="heading-kicker mb-2">Contexto</p>
+                <p>Uso docente com controle de sessao, configuracoes customizadas e entrada monitorada.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
 
-        {/* FOOTER */}
-        <footer className="w-full py-8 text-center opacity-60 hover:opacity-100 transition-opacity bg-background">
-          <p className="text-[10px] text-muted-foreground">
-            © 2025 BehaviorLab - Todos os direitos reservados.
-          </p>
-        </footer>
-      </div>
-    </>
+      <footer className="border-t border-border/70 bg-background/65 px-4 py-5 text-center backdrop-blur-sm">
+        <p className="text-[11px] tracking-[0.13em] text-muted-foreground">© 2025 BehaviorLab - Todos os direitos reservados.</p>
+      </footer>
+    </div>
   )
 }

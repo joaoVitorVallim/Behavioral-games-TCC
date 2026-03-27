@@ -65,12 +65,12 @@ export function ConfigSelector({
 
   return (
     <section
-      className="bg-card border border-border rounded-2xl p-8 shadow-lg mb-8"
+      className="surface-panel mb-8 p-8"
       aria-labelledby="section-match-config"
     >
       <div className="flex items-center gap-3 mb-2">
         <Gamepad2 className="w-6 h-6 text-primary" />
-        <h2 id="section-match-config" className="text-2xl font-bold text-foreground">
+        <h2 id="section-match-config" className="text-3xl text-foreground">
           Configuração da Partida
         </h2>
       </div>
@@ -87,7 +87,7 @@ export function ConfigSelector({
           className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
             config_mode === 'select'
               ? 'bg-primary text-primary-foreground'
-              : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:scale-105'
+              : 'bg-secondary/45 border border-border text-muted-foreground hover:text-foreground'
           }`}
         >
           <span className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export function ConfigSelector({
           className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
             config_mode === 'create'
               ? 'bg-primary text-primary-foreground'
-              : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:scale-105'
+              : 'bg-secondary/45 border border-border text-muted-foreground hover:text-foreground'
           }`}
         >
           <span className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export function ConfigSelector({
               type="button"
               onClick={() => setIsDropdownOpen((prev) => !prev)}
               disabled={configs_loading || configs_error || configs_for_game.length === 0}
-              className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:border-primary transition-colors text-left disabled:opacity-70"
+              className="input-shell text-left disabled:opacity-70"
             >
               {configs_loading
                 ? 'Carregando configuracoes...'
@@ -139,7 +139,7 @@ export function ConfigSelector({
             />
 
             {is_dropdown_open && !configs_loading && !configs_error && configs_for_game.length > 0 && (
-              <div className="absolute z-20 mt-2 w-full rounded-xl border border-border bg-card shadow-xl max-h-64 overflow-auto">
+              <div className="surface-panel absolute z-20 mt-2 max-h-64 w-full overflow-auto p-2">
                 <ul role="listbox" aria-label="Configuracoes existentes" className="p-2 space-y-1">
                   {configs_for_game.map((cfg) => {
                     const is_selected = cfg.id === selected_config_id
@@ -151,7 +151,7 @@ export function ConfigSelector({
                           className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors ${
                             is_selected
                               ? 'border-primary bg-primary/10'
-                              : 'border-transparent hover:border-border hover:bg-background'
+                              : 'border-transparent hover:border-border hover:bg-secondary/45'
                           }`}
                         >
                           <button
@@ -198,7 +198,7 @@ export function ConfigSelector({
 
           {/* Config Preview */}
           {selected_config && (
-            <div className="mt-6 p-6 bg-background border border-border rounded-xl">
+            <div className="surface-subtle mt-6 p-6">
               <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-4">
                 Resumo da Configuração
               </p>
@@ -214,7 +214,7 @@ export function ConfigSelector({
           )}
 
           {configs_for_game.length === 0 && (
-            <div className="mt-4 p-4 bg-background border border-border rounded-xl text-center">
+            <div className="surface-subtle mt-4 p-4 text-center">
               <p className="text-muted-foreground text-sm">
                 Nenhuma configuração encontrada para{' '}
                 <span className="capitalize font-medium">{selected_game}</span>. Crie uma nova.

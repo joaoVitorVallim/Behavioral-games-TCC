@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { gsap } from 'gsap'
 import { PlusCircle } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { SessionCodeModal } from '../components/SessionCodeModal'
@@ -73,6 +74,7 @@ export function CreateSessionPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [create_error, setCreateError] = useState<string | null>(null)
+  const page_ref = useRef<HTMLDivElement | null>(null)
   const [delete_toast, setDeleteToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const delete_toast_timeout_ref = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { games, is_loading: games_loading, is_error: games_error } = useGames()
@@ -126,6 +128,28 @@ export function CreateSessionPage() {
       dispatch({ type: 'SET_GAME', payload: first_game_id })
     }
   }, [state.selected_game, first_game_id, dispatch])
+
+  useEffect(() => {
+    if (!page_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '[data-create-section="title"], [data-create-section="form"], [data-create-section="config"], [data-create-section="summary"]',
+        { y: 18, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.55,
+          stagger: 0.09,
+          ease: 'power2.out'
+        }
+      )
+    }, page_ref)
+
+    return () => ctx.revert()
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -284,61 +308,67 @@ export function CreateSessionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={page_ref} className="app-shell">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-8 py-16">
-        {/* Page Title */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <PlusCircle className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Criar Nova Sessão</h1>
+      <main className="mx-auto w-full max-w-5xl px-5 py-10 md:px-8 md:py-14">
+        <div data-create-section="title" className="surface-panel mb-8 px-6 py-7 md:px-10 md:py-8">
+          <p className="heading-kicker mb-2">Fluxo orientado</p>
+          <div className="mb-3 flex items-center gap-3">
+            <PlusCircle className="h-9 w-9 text-primary" />
+            <h1 className="text-4xl text-foreground md:text-5xl">Criar Nova Sessão</h1>
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
             Defina os dados da sessão, configure a partida e comece
           </p>
         </div>
 
-        <SessionDataForm
-          session_name={state.session_name}
-          selected_game={state.selected_game}
-          games={games}
-          games_loading={games_loading}
-          games_error={games_error}
-          input_info={state.input_info}
-          dispatch={dispatch}
-        />
+        <div data-create-section="form">
+          <SessionDataForm
+            session_name={state.session_name}
+            selected_game={state.selected_game}
+            games={games}
+            games_loading={games_loading}
+            games_error={games_error}
+            input_info={state.input_info}
+            dispatch={dispatch}
+          />
+        </div>
 
-        <ConfigSelector
-          selected_game={state.selected_game}
-          config_mode={state.config_mode}
-          selected_config={selected_config}
-          selected_config_id={state.selected_config_id}
-          configs_for_game={configs}
-          configs_loading={configs_loading}
-          configs_error={configs_error}
-          new_config={state.new_config}
-          common_fields={common_fields}
-          game_fields={game_fields}
-          fields_loading={fields_loading}
-          fields_error={fields_error}
-          is_deleting_config={is_deleting_config}
-          deleting_config_id={deleting_id}
-          onDeleteConfig={handleDeleteConfig}
-          dispatch={dispatch}
-        />
+        <div data-create-section="config">
+          <ConfigSelector
+            selected_game={state.selected_game}
+            config_mode={state.config_mode}
+            selected_config={selected_config}
+            selected_config_id={state.selected_config_id}
+            configs_for_game={configs}
+            configs_loading={configs_loading}
+            configs_error={configs_error}
+            new_config={state.new_config}
+            common_fields={common_fields}
+            game_fields={game_fields}
+            fields_loading={fields_loading}
+            fields_error={fields_error}
+            is_deleting_config={is_deleting_config}
+            deleting_config_id={deleting_id}
+            onDeleteConfig={handleDeleteConfig}
+            dispatch={dispatch}
+          />
+        </div>
 
-        <SessionSummary
-          session_name={state.session_name}
-          selected_game={state.selected_game}
-          input_info={state.input_info}
-          active_config={active_config}
-          config_mode={state.config_mode}
-          can_create_session={can_create_session}
-          is_creating={is_creating}
-          create_error={create_error}
-          onCreateSession={handleCreateSession}
-        />
+        <div data-create-section="summary">
+          <SessionSummary
+            session_name={state.session_name}
+            selected_game={state.selected_game}
+            input_info={state.input_info}
+            active_config={active_config}
+            config_mode={state.config_mode}
+            can_create_session={can_create_session}
+            is_creating={is_creating}
+            create_error={create_error}
+            onCreateSession={handleCreateSession}
+          />
+        </div>
       </main>
 
       {/* Session Code Modal */}

@@ -117,19 +117,19 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
 
   return (
     <div 
-      className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Entrar na Sessão"
       onClick={onClose}
     >
       <div 
-        className="bg-popover rounded-2xl p-8 max-w-md w-full relative shadow-2xl"
+        className="surface-panel relative w-full max-w-md p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-muted-foreground hover:text-foreground hover:scale-125 transition-all text-xl w-6 h-6 flex items-center justify-center leading-none"
+          className="absolute right-5 top-5 flex h-6 w-6 items-center justify-center leading-none text-xl text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Fechar"
         >
           ✕
@@ -153,7 +153,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
                   setValidationError('')
                 }}
                 placeholder="A1AβA3"
-                className="w-full px-4 py-3.5 bg-input border-2 border-border rounded-lg text-foreground text-center text-lg tracking-[0.3em] placeholder:text-muted-foreground placeholder:tracking-[0.3em] focus:border-ring focus:outline-none transition-colors"
+                className="input-shell border-2 py-3.5 text-center text-lg tracking-[0.3em] placeholder:tracking-[0.3em]"
                 maxLength={10}
               />
               {validation_error && (
@@ -164,7 +164,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
             <button
               onClick={handleCodeSubmit}
               disabled={is_validating}
-              className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 hover:text-background disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground transition-all"
+              className="btn-primary w-full py-3.5 disabled:cursor-not-allowed"
             >
               {is_validating ? 'Validando...' : 'Continuar'}
             </button>
@@ -187,7 +187,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
                     onChange={(e) => handleInputChange(req.field, e.target.value)}
                     placeholder={req.placeholder}
                     required={req.required}
-                    className="w-full px-4 py-3.5 bg-input border-2 border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                    className="input-shell border-2 py-3.5"
                   />
                 </div>
               ))}
@@ -200,7 +200,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
             <button
               onClick={handleRequirementsSubmit}
               disabled={is_joining}
-              className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 hover:text-background disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground transition-all"
+              className="btn-primary w-full py-3.5 disabled:cursor-not-allowed"
             >
               {is_joining ? 'Entrando...' : 'Entrar na Sessão'}
             </button>

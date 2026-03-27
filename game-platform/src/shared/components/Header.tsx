@@ -28,23 +28,27 @@ export function Header() {
 
   return (
     <>
-      <header className="relative w-full px-6 md:px-8 py-4 flex justify-between items-center z-50 bg-background border-b border-border">
-        {/* Logo */}
+      <header className="sticky top-0 z-50 border-b border-border/70 bg-background/82 backdrop-blur-lg">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 md:px-8">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-3 hover:scale-105 transition-transform"
+            className="group flex items-center gap-3"
         >
-          <Brain className="w-8 h-8 text-primary" />
-          <span className="text-xl font-bold tracking-tight">BehaviorLab</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/35 bg-primary/12 text-primary shadow-[0_0_0_1px_rgba(154,190,255,0.18)_inset] transition-transform duration-300 group-hover:-translate-y-0.5">
+              <Brain className="h-5 w-5" />
+            </div>
+            <div className="text-left">
+              <p className="heading-kicker leading-none">Laboratorio Digital</p>
+              <span className="text-lg font-semibold tracking-tight text-foreground">BehaviorLab</span>
+            </div>
         </button>
 
-        {/* Desktop menu */}
-        <nav className="hidden md:flex items-center gap-3" aria-label="Navegação principal">
+          <nav className="hidden items-center gap-3 md:flex" aria-label="Navegacao principal">
           {is_authenticated ? (
             <>
               <button
                 onClick={() => navigate('/create-session')}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition-all"
+                  className="btn-primary"
               >
                 <PlusCircle className="w-4 h-4" />
                 Criar Sessão
@@ -52,26 +56,25 @@ export function Header() {
 
               <button
                 onClick={() => navigate('/reports')}
-                className="flex items-center gap-2 px-4 py-2 bg-card text-foreground border border-border rounded-lg text-sm font-semibold hover:scale-105 transition-all"
+                  className="btn-secondary"
               >
                 <FileText className="w-4 h-4" />
                 Relatórios
               </button>
 
-              {/* Profile dropdown */}
               <div className="relative" ref={dropdown_ref}>
                 <button
                   onClick={() => setShowProfileDropdown(!show_profile_dropdown)}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-card border border-transparent hover:border-border transition-all"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/65 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
                 >
-                  <UserCircle className="w-6 h-6 text-muted-foreground" />
+                    <UserCircle className="h-6 w-6" />
                 </button>
 
                 {show_profile_dropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-lg py-1 z-100">
+                    <div className="surface-panel absolute right-0 z-50 mt-2 w-52 p-1.5">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
                     >
                       <LogOut className="w-4 h-4" />
                       Sair da conta
@@ -83,30 +86,30 @@ export function Header() {
           ) : (
             <button
               onClick={() => setShowLoginModal(true)}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition-all"
+                className="btn-primary"
             >
               Entrar
             </button>
           )}
         </nav>
 
-        {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-card transition-colors"
+            className="rounded-xl border border-border/80 bg-card/65 p-2.5 text-foreground transition-colors hover:border-primary/35 md:hidden"
           onClick={() => setShowMobileMenu(!show_mobile_menu)}
         >
           {show_mobile_menu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
+        </div>
       </header>
 
-      {/* Mobile menu dropdown */}
       {show_mobile_menu && (
-        <nav className="md:hidden w-full bg-background border-b border-border px-6 py-4 flex flex-col gap-3 z-10" aria-label="Navegação móvel">
+        <nav className="border-b border-border/70 bg-background/95 px-5 py-4 backdrop-blur-md md:hidden" aria-label="Navegacao movel">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
           {is_authenticated ? (
             <>
               <button
                 onClick={() => { navigate('/create-session'); setShowMobileMenu(false) }}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold"
+                  className="btn-primary w-full"
               >
                 <PlusCircle className="w-4 h-4" />
                 Criar Sessão
@@ -114,7 +117,7 @@ export function Header() {
 
               <button
                 onClick={() => { navigate('/reports'); setShowMobileMenu(false) }}
-                className="flex items-center gap-2 px-4 py-2 bg-card text-foreground border border-border rounded-lg text-sm font-semibold"
+                  className="btn-secondary w-full"
               >
                 <FileText className="w-4 h-4" />
                 Relatórios
@@ -122,7 +125,7 @@ export function Header() {
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-red-500 border border-red-500/30 bg-red-500/10 rounded-lg text-sm font-semibold"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive"
               >
                 <LogOut className="w-4 h-4" />
                 Sair da conta
@@ -131,11 +134,12 @@ export function Header() {
           ) : (
             <button
               onClick={() => { setShowLoginModal(true); setShowMobileMenu(false) }}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold"
+                className="btn-primary w-full"
             >
               Entrar
             </button>
           )}
+          </div>
         </nav>
       )}
 

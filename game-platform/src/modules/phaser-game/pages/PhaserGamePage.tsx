@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import { PhaserGame } from '../components/PhaserGame'
 import { PopupModal } from '../components/PopupModal'
 import { useBettingGame } from '../hooks/useBettingGame'
@@ -79,6 +80,10 @@ export function PhaserGamePage() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background">
+      <div className="pointer-events-none absolute left-4 top-4 z-40 hidden rounded-lg border border-primary/30 bg-card/75 px-3 py-2 text-xs text-muted-foreground backdrop-blur-md md:flex md:items-center md:gap-2">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        Modo de jogo em execucao
+      </div>
       <PhaserGame
         fullscreen
         config={config || DEMO_CONFIG}

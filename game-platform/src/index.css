@@ -1,38 +1,46 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 @theme {
-  --color-background: oklch(0.15 0.02 240);
-  --color-foreground: oklch(0.98 0.01 240);
+  --color-background: oklch(0.16 0.03 250);
+  --color-foreground: oklch(0.96 0.01 240);
   
-  --color-card: oklch(0.2 0.02 240);
-  --color-card-foreground: oklch(0.98 0.01 240);
+  --color-card: oklch(0.22 0.03 246);
+  --color-card-foreground: oklch(0.97 0.01 240);
   
-  --color-popover: oklch(0.22 0.02 240);
+  --color-popover: oklch(0.24 0.03 246);
   --color-popover-foreground: oklch(0.98 0.01 240);
   
-  --color-primary: oklch(0.65 0.25 200);
+  --color-primary: oklch(0.68 0.19 230);
   --color-primary-foreground: oklch(0.15 0.02 240);
   
-  --color-secondary: oklch(0.25 0.02 240);
+  --color-secondary: oklch(0.29 0.04 245);
   --color-secondary-foreground: oklch(0.98 0.01 240);
   
-  --color-muted: oklch(0.28 0.02 240);
-  --color-muted-foreground: oklch(0.6 0.01 240);
+  --color-muted: oklch(0.3 0.02 244);
+  --color-muted-foreground: oklch(0.74 0.01 242);
   
-  --color-accent: oklch(0.65 0.25 200);
+  --color-accent: oklch(0.65 0.2 225);
   --color-accent-foreground: oklch(0.15 0.02 240);
   
-  --color-destructive: oklch(0.55 0.25 25);
+  --color-destructive: oklch(0.58 0.22 25);
   --color-destructive-foreground: oklch(0.98 0.01 240);
   
-  --color-border: oklch(0.28 0.02 240);
-  --color-input: oklch(0.25 0.02 240);
-  --color-ring: oklch(0.65 0.25 200);
+  --color-border: oklch(0.34 0.03 245);
+  --color-input: oklch(0.25 0.03 244);
+  --color-ring: oklch(0.72 0.16 230);
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --surface-shadow: 0 18px 35px -22px rgba(10, 20, 56, 0.8);
+  --surface-shadow-soft: 0 10px 24px -20px rgba(12, 25, 62, 0.95);
+  --surface-ring: inset 0 0 0 1px rgba(128, 166, 255, 0.16);
   
-  --radius-lg: 0.75rem;
-  --radius-md: calc(0.75rem - 2px);
-  --radius-sm: calc(0.75rem - 4px);
+  --radius-lg: 1rem;
+  --radius-md: calc(1rem - 2px);
+  --radius-sm: calc(1rem - 6px);
 }
 
 @layer base {
@@ -49,7 +57,100 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
+    background-image:
+      radial-gradient(circle at 18% 16%, oklch(0.45 0.09 230 / 0.16) 0%, transparent 30%),
+      radial-gradient(circle at 86% 5%, oklch(0.5 0.1 226 / 0.14) 0%, transparent 34%),
+      linear-gradient(180deg, oklch(0.17 0.03 248) 0%, oklch(0.15 0.03 249) 100%);
+    letter-spacing: 0.01em;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.3;
+    background-image:
+      linear-gradient(rgba(188, 208, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(188, 208, 255, 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+    z-index: -2;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at center, transparent 55%, rgba(6, 12, 36, 0.5) 100%);
+    z-index: -1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  code,
+  pre,
+  .font-data {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen;
+  }
+
+  .surface-panel {
+    @apply rounded-2xl border border-border/80 bg-card/85 backdrop-blur-md;
+    box-shadow: var(--surface-shadow), var(--surface-ring);
+  }
+
+  .surface-subtle {
+    @apply rounded-xl border border-border/70 bg-background/60;
+    box-shadow: var(--surface-shadow-soft), var(--surface-ring);
+  }
+
+  .heading-kicker {
+    @apply text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform duration-200 ease-out hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60;
+    box-shadow: 0 10px 20px -14px rgba(95, 151, 255, 0.8);
+  }
+
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible,
+  .input-shell:focus-visible {
+    outline: 2px solid oklch(0.72 0.16 230 / 0.9);
+    outline-offset: 2px;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border/90 bg-secondary/60 px-5 py-3 text-sm font-semibold text-foreground transition-colors duration-200 hover:border-primary/40 hover:bg-secondary;
+  }
+
+  .input-shell {
+    @apply w-full rounded-xl border border-border/80 bg-input/90 px-4 py-3 text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/90 focus:border-primary focus:ring-2 focus:ring-ring/40;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

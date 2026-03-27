@@ -67,20 +67,20 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Login Docente"
       onClick={onClose}
     >
       <div 
-        className="bg-card border border-border rounded-3xl p-8 md:p-10 max-w-md w-full shadow-2xl relative"
+        className="surface-panel relative w-full max-w-md p-8 md:p-10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Botão de Fechar */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-muted-foreground hover:text-foreground hover:scale-125 transition-all text-xl w-8 h-8 flex items-center justify-center leading-none"
+          className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center leading-none text-xl text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Fechar"
         >
           ✕
@@ -106,7 +106,7 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
               setErro('')
             }}
             disabled={is_submitting}
-            className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="input-shell disabled:cursor-not-allowed disabled:opacity-50"
           />
           </div>
 
@@ -122,7 +122,7 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
               setErro('')
             }}
             disabled={is_submitting}
-            className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="input-shell disabled:cursor-not-allowed disabled:opacity-50"
           />
           </div>
 
@@ -135,7 +135,7 @@ export const LoginModal = ({ onClose }: LoginModalProps) => {
           <button
             type="submit"
             disabled={is_submitting}
-            className="w-full py-3.5 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 hover:text-background disabled:opacity-50 disabled:hover:scale-100 disabled:hover:text-primary-foreground disabled:cursor-not-allowed transition-all"
+            className="btn-primary w-full py-3.5 font-bold disabled:cursor-not-allowed"
           >
             {is_submitting ? 'Entrando...' : 'Entrar no Sistema'}
           </button>

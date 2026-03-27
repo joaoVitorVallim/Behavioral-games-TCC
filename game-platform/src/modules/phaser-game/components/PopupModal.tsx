@@ -34,21 +34,21 @@ export function PopupModal({ popupData, students, onConfirm, onClose, isLoading 
   const canConfirm = markedStudents.size === popupData.selectedStudentCount && !isLoading
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl">
-        <div className="border-b border-border px-6 py-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="surface-panel w-full max-w-2xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-2xl font-bold text-foreground">Sorteio do Professor</h2>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="p-2 text-muted-foreground hover:bg-card rounded-lg transition-colors disabled:opacity-50"
+            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary/55 disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="px-6 py-6">
-          <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/30">
+          <div className="mb-6 rounded-lg border border-primary/30 bg-primary/10 p-4">
             <p className="text-lg text-foreground font-semibold mb-2">Frase do Professor:</p>
             <p className="text-base text-muted-foreground italic">{popupData.phrase}</p>
           </div>
@@ -75,7 +75,7 @@ export function PopupModal({ popupData, students, onConfirm, onClose, isLoading 
                     className={`p-3 rounded-lg border-2 transition-all text-left flex items-center gap-3 ${
                       isChecked
                         ? 'border-primary bg-primary/10 text-foreground'
-                        : 'border-border bg-card hover:border-primary/50 text-foreground'
+                        : 'border-border bg-secondary/45 hover:border-primary/50 text-foreground'
                     } ${(isDisabled || isLoading) && 'opacity-50 cursor-not-allowed'}`}
                   >
                     <div
@@ -92,7 +92,7 @@ export function PopupModal({ popupData, students, onConfirm, onClose, isLoading 
             </div>
           </div>
 
-          <div className="p-4 bg-muted/30 rounded-lg">
+          <div className="rounded-lg bg-muted/30 p-4">
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">Tempo ganho por aluno:</span>{' '}
               {popupData.timeGainedPerStudentSeconds}s
@@ -100,18 +100,18 @@ export function PopupModal({ popupData, students, onConfirm, onClose, isLoading 
           </div>
         </div>
 
-        <div className="border-t border-border px-6 py-4 flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-2 rounded-lg border border-border text-foreground hover:bg-card transition-colors disabled:opacity-50"
+            className="btn-secondary px-6 py-2 disabled:cursor-not-allowed"
           >
             Cancelar
           </button>
           <button
             onClick={handleConfirm}
             disabled={!canConfirm}
-            className="px-6 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary px-6 py-2 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Confirmando...' : 'Confirmar'}
           </button>

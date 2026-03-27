@@ -22,10 +22,10 @@ function Toggle({ value, onToggle }: { value: boolean; onToggle: (v: boolean) =>
 }
 
 const input_class =
-  'w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors'
+  'input-shell'
 
 const select_class =
-  'w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:border-primary transition-colors appearance-none'
+  'input-shell appearance-none'
 
 const label_class = 'block text-sm font-medium text-foreground mb-2'
 
@@ -70,7 +70,7 @@ export function ConfigurationForm({
 
     if (field.type === 'boolean') {
       return (
-        <div key={field.name} className="flex items-center justify-between p-4 bg-background border border-border rounded-xl">
+        <div key={field.name} className="surface-subtle flex items-center justify-between p-4">
           <div>
             <p className="text-sm font-medium text-foreground">{field_label}</p>
           </div>

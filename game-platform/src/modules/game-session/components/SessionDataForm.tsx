@@ -24,12 +24,12 @@ export function SessionDataForm({
 }: SessionDataFormProps) {
   return (
     <section
-      className="bg-card border border-border rounded-2xl p-8 shadow-lg mb-8"
+      className="surface-panel mb-8 p-8"
       aria-labelledby="section-session-data"
     >
       <div className="flex items-center gap-3 mb-6">
         <Users className="w-6 h-6 text-primary" />
-        <h2 id="section-session-data" className="text-2xl font-bold text-foreground">
+        <h2 id="section-session-data" className="text-3xl text-foreground">
           Dados da Sessão
         </h2>
       </div>
@@ -45,8 +45,8 @@ export function SessionDataForm({
             type="text"
             value={session_name}
             onChange={(e) => dispatch({ type: 'SET_SESSION_NAME', payload: e.target.value })}
-            className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
-            placeholder="Ex: Sessão Turma A — Manhã"
+            className="input-shell"
+            placeholder="Ex: Sessao Turma A - Manha"
           />
         </div>
 
@@ -61,7 +61,7 @@ export function SessionDataForm({
               value={selected_game}
               onChange={(e) => dispatch({ type: 'SET_GAME', payload: e.target.value })}
               disabled={games_loading || games_error || games.length === 0}
-              className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:border-primary transition-colors appearance-none"
+              className="input-shell appearance-none"
             >
               {games_loading && <option value="">Carregando jogos...</option>}
               {!games_loading && games.length > 0 && (
@@ -104,7 +104,7 @@ export function SessionDataForm({
                 className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                   input_info.includes(opt.value)
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-foreground'
+                    : 'bg-secondary/45 text-muted-foreground border-border hover:border-primary hover:text-foreground'
                 }`}
               >
                 {opt.label}
