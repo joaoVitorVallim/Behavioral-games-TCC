@@ -16,11 +16,31 @@ export enum MatchStatus {
   CANCELADA = 'cancelada',
 }
 
-export interface Move {
-  player: number; // 1 or 2
-  action: Record<string, any>; // JSON with game-specific action
-  timestamp: Date;
+export enum CardsMoveOption {
+  VERMELHO = 'vermelho',
+  PRETO = 'preto',
 }
+
+export enum RouletteMoveOption {
+  AZUL = 'azul',
+  VERMELHO = 'vermelho',
+  PRETO = 'preto',
+}
+
+export interface CardsRoundMove {
+  jogador1: CardsMoveOption;
+  jogador2: CardsMoveOption;
+}
+
+export interface RouletteRoundMove {
+  coinsAmount: number;
+  aposta: number;
+  opcao: RouletteMoveOption;
+  winrate: boolean;
+}
+
+export type RoundMove = CardsRoundMove | RouletteRoundMove;
+export type MatchMoves = Record<string, RoundMove>;
 
 @Entity('matches')
 export class Match {
@@ -41,15 +61,15 @@ export class Match {
   @Column({ nullable: false })
   player1_id: string;
 
-  @ManyToOne(() => Player, { nullable: false })
+  @ManyToOne(() => Player, { nullable: true })
   @JoinColumn({ name: 'player2_id' })
-  player2: Player;
+  player2?: Player;
 
-  @Column({ nullable: false })
-  player2_id: string;
+  @Column({ nullable: true })
+  player2_id?: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  moves?: Move[];
+  moves?: MatchMoves;
 
   @Column({ type: 'int', nullable: true })
   matchTime?: number;

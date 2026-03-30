@@ -22,12 +22,6 @@ export abstract class Settings {
   @Column({ type: 'enum', enum: GameType, nullable: false })
   game: GameType;
 
-  @Column({ type: 'boolean', default: false })
-  userViewPoints: boolean;
-
-  @Column({ type: 'int', nullable: false })
-  limitRounds: number;
-
   @OneToMany(() => Session, (session) => session.settings)
   sessions: Session[];
 

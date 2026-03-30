@@ -15,6 +15,7 @@ import {
   ApiQuery,
   ApiParam,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { MatchService } from './match.service';
 import { Match, MatchStatus } from './match.entity';
@@ -30,11 +31,71 @@ export class MatchController {
   @Post()
   @ApiOperation({
     summary: 'Create new match',
-    description: 'Creates a new match with two players in a session',
+    description: 'Creates a new match for cards (2 players) or roulette (single player)',
+  })
+  @ApiBody({
+    description: 'Cards and Roulette payload examples',
+    examples: {
+      cards: {
+        summary: 'Cards match creation',
+        value: {
+          sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+          player1Id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+          player2Id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
+          moves: {
+            '1': { jogador1: 'vermelho', jogador2: 'preto' },
+            '2': { jogador1: 'preto', jogador2: 'vermelho' },
+          },
+          status: 'aguardando',
+        },
+      },
+      roulette: {
+        summary: 'Roulette match creation',
+        value: {
+          sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+          player1Id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+          moves: {
+            '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true },
+            '2': { coinsAmount: 900, aposta: 50, opcao: 'preto', winrate: false },
+          },
+          status: 'aguardando',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 201,
     description: 'Match created successfully',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards match response',
+          value: {
+            id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
+            session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            player2_id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
+            moves: {
+              '1': { jogador1: 'vermelho', jogador2: 'preto' },
+            },
+            status: 'aguardando',
+          },
+        },
+        roulette: {
+          summary: 'Roulette match response',
+          value: {
+            id: 'b7fb8887-9739-4aab-8934-df34707d8d98',
+            session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            player2_id: null,
+            moves: {
+              '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true },
+            },
+            status: 'aguardando',
+          },
+        },
+      },
+    },
   })
   async create(@Body() body: CreateMatchDto): Promise<Match> {
     return await this.matchService.create(body);
@@ -48,18 +109,40 @@ export class MatchController {
   @ApiQuery({
     name: 'sessionId',
     required: false,
-    description: 'Filter by session ID',
+    description: 'Filter by session ID (optional)',
   })
   @ApiQuery({
     name: 'status',
     required: false,
     enum: MatchStatus,
-    description: 'Filter by match status',
+    description: 'Filter by match status (optional)',
   })
   @ApiResponse({
     status: 200,
     description: 'Matches list returned successfully',
     isArray: true,
+    schema: {
+      example: [
+        {
+          id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
+          session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+          player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+          player2_id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
+          moves: { '1': { jogador1: 'vermelho', jogador2: 'preto' } },
+          status: 'aguardando',
+        },
+        {
+          id: 'b7fb8887-9739-4aab-8934-df34707d8d98',
+          session_id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
+          player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+          player2_id: null,
+          moves: {
+            '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true },
+          },
+          status: 'aguardando',
+        },
+      ],
+    },
   })
   async findAll(
     @Query('sessionId') sessionId?: string,
@@ -80,6 +163,34 @@ export class MatchController {
   @ApiResponse({
     status: 200,
     description: 'Match found',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards match',
+          value: {
+            id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
+            session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            player2_id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
+            moves: { '1': { jogador1: 'vermelho', jogador2: 'preto' } },
+            status: 'aguardando',
+          },
+        },
+        roulette: {
+          summary: 'Roulette match',
+          value: {
+            id: 'b7fb8887-9739-4aab-8934-df34707d8d98',
+            session_id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
+            player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            player2_id: null,
+            moves: {
+              '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true },
+            },
+            status: 'aguardando',
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -98,9 +209,41 @@ export class MatchController {
     name: 'id',
     description: 'Match ID',
   })
+  @ApiBody({
+    type: UpdateMatchStatusDto,
+    description: 'Partial payload. Only status is accepted (required).',
+    examples: {
+      cards: {
+        summary: 'Cards status update',
+        value: { status: 'em_partida' },
+      },
+      roulette: {
+        summary: 'Roulette status update',
+        value: { status: 'finalizada' },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Status updated successfully',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards status changed',
+          value: {
+            id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
+            status: 'em_partida',
+          },
+        },
+        roulette: {
+          summary: 'Roulette status changed',
+          value: {
+            id: 'b7fb8887-9739-4aab-8934-df34707d8d98',
+            status: 'finalizada',
+          },
+        },
+      },
+    },
   })
   async updateStatus(
     @Param('id') id: string,

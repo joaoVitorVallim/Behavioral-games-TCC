@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Session } from './session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
@@ -9,16 +9,49 @@ import { GameType } from '../game/games.enum';
 import { SettingsService } from '../settings/settings.service';
 import { UsersService } from '../users/users.service';
 import { isValidPlayerField, PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
+import { Player } from '../player/player.entity';
+import { Match, MatchStatus } from '../match/match.entity';
+import { JoinSessionDto } from './dto/join-session.dto';
 
 @Injectable()
 export class SessionService {
   constructor(
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
+    @InjectRepository(Player)
+    private playerRepository: Repository<Player>,
+    @InjectRepository(Match)
+    private matchRepository: Repository<Match>,
+    private dataSource: DataSource,
     private gameService: GameService,
     private settingsService: SettingsService,
     private usersService: UsersService,
   ) {}
+
+  private getMaxPlayersForGame(game: GameType): number {
+    return game === GameType.CARDS ? 2 : 1;
+  }
+
+  private validateRequiredPlayerFields(
+    requiredFields: string[] | undefined,
+    playerData: JoinSessionDto,
+  ): void {
+    if (!requiredFields || requiredFields.length === 0) {
+      return;
+    }
+
+    for (const field of requiredFields) {
+      const value = playerData[field as keyof JoinSessionDto];
+      const isMissingString =
+        typeof value === 'string' && value.trim().length === 0;
+
+      if (value === undefined || value === null || isMissingString) {
+        throw new BadRequestException(
+          `Field ${field} is required by this session inputInfo`,
+        );
+      }
+    }
+  }
 
   /**
    * Generate a unique invite code
@@ -69,7 +102,7 @@ export class SessionService {
     let settings;
     try {
       // Infer game type from enum value
-      const gameType = dto.game === GameType.CARDS ? 'cards' : 'words';
+      const gameType = dto.game === GameType.CARDS ? 'cards' : 'roulette';
       settings = await this.settingsService.create(
         {
           configName: dto.settings.configName,
@@ -77,13 +110,10 @@ export class SessionService {
           userViewPoints: dto.settings.userViewPoints,
           limitRounds: dto.settings.limitRounds,
           // Game-specific fields
-          cardDeckSize: dto.settings.cardDeckSize,
-          allowSpecialCards: dto.settings.allowSpecialCards,
-          cardTheme: dto.settings.cardTheme,
-          wordPoolSize: dto.settings.wordPoolSize,
-          difficulty: dto.settings.difficulty,
-          includeTimerPerWord: dto.settings.includeTimerPerWord,
-          secondsPerWord: dto.settings.secondsPerWord,
+          timeLimit: dto.settings.timeLimit,
+          pointsLimit: dto.settings.pointsLimit,
+          popup: dto.settings.popup,
+          initMoney: dto.settings.initMoney,
         },
         gameType,
       );
@@ -178,6 +208,116 @@ export class SessionService {
     }
 
     return session;
+  }
+
+  async joinByInviteCode(payload: JoinSessionDto) {
+    const inviteCode = payload.inviteCode.trim().toUpperCase();
+
+    return await this.dataSource.transaction(async (manager) => {
+      const session = await manager
+        .getRepository(Session)
+        .createQueryBuilder('session')
+        .leftJoinAndSelect('session.settings', 'settings')
+        .leftJoinAndSelect('session.user', 'user')
+        .where('session.inviteCode = :inviteCode', { inviteCode })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!session) {
+        throw new NotFoundException(
+          `Session with invite code ${inviteCode} not found`,
+        );
+      }
+
+      if (!session.isActive) {
+        throw new BadRequestException('Session is not active');
+      }
+
+      this.validateRequiredPlayerFields(session.inputInfo, payload);
+
+      const playerRepo = manager.getRepository(Player);
+      const matchRepo = manager.getRepository(Match);
+
+      const maxPlayers = this.getMaxPlayersForGame(session.game);
+      const currentPlayersCount = await playerRepo.count({
+        where: { session_id: session.id },
+      });
+
+      if (currentPlayersCount >= maxPlayers) {
+        throw new BadRequestException(
+          `Session is full for ${session.game} mode`,
+        );
+      }
+
+      const player = playerRepo.create({
+        session_id: session.id,
+        educationLevel: payload.educationLevel,
+        semester: payload.semester,
+        course: payload.course,
+        age: payload.age,
+        gender: payload.gender,
+        profession: payload.profession,
+      });
+
+      const savedPlayer = await playerRepo.save(player);
+      const playersCount = currentPlayersCount + 1;
+
+      const targetPlayers = maxPlayers;
+      let createdMatch: Match | null = null;
+
+      if (playersCount === targetPlayers) {
+        const existingMatch = await matchRepo.findOne({
+          where: { session_id: session.id },
+        });
+
+        if (!existingMatch) {
+          if (session.game === GameType.CARDS) {
+            const players = await playerRepo.find({
+              where: { session_id: session.id },
+              order: { created_at: 'ASC' },
+              take: 2,
+            });
+
+            if (players.length < 2) {
+              throw new BadRequestException(
+                'Not enough players to create cards match',
+              );
+            }
+
+            createdMatch = matchRepo.create({
+              session_id: session.id,
+              player1_id: players[0].id,
+              player2_id: players[1].id,
+              status: MatchStatus.AGUARDANDO,
+              moves: {},
+            });
+          } else {
+            createdMatch = matchRepo.create({
+              session_id: session.id,
+              player1_id: savedPlayer.id,
+              player2_id: null,
+              status: MatchStatus.AGUARDANDO,
+              moves: {},
+            });
+          }
+
+          createdMatch = await matchRepo.save(createdMatch);
+        }
+      }
+
+      const updatedSession = await manager.getRepository(Session).findOne({
+        where: { id: session.id },
+        relations: ['settings', 'user', 'players'],
+      });
+
+      return {
+        session: updatedSession,
+        player: savedPlayer,
+        playersCount,
+        maxPlayers,
+        match: createdMatch,
+      };
+    });
   }
 
   async update(id: string, dto: UpdateSessionDto): Promise<Session> {

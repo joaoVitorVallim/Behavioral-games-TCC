@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,6 +21,7 @@ import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { GameType } from '../game/games.enum';
+import { JoinSessionDto } from './dto/join-session.dto';
 
 @ApiTags('Sessions')
 @ApiBearerAuth()
@@ -34,18 +34,66 @@ export class SessionController {
     summary: 'Create new session',
     description: 'Creates a new session with game-specific configurations',
   })
-  @ApiBody({ type: CreateSessionDto })
+  @ApiBody({
+    type: CreateSessionDto,
+    examples: {
+      cards: {
+        summary: 'Cards session creation',
+        value: {
+          game: 'cards',
+          settings: {
+            configName: 'Cards Config Level 1',
+            userViewPoints: true,
+            limitRounds: 10,
+          },
+          inputInfo: ['educationLevel', 'semester', 'profession'],
+          user_id: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',
+        },
+      },
+      roulette: {
+        summary: 'Roulette session creation',
+        value: {
+          game: 'roulette',
+          settings: {
+            configName: 'Roulette Config Beginner',
+            timeLimit: 60,
+            pointsLimit: 500,
+            popup: { message: 'Aposte agora!', players: 2 },
+            initMoney: 1000,
+          },
+          inputInfo: ['educationLevel'],
+          user_id: 'ab5d10f7-8522-498c-a585-97cdc9d0956d',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 201,
     description: 'Session created successfully',
     schema: {
-      example: {
-        id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-        game: 'cards',
-        inputInfo: ['nickname', 'profession'],
-        inviteCode: 'F4LVTX',
-        isActive: true,
-        created_at: '2026-03-07T17:05:59.734Z',
+      examples: {
+        cards: {
+          summary: 'Cards session created',
+          value: {
+            id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'cards',
+            inputInfo: ['educationLevel', 'semester', 'profession'],
+            inviteCode: 'F4LVTX',
+            isActive: true,
+            created_at: '2026-03-07T17:05:59.734Z',
+          },
+        },
+        roulette: {
+          summary: 'Roulette session created',
+          value: {
+            id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'roulette',
+            inputInfo: ['educationLevel'],
+            inviteCode: 'R8K2MP',
+            isActive: true,
+            created_at: '2026-03-07T17:05:59.734Z',
+          },
+        },
       },
     },
   })
@@ -57,6 +105,75 @@ export class SessionController {
     return this.sessionService.create(createSessionDto);
   }
 
+  @Post('join')
+  @ApiOperation({
+    summary: 'Join session by invite code',
+    description:
+      'Registers a player in a session using invite code. Cards allows up to 2 players and roulette allows only 1 player. A match is auto-created when the room is full for the game mode.',
+  })
+  @ApiBody({
+    type: JoinSessionDto,
+    examples: {
+      cards: {
+        summary: 'Join cards session',
+        value: {
+          inviteCode: 'F4LVTX',
+          educationLevel: 'bachelor',
+          semester: 6,
+          profession: 'Student',
+        },
+      },
+      roulette: {
+        summary: 'Join roulette session',
+        value: {
+          inviteCode: 'R8K2MP',
+          educationLevel: 'high_school',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Player joined session successfully',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards join response',
+          value: {
+            playersCount: 2,
+            maxPlayers: 2,
+            match: {
+              id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
+              status: 'aguardando',
+            },
+          },
+        },
+        roulette: {
+          summary: 'Roulette join response',
+          value: {
+            playersCount: 1,
+            maxPlayers: 1,
+            match: {
+              id: 'b7fb8887-9739-4aab-8934-df34707d8d98',
+              status: 'aguardando',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Session full, inactive, or missing required player fields',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Session invite code not found',
+  })
+  join(@Body() body: JoinSessionDto) {
+    return this.sessionService.joinByInviteCode(body);
+  }
+
   @Get()
   @ApiOperation({
     summary: 'List all sessions',
@@ -66,23 +183,39 @@ export class SessionController {
     name: 'game',
     required: false,
     enum: GameType,
-    description: 'Filter by game type',
+    description: 'Filter by game type (optional)',
   })
   @ApiQuery({
     name: 'userId',
     required: false,
-    description: 'Filter by creator user ID',
+    description: 'Filter by creator user ID (optional)',
   })
   @ApiQuery({
     name: 'isActive',
     required: false,
     enum: ['true', 'false'],
-    description: 'Filter by status (active/inactive)',
+    description: 'Filter by status (active/inactive) (optional)',
   })
   @ApiResponse({
     status: 200,
     description: 'Sessions list returned successfully',
     isArray: true,
+    schema: {
+      example: [
+        {
+          id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+          game: 'cards',
+          inviteCode: 'F4LVTX',
+          isActive: true,
+        },
+        {
+          id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+          game: 'roulette',
+          inviteCode: 'R8K2MP',
+          isActive: true,
+        },
+      ],
+    },
   })
   findAll(
     @Query('game') game?: GameType,
@@ -108,6 +241,28 @@ export class SessionController {
   @ApiResponse({
     status: 200,
     description: 'Session found',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards session by invite code',
+          value: {
+            id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'cards',
+            inviteCode: 'F4LVTX',
+            isActive: true,
+          },
+        },
+        roulette: {
+          summary: 'Roulette session by invite code',
+          value: {
+            id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'roulette',
+            inviteCode: 'R8K2MP',
+            isActive: true,
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -129,6 +284,28 @@ export class SessionController {
   @ApiResponse({
     status: 200,
     description: 'Statistics returned successfully',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards session stats',
+          value: {
+            sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'cards',
+            totalPlayers: 2,
+            inviteCode: 'F4LVTX',
+          },
+        },
+        roulette: {
+          summary: 'Roulette session stats',
+          value: {
+            sessionId: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'roulette',
+            totalPlayers: 1,
+            inviteCode: 'R8K2MP',
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -150,6 +327,28 @@ export class SessionController {
   @ApiResponse({
     status: 200,
     description: 'Session found',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards session details',
+          value: {
+            id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'cards',
+            inviteCode: 'F4LVTX',
+            isActive: true,
+          },
+        },
+        roulette: {
+          summary: 'Roulette session details',
+          value: {
+            id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
+            game: 'roulette',
+            inviteCode: 'R8K2MP',
+            isActive: true,
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -168,10 +367,35 @@ export class SessionController {
     name: 'id',
     description: 'Session ID',
   })
-  @ApiBody({ type: UpdateSessionDto })
+  @ApiBody({
+    type: UpdateSessionDto,
+    description: 'Partial payload. All fields are optional.',
+    examples: {
+      cards: {
+        summary: 'Cards session update',
+        value: { isActive: false },
+      },
+      roulette: {
+        summary: 'Roulette session update',
+        value: { isActive: true },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Session updated successfully',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards session updated',
+          value: { id: 'd7fb8887-9739-4aab-8934-df34707d8d98', isActive: false },
+        },
+        roulette: {
+          summary: 'Roulette session updated',
+          value: { id: 'e7fb8887-9739-4aab-8934-df34707d8d98', isActive: true },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -196,6 +420,18 @@ export class SessionController {
   @ApiResponse({
     status: 201,
     description: 'Session finished successfully',
+    schema: {
+      examples: {
+        cards: {
+          summary: 'Cards session finished',
+          value: { id: 'd7fb8887-9739-4aab-8934-df34707d8d98', isActive: false },
+        },
+        roulette: {
+          summary: 'Roulette session finished',
+          value: { id: 'e7fb8887-9739-4aab-8934-df34707d8d98', isActive: false },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,

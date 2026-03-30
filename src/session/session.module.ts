@@ -6,10 +6,12 @@ import { SessionController } from './session.controller';
 import { GameModule } from '../game/game.module';
 import { SettingsModule } from '../settings/settings.module';
 import { UsersModule } from '../users/users.module';
+import { Player } from '../player/player.entity';
+import { Match } from '../match/match.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Session]),
+    TypeOrmModule.forFeature([Session, Player, Match]),
     GameModule,
     SettingsModule,
     UsersModule,

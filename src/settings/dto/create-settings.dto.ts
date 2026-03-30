@@ -1,6 +1,24 @@
-import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, IsEnum, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
+import { Type } from 'class-transformer';
+
+class RoulettePopupDto {
+  @ApiProperty({
+    example: 'Mensagem do popup aparecer na tela',
+    description: 'Popup message shown to selected players',
+  })
+  @IsNotEmpty()
+  @IsString()
+  message: string;
+
+  @ApiProperty({
+    example: 2,
+    description: 'Number of players that should receive this popup',
+  })
+  @IsNumber()
+  players: number;
+}
 
 export class CreateSettingsDto {
   @ApiProperty({
@@ -14,91 +32,60 @@ export class CreateSettingsDto {
   @ApiProperty({
     enum: GameType,
     example: 'cards',
-    description: 'Game type (cards or words)',
+    description: 'Game type (cards or roulette)',
   })
   @IsNotEmpty()
   @IsEnum(GameType)
   game: GameType;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: true,
-    description: 'Whether the player can view points',
-    required: false,
+    description: 'Whether the player can view points (Cards only)',
   })
   @IsOptional()
   @IsBoolean()
   userViewPoints?: boolean;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 10,
-    description: 'Session round limit',
-    required: false,
+    description: 'Session round limit (Cards only)',
   })
   @IsOptional()
   @IsNumber()
   limitRounds?: number;
 
-  @ApiProperty({
-    example: 52,
-    description: 'Deck size (Cards only)',
-    required: false,
+  @ApiPropertyOptional({
+    example: 60,
+    description: 'Time limit in seconds (Roulette only)',
   })
   @IsOptional()
   @IsNumber()
-  cardDeckSize?: number;
+  timeLimit?: number;
 
-  @ApiProperty({
-    example: true,
-    description: 'Allow special cards (Cards only)',
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  allowSpecialCards?: boolean;
-
-  @ApiProperty({
-    example: 'standard',
-    description: 'Deck theme (Cards only)',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  cardTheme?: string;
-
-  @ApiProperty({
-    example: 100,
-    description: 'Word pool size (Words only)',
-    required: false,
+  @ApiPropertyOptional({
+    example: 500,
+    description: 'Points limit (Roulette only)',
   })
   @IsOptional()
   @IsNumber()
-  wordPoolSize?: number;
+  pointsLimit?: number;
 
-  @ApiProperty({
-    enum: ['easy', 'medium', 'hard'],
-    example: 'medium',
-    description: 'Difficulty level (Words only)',
-    required: false,
+  @ApiPropertyOptional({
+    nullable: true,
+    type: RoulettePopupDto,
+    example: { message: 'Mensagem do popup aparecer na tela', players: 2 },
+    description: 'Optional popup config, nullable (Roulette only)',
   })
   @IsOptional()
-  @IsString()
-  difficulty?: string;
+  @ValidateNested()
+  @Type(() => RoulettePopupDto)
+  popup?: RoulettePopupDto | null;
 
-  @ApiProperty({
-    example: false,
-    description: 'Include timer per word (Words only)',
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  includeTimerPerWord?: boolean;
-
-  @ApiProperty({
-    example: 30,
-    description: 'Seconds per word (Words only)',
-    required: false,
+  @ApiPropertyOptional({
+    example: 1000,
+    description: 'Initial money amount for players (Roulette only)',
   })
   @IsOptional()
   @IsNumber()
-  secondsPerWord?: number;
+  initMoney?: number;
 }

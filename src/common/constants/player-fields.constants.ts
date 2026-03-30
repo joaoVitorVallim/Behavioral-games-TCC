@@ -3,7 +3,8 @@
  * These are the only fields that can be added to inputInfos
  */
 export const PLAYER_OPTIONAL_FIELDS = [
-  'nickname',
+  'educationLevel',
+  'semester',
   'course',
   'age',
   'gender',
@@ -11,7 +12,8 @@ export const PLAYER_OPTIONAL_FIELDS = [
 ] as const;
 
 export const PLAYER_OPTIONAL_FIELDS_LABELS = {
-  nickname: 'Nickname',
+  educationLevel: 'Education Level',
+  semester: 'Semester',
   course: 'Course',
   age: 'Age',
   gender: 'Gender',

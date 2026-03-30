@@ -110,7 +110,7 @@ export class PlayerController {
   @ApiQuery({
     name: 'sessionId',
     required: false,
-    description: 'Filter by session ID',
+    description: 'Filter by session ID (optional)',
   })
   @ApiResponse({
     status: 200,

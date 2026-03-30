@@ -5,17 +5,24 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-  OneToMany,
 } from 'typeorm';
 import { Session } from '../session/session.entity';
+import { EducationLevel } from './education-level.enum';
 
 @Entity('players')
 export class Player {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 255, nullable: true })
-  nickname?: string;
+  @Column({
+    type: 'enum',
+    enum: EducationLevel,
+    nullable: true,
+  })
+  educationLevel?: EducationLevel;
+
+  @Column({ type: 'int', nullable: true })
+  semester?: number;
 
   @Column({ length: 100, nullable: true })
   course?: string;

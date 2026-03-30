@@ -1,15 +1,18 @@
 import {
   IsNotEmpty,
   IsOptional,
-  IsArray,
-  ValidateNested,
   IsInt,
   IsEnum,
+  IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { MatchStatus } from '../match.entity';
-import { MoveDto } from './move.dto';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  CardsMoveOption,
+  MatchStatus,
+  RouletteMoveOption,
+} from '../match.entity';
+import type { MatchMoves } from '../match.entity';
+import { IsMovesByRound } from '../validators/moves-by-round.validator';
 
 export class CreateMatchDto {
   @ApiProperty({
@@ -26,38 +29,47 @@ export class CreateMatchDto {
   @IsNotEmpty()
   player1Id: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'f7fb8887-9739-4aab-8934-df34707d8d98',
     description: 'Player 2 ID',
   })
+  @IsOptional()
   @IsNotEmpty()
-  player2Id: string;
+  player2Id?: string;
 
-  @ApiProperty({
-    type: MoveDto,
-    isArray: true,
-    required: false,
-    description: 'Moves list',
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: true,
+    description: 'Moves grouped by round keys ("1", "2", ...)',
+    example: {
+      '1': {
+        jogador1: CardsMoveOption.VERMELHO,
+        jogador2: CardsMoveOption.PRETO,
+      },
+      '2': {
+        coinsAmount: 900,
+        aposta: 100,
+        opcao: RouletteMoveOption.AZUL,
+        winrate: true,
+      },
+    },
   })
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MoveDto)
-  moves?: MoveDto[];
+  @IsObject()
+  @IsMovesByRound()
+  moves?: MatchMoves;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 180,
-    required: false,
     description: 'Match time in seconds',
   })
   @IsOptional()
   @IsInt()
   matchTime?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     enum: MatchStatus,
     example: MatchStatus.AGUARDANDO,
-    required: false,
     description: 'Match status',
   })
   @IsOptional()

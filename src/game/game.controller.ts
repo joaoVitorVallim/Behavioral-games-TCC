@@ -25,10 +25,10 @@ export class GameController {
           redirectUrl: 'https://cards-game.example.com',
         },
         {
-          id: 'words',
-          name: 'Word Game',
-          description: 'A word game for vocabulary development',
-          redirectUrl: 'https://words-game.example.com',
+          id: 'roulette',
+          name: 'Roulette Betting Game',
+          description: 'A roulette-style betting game',
+          redirectUrl: 'https://roulette-game.example.com',
         },
       ],
     },
@@ -44,7 +44,7 @@ export class GameController {
   })
   @ApiParam({
     name: 'game_name',
-    enum: ['cards', 'words'],
+    enum: ['cards', 'roulette'],
     description: 'Game type',
   })
   @ApiResponse({

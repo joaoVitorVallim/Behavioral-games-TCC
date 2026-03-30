@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Match, MatchStatus, Move } from './match.entity';
+import { Match, MatchStatus } from './match.entity';
 import { CreateMatchDto } from './dto/create-match.dto';
 
 @Injectable()
@@ -12,16 +12,11 @@ export class MatchService {
   ) {}
 
   async create(dto: CreateMatchDto): Promise<Match> {
-    const moves = dto.moves?.map((move) => ({
-      ...move,
-      timestamp: new Date(move.timestamp),
-    }));
-
     const match = this.matchRepository.create({
       session_id: dto.sessionId,
       player1_id: dto.player1Id,
-      player2_id: dto.player2Id,
-      moves: moves ?? [],
+      player2_id: dto.player2Id ?? null,
+      moves: dto.moves ?? {},
       status: dto.status ?? MatchStatus.AGUARDANDO,
       matchTime: dto.matchTime,
     });
@@ -54,20 +49,6 @@ export class MatchService {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
     return updatedMatch;
-  }
-
-  async addMove(matchId: string, move: Move): Promise<Match> {
-    const match = await this.matchRepository.findOne({ where: { id: matchId } });
-    if (!match) {
-      throw new NotFoundException(`Match with ID ${matchId} not found`);
-    }
-
-    if (!match.moves) {
-      match.moves = [];
-    }
-
-    match.moves.push(move);
-    return await this.matchRepository.save(match);
   }
 
   async updateStatus(id: string, status: MatchStatus): Promise<Match> {

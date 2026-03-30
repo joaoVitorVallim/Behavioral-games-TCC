@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Settings } from './settings.entity';
 import { SettingsGameCards } from './settings-game-cards.entity';
-import { SettingsGameWords } from './settings-game-words.entity';
+import { SettingsGameRoulette } from './settings-game-roulette.entity';
 import { CreateSettingsDto } from './dto/create-settings.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { GameService } from '../game/game.service';
@@ -17,8 +17,8 @@ export class SettingsService {
     private settingsRepository: Repository<Settings>,
     @InjectRepository(SettingsGameCards)
     private settingsCardsRepository: Repository<SettingsGameCards>,
-    @InjectRepository(SettingsGameWords)
-    private settingsWordsRepository: Repository<SettingsGameWords>,
+    @InjectRepository(SettingsGameRoulette)
+    private settingsRouletteRepository: Repository<SettingsGameRoulette>,
     private gameService: GameService,
   ) {}
 
@@ -33,39 +33,36 @@ export class SettingsService {
    * Returns the field structure for each game configuration.
    * Used by the frontend to know which fields and types to request from users.
    */
-  getGameConfigFields(game?: 'cards' | 'words') {
+  getGameConfigFields(game?: 'cards' | 'roulette') {
     const common = [
       { name: 'configName', type: 'string' },
       { name: 'game', type: 'enum(GameType)' },
+    ];
+
+    const cards = [
       { name: 'userViewPoints', type: 'boolean' },
       { name: 'limitRounds', type: 'number' },
     ];
 
-    const cards = [
-      { name: 'cardDeckSize', type: 'number' },
-      { name: 'allowSpecialCards', type: 'boolean' },
-      { name: 'cardTheme', type: 'string' },
-    ];
-
-    const words = [
-      { name: 'wordPoolSize', type: 'number' },
-      { name: 'difficulty', type: 'string' },
-      { name: 'includeTimerPerWord', type: 'boolean' },
-      { name: 'secondsPerWord', type: 'number' },
+    const roulette = [
+      { name: 'timeLimit', type: 'number' },
+      { name: 'pointsLimit', type: 'number' },
+      { name: 'popup', type: 'json|null' },
+      { name: 'initMoney', type: 'number' },
     ];
 
     if (game === 'cards') {
       return { common, cards };
     }
 
-    if (game === 'words') {
-      return { common, words };
+    if (game === 'roulette') {
+      return { common, roulette };
     }
 
-    return { common, cards, words };
+    return { common, cards, roulette };
   }
 
-  async create(dto: CreateSettingsDto, gameType?: 'cards' | 'words'): Promise<Settings> {
+  async create(dto: CreateSettingsDto, gameType?: 'cards' | 'roulette'): Promise<Settings> {
     // Verify game type is valid
     if (!this.gameService.isValidGameType(dto.game)) {
       throw new BadRequestException(`Invalid game type: ${dto.game}`);
@@ -73,7 +70,7 @@ export class SettingsService {
 
     // If gameType not provided, infer from dto.game
     if (!gameType) {
-      gameType = dto.game === GameType.CARDS ? 'cards' : 'words';
+      gameType = dto.game === GameType.CARDS ? 'cards' : 'roulette';
     }
 
     let settings: Settings;
@@ -84,23 +81,18 @@ export class SettingsService {
         game: dto.game,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
-        cardDeckSize: dto.cardDeckSize,
-        allowSpecialCards: dto.allowSpecialCards,
-        cardTheme: dto.cardTheme,
       });
       settings = await this.settingsCardsRepository.save(cardsSettings);
-    } else if (gameType === 'words') {
-      const wordsSettings = this.settingsWordsRepository.create({
+    } else if (gameType === 'roulette') {
+      const rouletteSettings = this.settingsRouletteRepository.create({
         configName: dto.configName,
         game: dto.game,
-        userViewPoints: dto.userViewPoints ?? false,
-        limitRounds: dto.limitRounds ?? 10,
-        wordPoolSize: dto.wordPoolSize,
-        difficulty: dto.difficulty,
-        includeTimerPerWord: dto.includeTimerPerWord,
-        secondsPerWord: dto.secondsPerWord,
+        timeLimit: dto.timeLimit,
+        pointsLimit: dto.pointsLimit,
+        popup: dto.popup,
+        initMoney: dto.initMoney,
       });
-      settings = await this.settingsWordsRepository.save(wordsSettings);
+      settings = await this.settingsRouletteRepository.save(rouletteSettings);
     } else {
       throw new BadRequestException(`Invalid game type: ${gameType}`);
     }
@@ -144,21 +136,18 @@ export class SettingsService {
 
     // Update common fields
     if (dto.configName) settings.configName = dto.configName;
-    if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
-    if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
 
     // Update type-specific fields
     if (settings instanceof SettingsGameCards) {
-      if (dto.cardDeckSize !== undefined) settings.cardDeckSize = dto.cardDeckSize;
-      if (dto.allowSpecialCards !== undefined) settings.allowSpecialCards = dto.allowSpecialCards;
-      if (dto.cardTheme) settings.cardTheme = dto.cardTheme;
+      if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
+      if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
       return await this.settingsCardsRepository.save(settings);
-    } else if (settings instanceof SettingsGameWords) {
-      if (dto.wordPoolSize !== undefined) settings.wordPoolSize = dto.wordPoolSize;
-      if (dto.difficulty) settings.difficulty = dto.difficulty;
-      if (dto.includeTimerPerWord !== undefined) settings.includeTimerPerWord = dto.includeTimerPerWord;
-      if (dto.secondsPerWord !== undefined) settings.secondsPerWord = dto.secondsPerWord;
-      return await this.settingsWordsRepository.save(settings);
+    } else if (settings instanceof SettingsGameRoulette) {
+      if (dto.timeLimit !== undefined) settings.timeLimit = dto.timeLimit;
+      if (dto.pointsLimit !== undefined) settings.pointsLimit = dto.pointsLimit;
+      if (dto.popup !== undefined) settings.popup = dto.popup;
+      if (dto.initMoney !== undefined) settings.initMoney = dto.initMoney;
+      return await this.settingsRouletteRepository.save(settings);
     }
 
     return await this.settingsRepository.save(settings);
@@ -174,8 +163,8 @@ export class SettingsService {
 
     if (settings instanceof SettingsGameCards) {
       await this.settingsCardsRepository.delete(id);
-    } else if (settings instanceof SettingsGameWords) {
-      await this.settingsWordsRepository.delete(id);
+    } else if (settings instanceof SettingsGameRoulette) {
+      await this.settingsRouletteRepository.delete(id);
     } else {
       await this.settingsRepository.delete(id);
     }
@@ -196,8 +185,8 @@ export class SettingsService {
 
     if (original instanceof SettingsGameCards) {
       return await this.settingsCardsRepository.save(copy);
-    } else if (original instanceof SettingsGameWords) {
-      return await this.settingsWordsRepository.save(copy);
+    } else if (original instanceof SettingsGameRoulette) {
+      return await this.settingsRouletteRepository.save(copy);
     }
 
     return await this.settingsRepository.save(copy);

@@ -1,6 +1,23 @@
-import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { GameType } from '../../game/games.enum';
+import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+class SessionRoulettePopupDto {
+  @ApiProperty({
+    example: 'Mensagem do popup aparecer na tela',
+    description: 'Popup message shown to selected players',
+  })
+  @IsNotEmpty()
+  @IsString()
+  message: string;
+
+  @ApiProperty({
+    example: 2,
+    description: 'Number of players that should receive this popup',
+  })
+  @IsNumber()
+  players: number;
+}
 
 /**
  * DTO for session configurations
@@ -15,87 +32,55 @@ export class SessionSettingsDto {
   @IsString()
   configName: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: true,
-    required: false,
-    description: 'Whether the player can view points',
+    description: 'Whether the player can view points (Cards)',
   })
   @IsOptional()
   @IsBoolean()
   userViewPoints?: boolean;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 10,
-    required: false,
-    description: 'Session round limit',
+    description: 'Session round limit (Cards)',
   })
   @IsOptional()
   @IsNumber()
   limitRounds?: number;
 
-  // Game-specific fields for Cards (optional)
-  @ApiProperty({
-    example: 52,
-    required: false,
-    description: 'Deck size (Cards)',
+  // Game-specific fields for Roulette (optional)
+  @ApiPropertyOptional({
+    example: 60,
+    description: 'Time limit in seconds (Roulette)',
   })
   @IsOptional()
   @IsNumber()
-  cardDeckSize?: number;
+  timeLimit?: number;
 
-  @ApiProperty({
-    example: true,
-    required: false,
-    description: 'Allow special cards (Cards)',
-  })
-  @IsOptional()
-  @IsBoolean()
-  allowSpecialCards?: boolean;
-
-  @ApiProperty({
-    example: 'standard',
-    required: false,
-    description: 'Deck theme (Cards)',
-  })
-  @IsOptional()
-  @IsString()
-  cardTheme?: string;
-
-  // Game-specific fields for Words (optional)
-  @ApiProperty({
-    example: 100,
-    required: false,
-    description: 'Word pool size (Words)',
+  @ApiPropertyOptional({
+    example: 500,
+    description: 'Points limit to finish a round/session (Roulette)',
   })
   @IsOptional()
   @IsNumber()
-  wordPoolSize?: number;
+  pointsLimit?: number;
 
-  @ApiProperty({
-    example: 'medium',
-    required: false,
-    enum: ['easy', 'medium', 'hard'],
-    description: 'Difficulty level (Words)',
+  @ApiPropertyOptional({
+    nullable: true,
+    type: SessionRoulettePopupDto,
+    description:
+      'Optional popup config. Use null or an object like {"message":"...","players":2} (Roulette)',
   })
   @IsOptional()
-  @IsString()
-  difficulty?: string;
+  @ValidateNested()
+  @Type(() => SessionRoulettePopupDto)
+  popup?: SessionRoulettePopupDto | null;
 
-  @ApiProperty({
-    example: false,
-    required: false,
-    description: 'Include timer per word (Words)',
-  })
-  @IsOptional()
-  @IsBoolean()
-  includeTimerPerWord?: boolean;
-
-  @ApiProperty({
-    example: 30,
-    required: false,
-    description: 'Seconds per word (Words)',
+  @ApiPropertyOptional({
+    example: 1000,
+    description: 'Initial money balance for each player (Roulette)',
   })
   @IsOptional()
   @IsNumber()
-  secondsPerWord?: number;
+  initMoney?: number;
 }

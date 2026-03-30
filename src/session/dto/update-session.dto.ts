@@ -1,10 +1,9 @@
 import { IsOptional, IsBoolean } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateSessionDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: false,
-    required: false,
     description: 'Session status (active/inactive)',
   })
   @IsOptional()

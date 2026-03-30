@@ -1,16 +1,15 @@
-import {
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsUUID,
-  IsInt,
-  Max,
-  IsEnum,
-} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EducationLevel } from '../education-level.enum';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Max } from 'class-validator';
+import { EducationLevel } from '../../player/education-level.enum';
 
-export class CreatePlayerDto {
+export class JoinSessionDto {
+  @ApiProperty({
+    example: 'F4LVTX',
+    description: 'Session invite code',
+  })
+  @IsString()
+  inviteCode: string;
+
   @ApiPropertyOptional({
     enum: EducationLevel,
     example: EducationLevel.BACHELOR,
@@ -46,7 +45,7 @@ export class CreatePlayerDto {
   age?: number;
 
   @ApiPropertyOptional({
-    example: 'Male',
+    example: 'M',
     description: "Player's gender",
   })
   @IsOptional()
@@ -60,11 +59,4 @@ export class CreatePlayerDto {
   @IsOptional()
   @IsString()
   profession?: string;
-
-  @ApiProperty({
-    example: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-    description: 'Session ID the player belongs to',
-  })
-  @IsUUID()
-  session_id: string;
 }
