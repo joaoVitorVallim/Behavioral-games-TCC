@@ -9,6 +9,7 @@ import { ConfigSelector } from '../components/ConfigSelector'
 import { SessionSummary } from '../components/SessionSummary'
 import { useSessionCreation } from '../hooks/useSessionCreation'
 import { useGames } from '../hooks/useGames'
+import { usePlayerFields } from '../hooks/usePlayerFields'
 import { useConfigs } from '../hooks/useConfigs'
 import { useGameConfigFields } from '../hooks/useGameConfigFields'
 import { useCreateSession } from '../hooks/useCreateSession'
@@ -78,6 +79,11 @@ export function CreateSessionPage() {
   const [delete_toast, setDeleteToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const delete_toast_timeout_ref = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { games, is_loading: games_loading, is_error: games_error } = useGames()
+  const {
+    player_field_options,
+    is_loading: player_fields_loading,
+    is_error: player_fields_error
+  } = usePlayerFields()
   const first_game_id = games[0]?.id ?? ''
   const {
     state,
@@ -123,11 +129,38 @@ export function CreateSessionPage() {
     return names
   }, [common_fields, game_fields])
 
+  const valid_player_field_values = useMemo(
+    () => new Set(player_field_options.map((option) => option.value)),
+    [player_field_options]
+  )
+
   useEffect(() => {
     if (!state.selected_game && first_game_id) {
       dispatch({ type: 'SET_GAME', payload: first_game_id })
     }
   }, [state.selected_game, first_game_id, dispatch])
+
+  useEffect(() => {
+    if (player_fields_loading || player_fields_error) return
+
+    const sanitized_input_info = state.input_info.filter((field) =>
+      valid_player_field_values.has(field)
+    )
+
+    const is_same_selection =
+      sanitized_input_info.length === state.input_info.length &&
+      sanitized_input_info.every((field, index) => field === state.input_info[index])
+
+    if (!is_same_selection) {
+      dispatch({ type: 'SET_PLAYER_INFO', payload: sanitized_input_info })
+    }
+  }, [
+    player_fields_loading,
+    player_fields_error,
+    valid_player_field_values,
+    state.input_info,
+    dispatch
+  ])
 
   useEffect(() => {
     if (!page_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -262,7 +295,7 @@ export function CreateSessionPage() {
       const payload: CreateSessionPayload = {
         game: selected_game_for_query,
         settings: settings_for_session,
-        inputInfo: state.input_info,
+        inputInfo: state.input_info.filter((field) => valid_player_field_values.has(field)),
         user_id: user.id
       }
 
@@ -330,12 +363,15 @@ export function CreateSessionPage() {
             games={games}
             games_loading={games_loading}
             games_error={games_error}
+            player_field_options={player_field_options}
+            player_fields_loading={player_fields_loading}
+            player_fields_error={player_fields_error}
             input_info={state.input_info}
             dispatch={dispatch}
           />
         </div>
 
-        <div data-create-section="config">
+        <div data-create-section="config" className="relative z-20">
           <ConfigSelector
             selected_game={state.selected_game}
             config_mode={state.config_mode}
@@ -356,7 +392,7 @@ export function CreateSessionPage() {
           />
         </div>
 
-        <div data-create-section="summary">
+        <div data-create-section="summary" className="relative z-10">
           <SessionSummary
             session_name={state.session_name}
             selected_game={state.selected_game}

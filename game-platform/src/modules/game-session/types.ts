@@ -1,15 +1,11 @@
 // -- Player Info Options (session-level) --
 
-export type PlayerInfoField = 'nickname' | 'name' | 'age' | 'gender' | 'profession' | 'email'
+export interface PlayerInfoOption {
+  value: string
+  label: string
+}
 
-export const PLAYER_INFO_OPTIONS: { value: PlayerInfoField; label: string }[] = [
-  { value: 'nickname', label: 'Apelido' },
-  { value: 'name', label: 'Nome' },
-  { value: 'age', label: 'Idade' },
-  { value: 'gender', label: 'Gênero' },
-  { value: 'profession', label: 'Profissão' },
-  { value: 'email', label: 'E-mail' }
-]
+export type ValidPlayerFieldsResponse = string[]
 
 // -- Game Catalog (from API) --
 

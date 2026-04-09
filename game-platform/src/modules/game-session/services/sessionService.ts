@@ -6,6 +6,7 @@ import type {
   GameConfig,
   GameCatalogItem,
   GameConfigFieldsResponse,
+  ValidPlayerFieldsResponse,
   CreateConfigPayload,
   CreateSessionPayload,
   CreateSessionResponse
@@ -22,6 +23,11 @@ export const sessionService = {
     const response = await api_client.get('/settings/game-config/fields', {
       params: { game }
     })
+    return response.data
+  },
+
+  getValidPlayerFields: async (): Promise<ValidPlayerFieldsResponse> => {
+    const response = await api_client.get('/settings/player-fields/valid')
     return response.data
   },
 

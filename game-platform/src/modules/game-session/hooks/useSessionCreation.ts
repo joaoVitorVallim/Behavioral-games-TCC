@@ -24,7 +24,7 @@ const build_initial_config = (game: string): CreateConfigPayload => ({
 const initial_state: SessionCreationState = {
   session_name: '',
   selected_game: '',
-  input_info: ['nickname'],
+  input_info: [],
   config_mode: 'select',
   selected_config_id: '',
   new_config: build_initial_config(''),
@@ -38,6 +38,7 @@ export type SessionAction =
   | { type: 'SET_SESSION_NAME'; payload: string }
   | { type: 'SET_GAME'; payload: string }
   | { type: 'TOGGLE_PLAYER_INFO'; payload: string }
+  | { type: 'SET_PLAYER_INFO'; payload: string[] }
   | { type: 'SET_CONFIG_MODE'; payload: 'select' | 'create' }
   | { type: 'SYNC_CONFIG_MODE_FOR_EMPTY_LIST'; payload: boolean }
   | { type: 'SELECT_CONFIG'; payload: string }
@@ -67,6 +68,9 @@ function session_reducer(state: SessionCreationState, action: SessionAction): Se
         : [...state.input_info, field]
       return { ...state, input_info }
     }
+
+    case 'SET_PLAYER_INFO':
+      return { ...state, input_info: action.payload }
 
     case 'SET_CONFIG_MODE':
       return { ...state, config_mode: action.payload }

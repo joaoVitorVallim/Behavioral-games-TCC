@@ -1,6 +1,6 @@
 import { ChevronDown, Users } from 'lucide-react'
-import { PLAYER_INFO_OPTIONS } from '../types'
 import type { GameCatalogItem } from '../types'
+import type { PlayerInfoOption } from '../types'
 import type { SessionAction } from '../hooks/useSessionCreation'
 
 interface SessionDataFormProps {
@@ -9,6 +9,9 @@ interface SessionDataFormProps {
   games: GameCatalogItem[]
   games_loading: boolean
   games_error: boolean
+  player_field_options: PlayerInfoOption[]
+  player_fields_loading: boolean
+  player_fields_error: boolean
   input_info: string[]
   dispatch: React.Dispatch<SessionAction>
 }
@@ -19,6 +22,9 @@ export function SessionDataForm({
   games,
   games_loading,
   games_error,
+  player_field_options,
+  player_fields_loading,
+  player_fields_error,
   input_info,
   dispatch
 }: SessionDataFormProps) {
@@ -95,8 +101,18 @@ export function SessionDataForm({
           <p className="text-xs text-muted-foreground mb-3">
             Selecione quais informações serão solicitadas ao jogador ao entrar na sessão
           </p>
+          {player_fields_loading && (
+            <p className="text-xs text-muted-foreground mb-3">
+              Carregando campos disponiveis do jogador...
+            </p>
+          )}
+          {player_fields_error && (
+            <p className="text-xs text-destructive mb-3">
+              Nao foi possivel carregar os campos do jogador.
+            </p>
+          )}
           <div className="flex flex-wrap gap-3">
-            {PLAYER_INFO_OPTIONS.map((opt) => (
+            {player_field_options.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
@@ -111,6 +127,11 @@ export function SessionDataForm({
               </button>
             ))}
           </div>
+          {!player_fields_loading && !player_fields_error && player_field_options.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Nenhum campo disponivel para selecionar.
+            </p>
+          )}
           {input_info.length === 0 && (
             <p className="text-xs text-destructive mt-2">
               Selecione ao menos uma informação do jogador

@@ -65,7 +65,7 @@ export function ConfigSelector({
 
   return (
     <section
-      className="surface-panel mb-8 p-8"
+      className="surface-panel relative mb-8 overflow-visible p-8"
       aria-labelledby="section-match-config"
     >
       <div className="flex items-center gap-3 mb-2">
@@ -139,7 +139,7 @@ export function ConfigSelector({
             />
 
             {is_dropdown_open && !configs_loading && !configs_error && configs_for_game.length > 0 && (
-              <div className="surface-panel absolute z-20 mt-2 max-h-64 w-full overflow-auto p-2">
+              <div className="surface-panel absolute z-50 mt-2 max-h-64 w-full overflow-auto p-2">
                 <ul role="listbox" aria-label="Configuracoes existentes" className="p-2 space-y-1">
                   {configs_for_game.map((cfg) => {
                     const is_selected = cfg.id === selected_config_id
