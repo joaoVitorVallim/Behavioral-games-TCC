@@ -6,7 +6,6 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  CardsMoveOption,
   MatchStatus,
   RouletteMoveOption,
 } from '../match.entity';
@@ -40,16 +39,8 @@ export class UpdateMatchDto {
     additionalProperties: true,
     description: 'Moves grouped by round keys ("1", "2", ...)',
     example: {
-      '1': {
-        jogador1: CardsMoveOption.VERMELHO,
-        jogador2: CardsMoveOption.PRETO,
-      },
-      '2': {
-        coinsAmount: 900,
-        aposta: 100,
-        opcao: RouletteMoveOption.AZUL,
-        winrate: true,
-      },
+      '1': { player1Choice: 'cooperate', player2Choice: 'defect', player1Points: 0, player2Points: 5 },
+      '2': { coinsAmount: 900, aposta: 100, opcao: RouletteMoveOption.AZUL, winrate: true },
     },
   })
   @IsOptional()

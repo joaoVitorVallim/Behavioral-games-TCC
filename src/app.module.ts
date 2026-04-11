@@ -8,6 +8,7 @@ import { SettingsModule } from './settings/settings.module';
 import { SessionModule } from './session/session.module';
 import { PlayerModule } from './player/player.module';
 import { MatchModule } from './match/match.module';
+import { PrisonerModule } from './prisoner/prisoner.module';
 
 @Module({
   imports: [
@@ -34,12 +35,8 @@ import { MatchModule } from './match/match.module';
     SessionModule,
     PlayerModule,
     MatchModule,
-    
+    PrisonerModule,
+
   ],
 })
 export class AppModule {}
-console.log(process.env.DATABASE_HOST)
-console.log(process.env.DATABASE_PORT)
-console.log(process.env.DATABASE_USER)
-console.log(process.env.DATABASE_PASSWORD)
-console.log(process.env.DATABASE_NAME)

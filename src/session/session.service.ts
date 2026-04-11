@@ -7,6 +7,7 @@ import { UpdateSessionDto } from './dto/update-session.dto';
 import { GameService } from '../game/game.service';
 import { GameType } from '../game/games.enum';
 import { SettingsService } from '../settings/settings.service';
+import { Settings } from '../settings/settings.entity';
 import { UsersService } from '../users/users.service';
 import { isValidPlayerField, PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
 import { Player } from '../player/player.entity';
@@ -18,10 +19,6 @@ export class SessionService {
   constructor(
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
-    @InjectRepository(Player)
-    private playerRepository: Repository<Player>,
-    @InjectRepository(Match)
-    private matchRepository: Repository<Match>,
     private dataSource: DataSource,
     private gameService: GameService,
     private settingsService: SettingsService,
@@ -29,7 +26,8 @@ export class SessionService {
   ) {}
 
   private getMaxPlayersForGame(game: GameType): number {
-    return game === GameType.CARDS ? 2 : 1;
+    const twoPlayerGames: GameType[] = [GameType.PRISONER];
+    return twoPlayerGames.includes(game) ? 2 : 1;
   }
 
   private validateRequiredPlayerFields(
@@ -53,9 +51,6 @@ export class SessionService {
     }
   }
 
-  /**
-   * Generate a unique invite code
-   */
   private generateInviteCode(): string {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
@@ -99,36 +94,38 @@ export class SessionService {
     const validatedInputInfo = this.validateAndFilterInputInfo(dto.inputInfo);
 
     // Create settings based on the game type
-    let settings;
+    const gameTypeMap: Record<GameType, 'roulette' | 'prisoner'> = {
+      [GameType.ROULETTE]: 'roulette',
+      [GameType.PRISONER]: 'prisoner',
+    };
+
+    let settings: Settings;
     try {
-      // Infer game type from enum value
-      const gameType = dto.game === GameType.CARDS ? 'cards' : 'roulette';
       settings = await this.settingsService.create(
         {
           configName: dto.settings.configName,
           game: dto.game,
           userViewPoints: dto.settings.userViewPoints,
           limitRounds: dto.settings.limitRounds,
-          // Game-specific fields
           timeLimit: dto.settings.timeLimit,
           pointsLimit: dto.settings.pointsLimit,
           popup: dto.settings.popup,
           initMoney: dto.settings.initMoney,
         },
-        gameType,
+        gameTypeMap[dto.game],
       );
-    } catch (error) {
-      throw new BadRequestException(`Failed to create settings: ${error.message}`);
+    } catch (error: unknown) {
+      throw new BadRequestException(`Failed to create settings: ${(error as Error).message}`);
     }
 
-    let sessionSettings;
+    let sessionSettings: Settings;
     try {
       sessionSettings = await this.settingsService.createCopy(
         settings.id,
         `${dto.settings.configName} (Session)`,
       );
-    } catch (error) {
-      throw new BadRequestException(`Failed to create settings snapshot: ${error.message}`);
+    } catch (error: unknown) {
+      throw new BadRequestException(`Failed to create settings snapshot: ${(error as Error).message}`);
     }
 
     // Generate unique invite code
@@ -214,19 +211,26 @@ export class SessionService {
     const inviteCode = payload.inviteCode.trim().toUpperCase();
 
     return await this.dataSource.transaction(async (manager) => {
-      const session = await manager
+      const lockedSession = await manager
         .getRepository(Session)
         .createQueryBuilder('session')
-        .leftJoinAndSelect('session.settings', 'settings')
-        .leftJoinAndSelect('session.user', 'user')
         .where('session.inviteCode = :inviteCode', { inviteCode })
         .setLock('pessimistic_write')
         .getOne();
 
-      if (!session) {
+      if (!lockedSession) {
         throw new NotFoundException(
           `Session with invite code ${inviteCode} not found`,
         );
+      }
+
+      const session = await manager.getRepository(Session).findOne({
+        where: { id: lockedSession.id },
+        relations: ['settings', 'user'],
+      });
+
+      if (!session) {
+        throw new NotFoundException(`Session with invite code ${inviteCode} not found`);
       }
 
       if (!session.isActive) {
@@ -271,7 +275,7 @@ export class SessionService {
         });
 
         if (!existingMatch) {
-          if (session.game === GameType.CARDS) {
+          if (session.game === GameType.PRISONER) {
             const players = await playerRepo.find({
               where: { session_id: session.id },
               order: { created_at: 'ASC' },
@@ -280,7 +284,7 @@ export class SessionService {
 
             if (players.length < 2) {
               throw new BadRequestException(
-                'Not enough players to create cards match',
+                'Not enough players to create prisoner match',
               );
             }
 

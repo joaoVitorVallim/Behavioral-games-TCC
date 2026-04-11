@@ -19,10 +19,10 @@ export class GameController {
     schema: {
       example: [
         {
-          id: 'cards',
-          name: 'Card Game',
-          description: 'A strategic and educational card game',
-          redirectUrl: 'https://cards-game.example.com',
+          id: 'prisoner',
+          name: "Prisoner's Dilemma",
+          description: "A behavioral game based on the classic Prisoner's Dilemma theory",
+          redirectUrl: 'http://localhost:3001',
         },
         {
           id: 'roulette',
@@ -44,7 +44,7 @@ export class GameController {
   })
   @ApiParam({
     name: 'game_name',
-    enum: ['cards', 'roulette'],
+    enum: ['prisoner', 'roulette'],
     description: 'Game type',
   })
   @ApiResponse({
@@ -52,10 +52,10 @@ export class GameController {
     description: 'Game information returned successfully',
     schema: {
       example: {
-        id: 'cards',
-        name: 'Card Game',
-        description: 'A strategic and educational card game',
-        redirectUrl: 'https://cards-game.example.com',
+        id: 'prisoner',
+        name: "Prisoner's Dilemma",
+        description: "A behavioral game based on the classic Prisoner's Dilemma theory",
+        redirectUrl: 'http://localhost:3001',
       },
     },
   })

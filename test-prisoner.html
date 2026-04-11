@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teste - Dilema do Prisioneiro</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: monospace; background: #1a1a2e; color: #eee; padding: 16px; }
+    h1 { text-align: center; color: #00d4ff; margin-bottom: 20px; font-size: 1.4rem; }
+    h2 { color: #00d4ff; font-size: 1rem; margin-bottom: 10px; }
+    h3 { color: #aaa; font-size: 0.85rem; margin-bottom: 6px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .full-width { grid-column: 1 / -1; }
+
+    button {
+      background: #0f3460;
+      color: #00d4ff;
+      border: 1px solid #00d4ff;
+      border-radius: 4px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      margin: 3px;
+      font-family: monospace;
+    }
+    button:hover { background: #1a4a80; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.cooperate { border-color: #00ff88; color: #00ff88; }
+    button.cooperate:hover { background: #003322; }
+    button.defect { border-color: #ff4444; color: #ff4444; }
+    button.defect:hover { background: #330000; }
+    button.action { border-color: #ffaa00; color: #ffaa00; }
+    button.action:hover { background: #332200; }
+
+    input, select {
+      background: #0a0a1a;
+      border: 1px solid #0f3460;
+      border-radius: 4px;
+      color: #eee;
+      padding: 6px 8px;
+      font-size: 0.82rem;
+      font-family: monospace;
+      width: 100%;
+      margin-bottom: 6px;
+    }
+    label { font-size: 0.78rem; color: #aaa; display: block; margin-bottom: 2px; }
+
+    .log {
+      background: #0a0a1a;
+      border: 1px solid #0f3460;
+      border-radius: 4px;
+      padding: 8px;
+      height: 160px;
+      overflow-y: auto;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+    .log p { margin: 0; padding: 1px 0; }
+    .log .ok { color: #00ff88; }
+    .log .err { color: #ff4444; }
+    .log .info { color: #00d4ff; }
+    .log .warn { color: #ffaa00; }
+    .log .dim { color: #666; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: bold;
+    }
+    .badge-waiting { background: #332200; color: #ffaa00; }
+    .badge-ready { background: #003322; color: #00ff88; }
+    .badge-done { background: #003366; color: #00d4ff; }
+    .badge-err { background: #330000; color: #ff4444; }
+
+    .score-box {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .score-card {
+      flex: 1;
+      background: #0a0a1a;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+    }
+    .score-card .name { font-size: 0.78rem; color: #aaa; margin-bottom: 4px; }
+    .score-card .pts { font-size: 1.6rem; color: #00d4ff; font-weight: bold; }
+
+    .round-info {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #aaa;
+      margin: 8px 0;
+    }
+    .round-info span { color: #ffaa00; font-weight: bold; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 8px; }
+    th { background: #0f3460; color: #00d4ff; padding: 5px 8px; text-align: left; }
+    td { padding: 4px 8px; border-bottom: 1px solid #0f3460; }
+    .c { color: #00ff88; }
+    .d { color: #ff4444; }
+
+    .step-indicator {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .step {
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      background: #0a0a1a;
+      border: 1px solid #333;
+      color: #555;
+    }
+    .step.active { border-color: #ffaa00; color: #ffaa00; }
+    .step.done { border-color: #00ff88; color: #00ff88; }
+    .step.current { background: #332200; border-color: #ffaa00; color: #ffaa00; }
+
+    hr { border: none; border-top: 1px solid #0f3460; margin: 12px 0; }
+    .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 120px; }
+    small { color: #555; font-size: 0.7rem; }
+
+    /* Teacher panel */
+    .session-card {
+      background: #0a0a1a;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: border-color 0.15s;
+      min-width: 200px;
+    }
+    .session-card:hover { border-color: #00d4ff; }
+    .session-card.selected { border-color: #ffaa00; background: #1a1000; }
+    .session-card .sc-code { font-size: 1rem; color: #ffaa00; font-weight: bold; }
+    .session-card .sc-meta { color: #555; margin-top: 3px; }
+
+    .match-block {
+      background: #0a0a1a;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .match-block h4 { color: #00d4ff; font-size: 0.85rem; margin-bottom: 8px; }
+    .match-block .match-meta { font-size: 0.75rem; color: #666; margin-bottom: 8px; }
+    .match-block .final-score {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .match-block .fs-card {
+      flex: 1;
+      background: #16213e;
+      border-radius: 4px;
+      padding: 8px;
+      text-align: center;
+    }
+    .match-block .fs-card .fs-name { font-size: 0.72rem; color: #aaa; }
+    .match-block .fs-card .fs-pts { font-size: 1.3rem; font-weight: bold; color: #00d4ff; }
+    .match-block .winner { color: #00ff88; }
+
+    .report-header {
+      border-bottom: 2px solid #0f3460;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .report-header h3 { color: #ffaa00; font-size: 1rem; }
+    .report-header p { font-size: 0.78rem; color: #666; margin-top: 4px; }
+
+    .session-report-block { margin-bottom: 28px; }
+    .session-report-block h3 {
+      color: #00d4ff;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #0f3460;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+    }
+
+    .summary-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .summary-item {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+    .summary-item span { color: #ffaa00; font-weight: bold; }
+
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .panel { border: 1px solid #ccc; background: #fff; }
+      button, .log, #steps, #log-setup, #log-p1, #log-p2,
+      #log-teacher, .step-indicator, [id^="p1-"], [id^="p2-"],
+      .score-box, #rounds-table, #final-result,
+      h1, .grid > .panel:not(#teacher-panel) { display: none !important; }
+      #teacher-panel { border: none; padding: 0; }
+      .match-block { break-inside: avoid; border: 1px solid #ccc; }
+      table { border-collapse: collapse; }
+      th, td { border: 1px solid #ccc; color: #000; }
+      th { background: #eee !important; }
+      .c { color: #006600 !important; }
+      .d { color: #cc0000 !important; }
+      .report-header h3 { color: #000 !important; }
+      .session-report-block h3 { color: #000 !important; border-bottom: 2px solid #000; }
+      .fs-card { background: #f9f9f9 !important; }
+      .fs-card .fs-pts { color: #000 !important; }
+      #teacher-session-list { display: none !important; }
+      .teacher-controls { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Teste — Dilema do Prisioneiro</h1>
+
+<!-- Step Indicator -->
+<div class="step-indicator" id="steps">
+  <div class="step" id="step-setup">1. Setup</div>
+  <div class="step" id="step-session">2. Sessão criada</div>
+  <div class="step" id="step-players">3. Jogadores entraram</div>
+  <div class="step" id="step-ws">4. WebSocket conectado</div>
+  <div class="step" id="step-playing">5. Jogando</div>
+  <div class="step" id="step-done">6. Finalizado</div>
+</div>
+
+<div class="grid">
+
+  <!-- SETUP -->
+  <div class="panel full-width">
+    <h2>Setup Inicial</h2>
+    <div class="row">
+      <div>
+        <label>API Base URL</label>
+        <input id="apiUrl" value="http://localhost:3000" />
+      </div>
+      <div>
+        <label>Rounds</label>
+        <input id="limitRounds" type="number" value="3" min="1" max="20" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="action" onclick="setupAll()">Setup Completo (criar usuário → sessão → 2 jogadores)</button>
+      <button onclick="clearAll()">Limpar tudo</button>
+    </div>
+    <hr/>
+    <div class="row">
+      <div>
+        <label>Ou: ID de Sessão existente</label>
+        <input id="existingSessionId" placeholder="UUID da sessão" />
+      </div>
+      <div>
+        <label>Invite Code</label>
+        <input id="existingCode" placeholder="ex: F4LVTX" />
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button onclick="useExistingSession()">Usar sessão existente</button>
+      </div>
+    </div>
+    <div class="log" id="log-setup" style="margin-top:10px;height:300px;"></div>
+  </div>
+
+  <!-- PLAYER 1 -->
+  <div class="panel">
+    <h2>Jogador 1</h2>
+    <div id="p1-status"><span class="status-badge badge-waiting">aguardando</span></div>
+    <div id="p1-info" style="font-size:0.78rem;color:#aaa;margin:6px 0;"></div>
+    <div class="round-info" id="p1-round">Rodada: <span>-</span> / <span>-</span></div>
+    <div id="p1-choice-btns" style="display:none; text-align:center; margin: 10px 0;">
+      <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">Sua escolha:</p>
+      <button class="cooperate" onclick="submitChoice(1, 'cooperate')">Cooperar</button>
+      <button class="defect" onclick="submitChoice(1, 'defect')">Trair</button>
+    </div>
+    <div id="p1-waiting" style="display:none;text-align:center;font-size:0.8rem;color:#ffaa00;">
+      Aguardando outro jogador...
+    </div>
+    <div class="log" id="log-p1" style="height:130px;"></div>
+  </div>
+
+  <!-- PLAYER 2 -->
+  <div class="panel">
+    <h2>Jogador 2</h2>
+    <div id="p2-status"><span class="status-badge badge-waiting">aguardando</span></div>
+    <div id="p2-info" style="font-size:0.78rem;color:#aaa;margin:6px 0;"></div>
+    <div class="round-info" id="p2-round">Rodada: <span>-</span> / <span>-</span></div>
+    <div id="p2-choice-btns" style="display:none; text-align:center; margin: 10px 0;">
+      <p style="font-size:0.8rem;color:#aaa;margin-bottom:6px;">Sua escolha:</p>
+      <button class="cooperate" onclick="submitChoice(2, 'cooperate')">Cooperar</button>
+      <button class="defect" onclick="submitChoice(2, 'defect')">Trair</button>
+    </div>
+    <div id="p2-waiting" style="display:none;text-align:center;font-size:0.8rem;color:#ffaa00;">
+      Aguardando outro jogador...
+    </div>
+    <div class="log" id="log-p2" style="height:130px;"></div>
+  </div>
+
+  <!-- PLACAR -->
+  <div class="panel full-width">
+    <h2>Placar em Tempo Real</h2>
+    <div class="score-box">
+      <div class="score-card">
+        <div class="name" id="score-p1-name">Jogador 1</div>
+        <div class="pts" id="score-p1">0</div>
+        <small>pontos</small>
+      </div>
+      <div class="score-card" style="border-color:#555;">
+        <div class="name">Rodada Atual</div>
+        <div class="pts" id="score-round" style="color:#ffaa00;">-</div>
+        <small id="score-total-rounds">de ? rodadas</small>
+      </div>
+      <div class="score-card">
+        <div class="name" id="score-p2-name">Jogador 2</div>
+        <div class="pts" id="score-p2">0</div>
+        <small>pontos</small>
+      </div>
+    </div>
+
+    <h3>Histórico de Rodadas</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Jogador 1</th>
+          <th>Pts P1</th>
+          <th>Jogador 2</th>
+          <th>Pts P2</th>
+        </tr>
+      </thead>
+      <tbody id="rounds-table"></tbody>
+    </table>
+  </div>
+
+  <!-- RESULTADO FINAL -->
+  <div class="panel full-width" id="final-result" style="display:none;">
+    <h2>Resultado Final</h2>
+    <div id="final-content"></div>
+  </div>
+
+  <!-- AUTO-PLAY -->
+  <div class="panel full-width">
+    <h2>Auto-Play</h2>
+    <p style="font-size:0.78rem;color:#aaa;margin-bottom:8px;">Simula escolhas automáticas para testar o fluxo completo.</p>
+    <div class="row">
+      <div>
+        <label>Estratégia P1</label>
+        <select id="strategy-p1">
+          <option value="cooperate">Sempre Cooperar</option>
+          <option value="defect">Sempre Trair</option>
+          <option value="random">Aleatório</option>
+          <option value="tit-for-tat">Tit-for-Tat</option>
+        </select>
+      </div>
+      <div>
+        <label>Estratégia P2</label>
+        <select id="strategy-p2">
+          <option value="defect">Sempre Trair</option>
+          <option value="cooperate">Sempre Cooperar</option>
+          <option value="random">Aleatório</option>
+          <option value="tit-for-tat">Tit-for-Tat</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="action" onclick="startAutoPlay()" id="btn-autoplay">Iniciar Auto-Play</button>
+        <button onclick="stopAutoPlay()" id="btn-stop-auto" disabled>Parar</button>
+      </div>
+    </div>
+    <div id="autoplay-status" style="font-size:0.78rem;color:#aaa;margin-top:6px;"></div>
+  </div>
+
+  <!-- PAINEL DA PROFESSORA -->
+  <div class="panel full-width" id="teacher-panel">
+    <h2>Painel da Professora — Consulta de Sessões</h2>
+
+    <div class="row" style="margin-bottom:10px;">
+      <div>
+        <label>Filtrar por jogo</label>
+        <select id="teacher-game-filter">
+          <option value="">Todos</option>
+          <option value="prisoner" selected>prisoner</option>
+          <option value="roulette">roulette</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px;">
+        <button class="action" onclick="teacherLoadSessions()">Listar Sessões</button>
+        <button onclick="teacherClear()">Limpar</button>
+        <button onclick="window.print()">Imprimir / Salvar PDF</button>
+      </div>
+    </div>
+
+    <!-- Session list -->
+    <div id="teacher-session-list" style="display:none;margin-bottom:14px;">
+      <h3>Sessões encontradas — selecione para carregar partidas:</h3>
+      <div id="teacher-session-cards" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+    </div>
+
+    <!-- Report area -->
+    <div id="teacher-report" style="display:none;">
+      <hr/>
+      <div id="teacher-report-content"></div>
+    </div>
+
+    <div class="log" id="log-teacher" style="height:80px;margin-top:10px;"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const state = {
+  apiUrl: 'http://localhost:3000',
+  userId: null,
+  sessionId: null,
+  inviteCode: null,
+  matchId: null,
+  player1Id: null,
+  player2Id: null,
+  socket1: null,
+  socket2: null,
+  currentRound: 1,
+  totalRounds: 3,
+  p1Chose: false,
+  p2Chose: false,
+  p1LastChoice: null,
+  p2LastChoice: null,
+  autoPlaying: false,
+  autoInterval: null,
+  matchReady: false,
+};
+
+// ─── LOGGING ─────────────────────────────────────────────────────────────────
+function log(targetId, msg, type = 'info') {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const p = document.createElement('p');
+  p.className = type;
+  p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(p);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── STEP INDICATOR ──────────────────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById(`step-${['setup','session','players','ws','playing','done'][i-1]}`);
+    if (!el) continue;
+    el.className = 'step';
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('current');
+  }
+}
+
+// ─── API HELPERS ──────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const url = `${state.apiUrl}${path}`;
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  };
+  const r = await fetch(url, opts);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.message || `HTTP ${r.status}`);
+  return data;
+}
+
+// ─── SETUP FLOW ───────────────────────────────────────────────────────────────
+async function setupAll() {
+  state.apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+  state.totalRounds = parseInt(document.getElementById('limitRounds').value) || 3;
+  clearAll();
+  setStep(1);
+
+  try {
+    // 1. Create user
+    log('log-setup', 'Criando usuário (professor)...', 'info');
+    const user = await api('POST', '/users', {
+      name: 'Professor Teste',
+      login: `prof_${Date.now()}`,
+      password: 'senha123',
+    });
+    state.userId = user.id;
+    log('log-setup', `Usuário criado: ${user.id}`, 'ok');
+
+    // 2. Create session
+    log('log-setup', 'Criando sessão...', 'info');
+    const session = await api('POST', '/sessions', {
+      game: 'prisoner',
+      settings: {
+        configName: 'Teste Dilema',
+        userViewPoints: true,
+        limitRounds: state.totalRounds,
+      },
+      inputInfo: [],
+      user_id: state.userId,
+    });
+    state.sessionId = session.id;
+    state.inviteCode = session.inviteCode;
+    log('log-setup', `Sessão: ${session.id}`, 'ok');
+    log('log-setup', `Código: ${session.inviteCode}`, 'ok');
+    setStep(2);
+
+    // 3. Player 1 joins
+    log('log-setup', 'Jogador 1 entrando...', 'info');
+    const j1 = await api('POST', '/sessions/join', { inviteCode: state.inviteCode });
+    state.player1Id = j1.player.id;
+    log('log-setup', `Jogador 1: ${j1.player.id}`, 'ok');
+    document.getElementById('p1-info').textContent = `ID: ${j1.player.id.slice(0,8)}...`;
+
+    // 4. Player 2 joins → creates match
+    log('log-setup', 'Jogador 2 entrando...', 'info');
+    const j2 = await api('POST', '/sessions/join', { inviteCode: state.inviteCode });
+    state.player2Id = j2.player.id;
+    state.matchId = j2.match?.id;
+    log('log-setup', `Jogador 2: ${j2.player.id}`, 'ok');
+    log('log-setup', `Partida criada: ${state.matchId}`, 'ok');
+    document.getElementById('p2-info').textContent = `ID: ${j2.player.id.slice(0,8)}...`;
+    setStep(3);
+
+    updateScoreHeader();
+    connectWebSockets();
+
+  } catch (err) {
+    log('log-setup', `Erro: ${err.message}`, 'err');
+    console.error(err);
+  }
+}
+
+function useExistingSession() {
+  state.apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+  state.sessionId = document.getElementById('existingSessionId').value.trim();
+  state.inviteCode = document.getElementById('existingCode').value.trim().toUpperCase();
+  if (!state.sessionId || !state.inviteCode) {
+    alert('Preencha o ID da sessão e o invite code.');
+    return;
+  }
+  log('log-setup', `Usando sessão existente: ${state.sessionId}`, 'info');
+  log('log-setup', `Código: ${state.inviteCode}`, 'info');
+  log('log-setup', 'Você ainda precisa configurar player IDs e match ID manualmente ou fazer os joins.', 'warn');
+}
+
+// ─── WEBSOCKET ────────────────────────────────────────────────────────────────
+function connectWebSockets() {
+  if (!state.matchId || !state.player1Id || !state.player2Id) {
+    log('log-setup', 'Faltam dados para conectar WebSocket', 'err');
+    return;
+  }
+
+  log('log-setup', 'Conectando WebSockets...', 'info');
+
+  const wsUrl = state.apiUrl.replace(/^http/, 'ws');
+
+  state.socket1 = io(state.apiUrl, { path: '/socket.io', transports: ['websocket'] });
+  state.socket2 = io(state.apiUrl, { path: '/socket.io', transports: ['websocket'] });
+
+  // We need namespace /prisoner
+  state.socket1 = io(`${state.apiUrl}/prisoner`, { transports: ['websocket'] });
+  state.socket2 = io(`${state.apiUrl}/prisoner`, { transports: ['websocket'] });
+
+  setupSocketEvents(state.socket1, 1);
+  setupSocketEvents(state.socket2, 2);
+}
+
+function setupSocketEvents(socket, playerNum) {
+  const logId = `log-p${playerNum}`;
+  const playerId = playerNum === 1 ? state.player1Id : state.player2Id;
+
+  socket.on('connect', () => {
+    log(logId, `Conectado (${socket.id})`, 'ok');
+    document.getElementById(`p${playerNum}-status`).innerHTML =
+      '<span class="status-badge badge-ready">conectado</span>';
+
+    // Join match
+    socket.emit('joinMatch', { matchId: state.matchId, playerId });
+    log(logId, `joinMatch enviado`, 'dim');
+  });
+
+  socket.on('connect_error', (err) => {
+    log(logId, `Erro de conexão: ${err.message}`, 'err');
+    document.getElementById(`p${playerNum}-status`).innerHTML =
+      '<span class="status-badge badge-err">erro</span>';
+  });
+
+  socket.on('disconnect', () => {
+    log(logId, 'Desconectado', 'warn');
+    document.getElementById(`p${playerNum}-status`).innerHTML =
+      '<span class="status-badge badge-waiting">desconectado</span>';
+  });
+
+  socket.on('joinedMatch', (data) => {
+    log(logId, `Entrou na partida | Rodadas: ${data.totalRounds} | Status: ${data.status}`, 'ok');
+    state.totalRounds = data.totalRounds;
+    updateRoundDisplay(playerNum, 1, data.totalRounds);
+    document.getElementById('score-total-rounds').textContent = `de ${data.totalRounds} rodadas`;
+    setStep(4);
+  });
+
+  socket.on('matchReady', (data) => {
+    log(logId, `Partida pronta! Rodada ${data.currentRound}/${data.totalRounds}`, 'ok');
+    state.matchReady = true;
+    state.currentRound = data.currentRound;
+    document.getElementById(`p${playerNum}-status`).innerHTML =
+      '<span class="status-badge badge-ready">em jogo</span>';
+    showChoiceButtons(playerNum);
+    setStep(5);
+    updateRoundDisplay(playerNum, data.currentRound, data.totalRounds);
+    document.getElementById('score-round').textContent = data.currentRound;
+  });
+
+  socket.on('choiceReceived', (data) => {
+    log(logId, `Escolha registrada (rodada ${data.round})`, 'dim');
+    hideChoiceButtons(playerNum);
+    document.getElementById(`p${playerNum}-waiting`).style.display = 'block';
+  });
+
+  socket.on('roundResult', (data) => {
+    const myChoice = playerNum === 1 ? data.result.player1Choice : data.result.player2Choice;
+    const myPts = playerNum === 1 ? data.result.player1Points : data.result.player2Points;
+    log(logId, `Rodada ${data.round}: ${myChoice} → +${myPts} pts`, 'info');
+    log(logId, `   Total: P1=${data.totalPoints.player1} | P2=${data.totalPoints.player2}`, 'dim');
+
+    // Update state for tit-for-tat
+    state.p1LastChoice = data.result.player1Choice;
+    state.p2LastChoice = data.result.player2Choice;
+    state.p1Chose = false;
+    state.p2Chose = false;
+
+    // Update scoreboard (only player 1 socket updates the shared table to avoid duplicates)
+    document.getElementById('score-p1').textContent = data.totalPoints.player1;
+    document.getElementById('score-p2').textContent = data.totalPoints.player2;
+    if (playerNum === 1) addRoundRow(data.round, data.result);
+
+    document.getElementById(`p${playerNum}-waiting`).style.display = 'none';
+
+    if (data.nextRound !== null) {
+      state.currentRound = data.nextRound;
+      updateRoundDisplay(playerNum, data.nextRound, state.totalRounds);
+      document.getElementById('score-round').textContent = data.nextRound;
+      showChoiceButtons(playerNum);
+    }
+  });
+
+  socket.on('matchFinished', (data) => {
+    log(logId, `Partida finalizada! P1=${data.finalScore.player1} P2=${data.finalScore.player2}`, 'ok');
+    hideChoiceButtons(playerNum);
+    document.getElementById(`p${playerNum}-status`).innerHTML =
+      '<span class="status-badge badge-done">finalizado</span>';
+    document.getElementById('score-round').textContent = '✓';
+
+    if (playerNum === 1) {
+      showFinalResult(data);
+      setStep(6);
+      stopAutoPlay();
+    }
+  });
+
+  socket.on('playerDisconnected', (data) => {
+    log(logId, `Outro jogador desconectou (status: ${data.status})`, 'warn');
+  });
+
+  socket.on('error', (data) => {
+    log(logId, `Erro: ${data.message}`, 'err');
+  });
+
+  socket.on('matchState', (data) => {
+    log(logId, `Estado: ${JSON.stringify(data)}`, 'dim');
+  });
+}
+
+// ─── CHOICES ─────────────────────────────────────────────────────────────────
+function submitChoice(playerNum, choice) {
+  const socket = playerNum === 1 ? state.socket1 : state.socket2;
+  const playerId = playerNum === 1 ? state.player1Id : state.player2Id;
+  const logId = `log-p${playerNum}`;
+
+  if (!socket || !state.matchId || !playerId) {
+    log(logId, 'Sem conexão ou partida ativa', 'err');
+    return;
+  }
+
+  if (playerNum === 1) state.p1Chose = true;
+  if (playerNum === 2) state.p2Chose = true;
+
+  log(logId, `submitChoice: ${choice}`, 'info');
+  socket.emit('submitChoice', { matchId: state.matchId, playerId, choice });
+  hideChoiceButtons(playerNum);
+}
+
+function showChoiceButtons(playerNum) {
+  document.getElementById(`p${playerNum}-choice-btns`).style.display = 'block';
+  document.getElementById(`p${playerNum}-waiting`).style.display = 'none';
+}
+
+function hideChoiceButtons(playerNum) {
+  document.getElementById(`p${playerNum}-choice-btns`).style.display = 'none';
+}
+
+function updateRoundDisplay(playerNum, current, total) {
+  const el = document.getElementById(`p${playerNum}-round`);
+  el.innerHTML = `Rodada: <span>${current}</span> / <span>${total}</span>`;
+}
+
+// ─── SCOREBOARD ──────────────────────────────────────────────────────────────
+function updateScoreHeader() {
+  document.getElementById('score-p1-name').textContent = `Jogador 1`;
+  document.getElementById('score-p2-name').textContent = `Jogador 2`;
+}
+
+function addRoundRow(round, result) {
+  const tbody = document.getElementById('rounds-table');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${round}</td>
+    <td class="${result.player1Choice === 'cooperate' ? 'c' : 'd'}">${result.player1Choice === 'cooperate' ? 'Cooperar' : 'Trair'}</td>
+    <td>+${result.player1Points}</td>
+    <td class="${result.player2Choice === 'cooperate' ? 'c' : 'd'}">${result.player2Choice === 'cooperate' ? 'Cooperar' : 'Trair'}</td>
+    <td>+${result.player2Points}</td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function showFinalResult(data) {
+  const div = document.getElementById('final-result');
+  const content = document.getElementById('final-content');
+  div.style.display = 'block';
+
+  const p1 = data.finalScore.player1;
+  const p2 = data.finalScore.player2;
+  const winner = p1 > p2 ? 'Jogador 1 venceu!' : p2 > p1 ? 'Jogador 2 venceu!' : 'Empate!';
+
+  content.innerHTML = `
+    <div style="text-align:center;font-size:1.2rem;margin-bottom:14px;color:#ffaa00;">${winner}</div>
+    <div class="score-box">
+      <div class="score-card" style="border-color:${p1 >= p2 ? '#00ff88' : '#555'}">
+        <div class="name">Jogador 1</div>
+        <div class="pts">${p1}</div>
+        <small>pontos finais</small>
+      </div>
+      <div class="score-card" style="border-color:${p2 >= p1 ? '#00ff88' : '#555'}">
+        <div class="name">Jogador 2</div>
+        <div class="pts">${p2}</div>
+        <small>pontos finais</small>
+      </div>
+    </div>
+    <p style="font-size:0.78rem;color:#555;margin-top:8px;">Match ID: ${data.matchId}</p>
+    <p style="font-size:0.78rem;color:#555;">Resultado persistido no banco de dados ✓</p>
+  `;
+}
+
+// ─── AUTO-PLAY ────────────────────────────────────────────────────────────────
+function getAutoChoice(strategy, playerNum) {
+  if (strategy === 'cooperate') return 'cooperate';
+  if (strategy === 'defect') return 'defect';
+  if (strategy === 'random') return Math.random() > 0.5 ? 'cooperate' : 'defect';
+  if (strategy === 'tit-for-tat') {
+    // Cooperate first, then mirror opponent's last choice
+    const opponentLast = playerNum === 1 ? state.p2LastChoice : state.p1LastChoice;
+    return opponentLast ?? 'cooperate';
+  }
+  return 'cooperate';
+}
+
+function startAutoPlay() {
+  if (!state.matchReady) {
+    alert('A partida ainda não começou. Faça o setup primeiro.');
+    return;
+  }
+  state.autoPlaying = true;
+  document.getElementById('btn-autoplay').disabled = true;
+  document.getElementById('btn-stop-auto').disabled = false;
+  document.getElementById('autoplay-status').textContent = 'Auto-play ativo...';
+
+  // Run every 1.5s to give time for events to propagate
+  state.autoInterval = setInterval(() => {
+    if (!state.autoPlaying) return;
+
+    const s1 = document.getElementById('strategy-p1').value;
+    const s2 = document.getElementById('strategy-p2').value;
+
+    const p1BtnsVisible = document.getElementById('p1-choice-btns').style.display !== 'none';
+    const p2BtnsVisible = document.getElementById('p2-choice-btns').style.display !== 'none';
+
+    if (p1BtnsVisible && !state.p1Chose) {
+      submitChoice(1, getAutoChoice(s1, 1));
+    }
+    if (p2BtnsVisible && !state.p2Chose) {
+      submitChoice(2, getAutoChoice(s2, 2));
+    }
+  }, 800);
+}
+
+function stopAutoPlay() {
+  state.autoPlaying = false;
+  if (state.autoInterval) clearInterval(state.autoInterval);
+  document.getElementById('btn-autoplay').disabled = false;
+  document.getElementById('btn-stop-auto').disabled = true;
+  document.getElementById('autoplay-status').textContent = '';
+}
+
+// ─── CLEAR ───────────────────────────────────────────────────────────────────
+function clearAll() {
+  if (state.socket1) { state.socket1.disconnect(); state.socket1 = null; }
+  if (state.socket2) { state.socket2.disconnect(); state.socket2 = null; }
+  stopAutoPlay();
+
+  Object.assign(state, {
+    userId: null, sessionId: null, inviteCode: null, matchId: null,
+    player1Id: null, player2Id: null, socket1: null, socket2: null,
+    currentRound: 1, p1Chose: false, p2Chose: false,
+    p1LastChoice: null, p2LastChoice: null, matchReady: false,
+  });
+
+  ['log-setup','log-p1','log-p2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  document.getElementById('rounds-table').innerHTML = '';
+  document.getElementById('score-p1').textContent = '0';
+  document.getElementById('score-p2').textContent = '0';
+  document.getElementById('score-round').textContent = '-';
+  document.getElementById('final-result').style.display = 'none';
+  ['p1','p2'].forEach(p => {
+    document.getElementById(`${p}-status`).innerHTML = '<span class="status-badge badge-waiting">aguardando</span>';
+    document.getElementById(`${p}-info`).textContent = '';
+    document.getElementById(`${p}-choice-btns`).style.display = 'none';
+    document.getElementById(`${p}-waiting`).style.display = 'none';
+    document.getElementById(`${p}-round`).innerHTML = 'Rodada: <span>-</span> / <span>-</span>';
+  });
+  setStep(1);
+}
+
+// ─── TEACHER PANEL ───────────────────────────────────────────────────────────
+const teacherState = {
+  sessions: [],
+  selectedIds: new Set(),
+};
+
+async function teacherLoadSessions() {
+  const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+  const game = document.getElementById('teacher-game-filter').value;
+  const url = game ? `${apiUrl}/sessions?game=${game}` : `${apiUrl}/sessions`;
+
+  log('log-teacher', `Buscando sessões...`, 'info');
+  try {
+    const sessions = await fetch(url).then(r => r.json());
+    teacherState.sessions = sessions;
+    teacherState.selectedIds = new Set();
+    log('log-teacher', `${sessions.length} sessão(ões) encontrada(s)`, 'ok');
+    renderSessionCards(sessions);
+  } catch (err) {
+    log('log-teacher', `Erro: ${err.message}`, 'err');
+  }
+}
+
+function renderSessionCards(sessions) {
+  const container = document.getElementById('teacher-session-cards');
+  container.innerHTML = '';
+
+  if (sessions.length === 0) {
+    container.innerHTML = '<p style="color:#666;font-size:0.8rem;">Nenhuma sessão encontrada.</p>';
+  }
+
+  sessions.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'session-card';
+    card.id = `sc-${s.id}`;
+    const date = new Date(s.created_at).toLocaleString('pt-BR');
+    card.innerHTML = `
+      <div class="sc-code">${s.inviteCode}</div>
+      <div>${s.game} &bull; ${s.isActive ? '<span style="color:#00ff88">ativa</span>' : '<span style="color:#555">encerrada</span>'}</div>
+      <div class="sc-meta">${date}</div>
+      <div class="sc-meta" style="margin-top:4px;color:#444;font-size:0.7rem;">${s.id.slice(0,12)}...</div>
+    `;
+    card.onclick = () => toggleSession(s.id, card);
+    container.appendChild(card);
+  });
+
+  document.getElementById('teacher-session-list').style.display = 'block';
+  document.getElementById('teacher-report').style.display = 'none';
+}
+
+async function toggleSession(sessionId, cardEl) {
+  if (teacherState.selectedIds.has(sessionId)) {
+    teacherState.selectedIds.delete(sessionId);
+    cardEl.classList.remove('selected');
+  } else {
+    teacherState.selectedIds.add(sessionId);
+    cardEl.classList.add('selected');
+  }
+
+  if (teacherState.selectedIds.size > 0) {
+    await buildReport();
+  } else {
+    document.getElementById('teacher-report').style.display = 'none';
+  }
+}
+
+async function buildReport() {
+  const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+  const reportEl = document.getElementById('teacher-report-content');
+  reportEl.innerHTML = '';
+  document.getElementById('teacher-report').style.display = 'block';
+  log('log-teacher', `Carregando ${teacherState.selectedIds.size} sessão(ões)...`, 'info');
+
+  const header = document.createElement('div');
+  header.className = 'report-header';
+  header.innerHTML = `
+    <h3>Relatório — Dilema do Prisioneiro</h3>
+    <p>Gerado em ${new Date().toLocaleString('pt-BR')} &bull; ${teacherState.selectedIds.size} sessão(ões) selecionada(s)</p>
+  `;
+  reportEl.appendChild(header);
+
+  for (const sessionId of teacherState.selectedIds) {
+    const session = teacherState.sessions.find(s => s.id === sessionId);
+    const matches = await fetch(`${apiUrl}/matches?sessionId=${sessionId}`).then(r => r.json());
+    log('log-teacher', `Sessão ${session?.inviteCode}: ${matches.length} partida(s)`, 'dim');
+    reportEl.appendChild(buildSessionBlock(session, matches));
+  }
+
+  log('log-teacher', `Relatório montado`, 'ok');
+}
+
+function buildSessionBlock(session, matches) {
+  const block = document.createElement('div');
+  block.className = 'session-report-block';
+
+  const date = session ? new Date(session.created_at).toLocaleString('pt-BR') : '?';
+  const finishedAt = session?.finished_at ? new Date(session.finished_at).toLocaleString('pt-BR') : 'em andamento';
+  const settings = session?.settings;
+
+  // Count aggregate stats across all finished matches
+  const finished = matches.filter(m => m.status === 'finalizada');
+  let totalCoopP1 = 0, totalCoopP2 = 0, totalRoundsPlayed = 0;
+
+  finished.forEach(m => {
+    const rounds = Object.values(m.moves || {});
+    totalRoundsPlayed += rounds.length;
+    rounds.forEach(r => {
+      if (r.player1Choice === 'cooperate') totalCoopP1++;
+      if (r.player2Choice === 'cooperate') totalCoopP2++;
+    });
+  });
+
+  const coopRateP1 = totalRoundsPlayed ? Math.round((totalCoopP1 / totalRoundsPlayed) * 100) : 0;
+  const coopRateP2 = totalRoundsPlayed ? Math.round((totalCoopP2 / totalRoundsPlayed) * 100) : 0;
+
+  block.innerHTML = `
+    <h3>
+      Sessão: <span style="color:#ffaa00">${session?.inviteCode ?? '?'}</span>
+      &nbsp;&bull;&nbsp; ${session?.game ?? '?'}
+      &nbsp;&bull;&nbsp; <span style="${session?.isActive ? 'color:#00ff88' : 'color:#666'}">${session?.isActive ? 'ativa' : 'encerrada'}</span>
+    </h3>
+    <div class="summary-bar">
+      <div class="summary-item">Partidas: <span>${matches.length}</span></div>
+      <div class="summary-item">Finalizadas: <span>${finished.length}</span></div>
+      <div class="summary-item">Rounds configurados: <span>${settings?.limitRounds ?? '?'}</span></div>
+      <div class="summary-item">Criada em: <span>${date}</span></div>
+      <div class="summary-item">Encerrada em: <span>${finishedAt}</span></div>
+      ${totalRoundsPlayed > 0 ? `
+        <div class="summary-item">Taxa cooperação P1: <span style="color:#00ff88">${coopRateP1}%</span></div>
+        <div class="summary-item">Taxa cooperação P2: <span style="color:#00ff88">${coopRateP2}%</span></div>
+      ` : ''}
+    </div>
+  `;
+
+  if (matches.length === 0) {
+    const noMatch = document.createElement('p');
+    noMatch.style.cssText = 'color:#555;font-size:0.8rem;';
+    noMatch.textContent = 'Nenhuma partida encontrada para esta sessão.';
+    block.appendChild(noMatch);
+    return block;
+  }
+
+  matches.forEach((match, idx) => {
+    block.appendChild(buildMatchBlock(match, idx + 1));
+  });
+
+  return block;
+}
+
+function buildMatchBlock(match, idx) {
+  const div = document.createElement('div');
+  div.className = 'match-block';
+
+  const rounds = Object.entries(match.moves || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
+  const status = { aguardando: 'Aguardando', em_partida: 'Em andamento', finalizada: 'Finalizada', cancelada: 'Cancelada' }[match.status] ?? match.status;
+
+  // Compute totals from moves
+  let p1Total = 0, p2Total = 0, p1Coop = 0, p2Coop = 0;
+  rounds.forEach(([, r]) => {
+    p1Total += r.player1Points ?? 0;
+    p2Total += r.player2Points ?? 0;
+    if (r.player1Choice === 'cooperate') p1Coop++;
+    if (r.player2Choice === 'cooperate') p2Coop++;
+  });
+  const winner = p1Total > p2Total ? 'Jogador 1' : p2Total > p1Total ? 'Jogador 2' : 'Empate';
+  const winnerClass = p1Total !== p2Total ? 'winner' : '';
+
+  const p1CoopPct = rounds.length ? Math.round((p1Coop / rounds.length) * 100) : 0;
+  const p2CoopPct = rounds.length ? Math.round((p2Coop / rounds.length) * 100) : 0;
+
+  let scoresHtml = '';
+  if (match.status === 'finalizada') {
+    scoresHtml = `
+      <div class="final-score">
+        <div class="fs-card" style="${p1Total >= p2Total && p1Total !== p2Total ? 'border:1px solid #00ff88' : ''}">
+          <div class="fs-name">Jogador 1</div>
+          <div class="fs-pts">${p1Total}</div>
+          <div style="font-size:0.7rem;color:#555;">coop: ${p1CoopPct}%</div>
+        </div>
+        <div class="fs-card" style="border:1px solid #333;text-align:center;padding:8px;min-width:100px;">
+          <div style="font-size:0.72rem;color:#aaa;">Resultado</div>
+          <div class="fs-pts ${winnerClass}" style="font-size:1rem;margin-top:4px;">${winner}</div>
+        </div>
+        <div class="fs-card" style="${p2Total >= p1Total && p1Total !== p2Total ? 'border:1px solid #00ff88' : ''}">
+          <div class="fs-name">Jogador 2</div>
+          <div class="fs-pts">${p2Total}</div>
+          <div style="font-size:0.7rem;color:#555;">coop: ${p2CoopPct}%</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let tableHtml = '';
+  if (rounds.length > 0) {
+    const rows = rounds.map(([round, r]) => `
+      <tr>
+        <td>${round}</td>
+        <td class="${r.player1Choice === 'cooperate' ? 'c' : 'd'}">${r.player1Choice === 'cooperate' ? 'Cooperar' : 'Trair'}</td>
+        <td>+${r.player1Points}</td>
+        <td class="${r.player2Choice === 'cooperate' ? 'c' : 'd'}">${r.player2Choice === 'cooperate' ? 'Cooperar' : 'Trair'}</td>
+        <td>+${r.player2Points}</td>
+      </tr>
+    `).join('');
+
+    tableHtml = `
+      <table>
+        <thead>
+          <tr><th>#</th><th>Jogador 1</th><th>Pts P1</th><th>Jogador 2</th><th>Pts P2</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } else {
+    tableHtml = '<p style="color:#555;font-size:0.78rem;">Sem jogadas registradas.</p>';
+  }
+
+  div.innerHTML = `
+    <h4>
+      Partida ${idx}
+      &nbsp;<span style="color:#555;font-size:0.75rem;">${match.id.slice(0,12)}...</span>
+      &nbsp;&bull;&nbsp; <span style="color:${match.status === 'finalizada' ? '#00ff88' : '#ffaa00'}">${status}</span>
+    </h4>
+    <div class="match-meta">
+      P1: <code>${match.player1_id?.slice(0,8)}...</code>
+      &nbsp;&nbsp;P2: <code>${match.player2_id?.slice(0,8) ?? 'N/A'}...</code>
+      &nbsp;&nbsp;Criada: ${new Date(match.created_at).toLocaleString('pt-BR')}
+    </div>
+    ${scoresHtml}
+    ${tableHtml}
+  `;
+
+  return div;
+}
+
+function teacherClear() {
+  teacherState.sessions = [];
+  teacherState.selectedIds = new Set();
+  document.getElementById('teacher-session-list').style.display = 'none';
+  document.getElementById('teacher-report').style.display = 'none';
+  document.getElementById('teacher-session-cards').innerHTML = '';
+  document.getElementById('teacher-report-content').innerHTML = '';
+  document.getElementById('log-teacher').innerHTML = '';
+}
+
+// Init
+setStep(1);
+</script>
+</body>
+</html>

@@ -6,11 +6,10 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 import {
-  CardsMoveOption,
   RouletteMoveOption,
   MatchMoves,
   RoundMove,
-  CardsRoundMove,
+  PrisonerRoundMove,
   RouletteRoundMove,
 } from '../match.entity';
 
@@ -18,22 +17,19 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isCardsRoundMove(value: unknown): value is CardsRoundMove {
-  if (!isPlainObject(value)) {
-    return false;
-  }
-
+function isPrisonerRoundMove(value: unknown): value is PrisonerRoundMove {
+  if (!isPlainObject(value)) return false;
+  const validChoices = ['cooperate', 'defect'];
   return (
-    Object.values(CardsMoveOption).includes(value.jogador1 as CardsMoveOption) &&
-    Object.values(CardsMoveOption).includes(value.jogador2 as CardsMoveOption)
+    validChoices.includes(value.player1Choice as string) &&
+    validChoices.includes(value.player2Choice as string) &&
+    typeof value.player1Points === 'number' &&
+    typeof value.player2Points === 'number'
   );
 }
 
 function isRouletteRoundMove(value: unknown): value is RouletteRoundMove {
-  if (!isPlainObject(value)) {
-    return false;
-  }
-
+  if (!isPlainObject(value)) return false;
   return (
     typeof value.coinsAmount === 'number' &&
     typeof value.aposta === 'number' &&
@@ -43,27 +39,22 @@ function isRouletteRoundMove(value: unknown): value is RouletteRoundMove {
 }
 
 function isValidRoundMove(value: unknown): value is RoundMove {
-  return isCardsRoundMove(value) || isRouletteRoundMove(value);
+  return isPrisonerRoundMove(value) || isRouletteRoundMove(value);
 }
 
 @ValidatorConstraint({ name: 'isMovesByRound', async: false })
 export class IsMovesByRoundConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): value is MatchMoves {
-    if (!isPlainObject(value)) {
-      return false;
-    }
+    if (!isPlainObject(value)) return false;
 
     const entries = Object.entries(value);
-
-    if (entries.length === 0) {
-      return true;
-    }
+    if (entries.length === 0) return true;
 
     return entries.every(([round, move]) => /^\d+$/.test(round) && isValidRoundMove(move));
   }
 
   defaultMessage(args: ValidationArguments): string {
-    return `${args.property} must be an object with numeric keys ("1", "2", ...) and each round must follow cards or roulette schema`;
+    return `${args.property} must be an object with numeric keys ("1", "2", ...) and each round must follow prisoner or roulette schema`;
   }
 }
 

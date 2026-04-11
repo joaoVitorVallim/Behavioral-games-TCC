@@ -2,8 +2,8 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Settings } from './settings.entity';
-import { SettingsGameCards } from './settings-game-cards.entity';
 import { SettingsGameRoulette } from './settings-game-roulette.entity';
+import { SettingsGamePrisoner } from './settings-game-prisoner.entity';
 import { CreateSettingsDto } from './dto/create-settings.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { GameService } from '../game/game.service';
@@ -15,31 +15,24 @@ export class SettingsService {
   constructor(
     @InjectRepository(Settings)
     private settingsRepository: Repository<Settings>,
-    @InjectRepository(SettingsGameCards)
-    private settingsCardsRepository: Repository<SettingsGameCards>,
     @InjectRepository(SettingsGameRoulette)
     private settingsRouletteRepository: Repository<SettingsGameRoulette>,
+    @InjectRepository(SettingsGamePrisoner)
+    private settingsPrisonerRepository: Repository<SettingsGamePrisoner>,
     private gameService: GameService,
   ) {}
 
-  /**
-   * Returns the list of valid optional Player fields
-   */
   getValidPlayerFields(): string[] {
     return [...PLAYER_OPTIONAL_FIELDS];
   }
 
-  /**
-   * Returns the field structure for each game configuration.
-   * Used by the frontend to know which fields and types to request from users.
-   */
-  getGameConfigFields(game?: 'cards' | 'roulette') {
+  getGameConfigFields(game?: 'roulette' | 'prisoner') {
     const common = [
       { name: 'configName', type: 'string' },
       { name: 'game', type: 'enum(GameType)' },
     ];
 
-    const cards = [
+    const prisoner = [
       { name: 'userViewPoints', type: 'boolean' },
       { name: 'limitRounds', type: 'number' },
     ];
@@ -51,39 +44,33 @@ export class SettingsService {
       { name: 'initMoney', type: 'number' },
     ];
 
-    if (game === 'cards') {
-      return { common, cards };
+    if (game === 'prisoner') {
+      return { common, prisoner };
     }
 
     if (game === 'roulette') {
       return { common, roulette };
     }
 
-    return { common, cards, roulette };
+    return { common, prisoner, roulette };
   }
 
-  async create(dto: CreateSettingsDto, gameType?: 'cards' | 'roulette'): Promise<Settings> {
-    // Verify game type is valid
+  async create(dto: CreateSettingsDto, gameType?: 'roulette' | 'prisoner'): Promise<Settings> {
     if (!this.gameService.isValidGameType(dto.game)) {
       throw new BadRequestException(`Invalid game type: ${dto.game}`);
     }
 
-    // If gameType not provided, infer from dto.game
     if (!gameType) {
-      gameType = dto.game === GameType.CARDS ? 'cards' : 'roulette';
+      const inferMap: Record<GameType, 'roulette' | 'prisoner'> = {
+        [GameType.ROULETTE]: 'roulette',
+        [GameType.PRISONER]: 'prisoner',
+      };
+      gameType = inferMap[dto.game];
     }
 
     let settings: Settings;
 
-    if (gameType === 'cards') {
-      const cardsSettings = this.settingsCardsRepository.create({
-        configName: dto.configName,
-        game: dto.game,
-        userViewPoints: dto.userViewPoints ?? false,
-        limitRounds: dto.limitRounds ?? 10,
-      });
-      settings = await this.settingsCardsRepository.save(cardsSettings);
-    } else if (gameType === 'roulette') {
+    if (gameType === 'roulette') {
       const rouletteSettings = this.settingsRouletteRepository.create({
         configName: dto.configName,
         game: dto.game,
@@ -93,6 +80,14 @@ export class SettingsService {
         initMoney: dto.initMoney,
       });
       settings = await this.settingsRouletteRepository.save(rouletteSettings);
+    } else if (gameType === 'prisoner') {
+      const prisonerSettings = this.settingsPrisonerRepository.create({
+        configName: dto.configName,
+        game: dto.game,
+        userViewPoints: dto.userViewPoints ?? false,
+        limitRounds: dto.limitRounds ?? 10,
+      });
+      settings = await this.settingsPrisonerRepository.save(prisonerSettings);
     } else {
       throw new BadRequestException(`Invalid game type: ${gameType}`);
     }
@@ -134,20 +129,18 @@ export class SettingsService {
   async update(id: string, dto: UpdateSettingsDto): Promise<Settings> {
     const settings = await this.findOne(id);
 
-    // Update common fields
     if (dto.configName) settings.configName = dto.configName;
 
-    // Update type-specific fields
-    if (settings instanceof SettingsGameCards) {
-      if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
-      if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
-      return await this.settingsCardsRepository.save(settings);
-    } else if (settings instanceof SettingsGameRoulette) {
+    if (settings instanceof SettingsGameRoulette) {
       if (dto.timeLimit !== undefined) settings.timeLimit = dto.timeLimit;
       if (dto.pointsLimit !== undefined) settings.pointsLimit = dto.pointsLimit;
       if (dto.popup !== undefined) settings.popup = dto.popup;
       if (dto.initMoney !== undefined) settings.initMoney = dto.initMoney;
       return await this.settingsRouletteRepository.save(settings);
+    } else if (settings instanceof SettingsGamePrisoner) {
+      if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
+      if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
+      return await this.settingsPrisonerRepository.save(settings);
     }
 
     return await this.settingsRepository.save(settings);
@@ -156,23 +149,19 @@ export class SettingsService {
   async remove(id: string): Promise<void> {
     const settings = await this.findOne(id);
 
-    // Prevent deletion if settings has active sessions
     if (settings.sessions && settings.sessions.length > 0) {
       throw new BadRequestException('Cannot delete settings that have active sessions');
     }
 
-    if (settings instanceof SettingsGameCards) {
-      await this.settingsCardsRepository.delete(id);
-    } else if (settings instanceof SettingsGameRoulette) {
+    if (settings instanceof SettingsGameRoulette) {
       await this.settingsRouletteRepository.delete(id);
+    } else if (settings instanceof SettingsGamePrisoner) {
+      await this.settingsPrisonerRepository.delete(id);
     } else {
       await this.settingsRepository.delete(id);
     }
   }
 
-  /**
-   * Creates a copy of settings for session immutability
-   */
   async createCopy(id: string, newConfigName?: string): Promise<Settings> {
     const original = await this.findOne(id);
 
@@ -183,10 +172,10 @@ export class SettingsService {
       createdAt: undefined,
     };
 
-    if (original instanceof SettingsGameCards) {
-      return await this.settingsCardsRepository.save(copy);
-    } else if (original instanceof SettingsGameRoulette) {
+    if (original instanceof SettingsGameRoulette) {
       return await this.settingsRouletteRepository.save(copy);
+    } else if (original instanceof SettingsGamePrisoner) {
+      return await this.settingsPrisonerRepository.save(copy);
     }
 
     return await this.settingsRepository.save(copy);

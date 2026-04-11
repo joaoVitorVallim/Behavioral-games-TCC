@@ -14,18 +14,18 @@ export class SettingsController {
   @Post()
   @ApiOperation({
     summary: 'Create new game configuration',
-    description: 'Creates a new configuration preset for a game type (Cards or Roulette)',
+    description: "Creates a new configuration preset for a game type (Prisoner's Dilemma or Roulette)",
   })
   @ApiBody({
-    description: 'Cards and Roulette payload examples',
+    description: "Prisoner's Dilemma and Roulette payload examples",
     schema: {
       oneOf: [
         {
           type: 'object',
           required: ['configName', 'game'],
           properties: {
-            configName: { type: 'string', example: 'Cards Config Level 1' },
-            game: { type: 'string', enum: ['cards'], example: 'cards' },
+            configName: { type: 'string', example: "Prisoner's Config Level 1" },
+            game: { type: 'string', enum: ['prisoner'], example: 'prisoner' },
             userViewPoints: { type: 'boolean', example: true },
             limitRounds: { type: 'number', example: 10 },
           },
@@ -52,11 +52,11 @@ export class SettingsController {
       ],
     },
     examples: {
-      cards: {
-        summary: 'Cards configuration',
+      prisoner: {
+        summary: "Prisoner's Dilemma configuration",
         value: {
-          configName: 'Cards Config Level 1',
-          game: 'cards',
+          configName: "Prisoner's Config Level 1",
+          game: 'prisoner',
           userViewPoints: true,
           limitRounds: 10,
         },
@@ -68,10 +68,7 @@ export class SettingsController {
           game: 'roulette',
           timeLimit: 60,
           pointsLimit: 500,
-          popup: {
-            message: 'Aposte agora!',
-            players: 2,
-          },
+          popup: { message: 'Aposte agora!', players: 2 },
           initMoney: 1000,
         },
       },
@@ -82,12 +79,12 @@ export class SettingsController {
     description: 'Configuration created successfully',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards configuration created',
+        prisoner: {
+          summary: "Prisoner's Dilemma configuration created",
           value: {
             id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
-            configName: 'Cards Config Level 1',
-            game: 'cards',
+            configName: "Prisoner's Config Level 1",
+            game: 'prisoner',
             userViewPoints: true,
             limitRounds: 10,
           },
@@ -123,7 +120,7 @@ export class SettingsController {
   @ApiQuery({
     name: 'game',
     required: false,
-    enum: ['cards', 'roulette'],
+    enum: ['prisoner', 'roulette'],
     description: 'Filter by game type (optional)',
   })
   @ApiResponse({
@@ -133,8 +130,8 @@ export class SettingsController {
       example: [
         {
           id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
-          configName: 'Cards Config Level 1',
-          game: 'cards',
+          configName: "Prisoner's Config Level 1",
+          game: 'prisoner',
           userViewPoints: true,
           limitRounds: 10,
         },
@@ -160,7 +157,7 @@ export class SettingsController {
   })
   @ApiParam({
     name: 'game',
-    enum: ['cards', 'roulette'],
+    enum: ['prisoner', 'roulette'],
     description: 'Game type',
   })
   @ApiResponse({
@@ -168,13 +165,13 @@ export class SettingsController {
     description: 'Configurations returned successfully',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards configs list',
+        prisoner: {
+          summary: "Prisoner's Dilemma configs list",
           value: [
             {
               id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
-              configName: 'Cards Config Level 1',
-              game: 'cards',
+              configName: "Prisoner's Config Level 1",
+              game: 'prisoner',
               userViewPoints: true,
               limitRounds: 10,
             },
@@ -219,12 +216,12 @@ export class SettingsController {
   @Get('game-config/fields')
   @ApiOperation({
     summary: 'Get game config field structure',
-    description: 'Returns field names and types for Cards and Roulette configurations',
+    description: "Returns field names and types for Prisoner's Dilemma and Roulette configurations",
   })
   @ApiQuery({
     name: 'game',
     required: false,
-    enum: ['cards', 'roulette'],
+    enum: ['prisoner', 'roulette'],
     description: 'Filter by game type (optional)',
   })
   @ApiResponse({
@@ -236,7 +233,7 @@ export class SettingsController {
           { name: 'configName', type: 'string' },
           { name: 'game', type: 'enum(GameType)' },
         ],
-        cards: [
+        prisoner: [
           { name: 'userViewPoints', type: 'boolean' },
           { name: 'limitRounds', type: 'number' },
         ],
@@ -249,7 +246,7 @@ export class SettingsController {
       },
     },
   })
-  getGameConfigFields(@Query('game') game?: 'cards' | 'roulette') {
+  getGameConfigFields(@Query('game') game?: 'prisoner' | 'roulette') {
     return this.settingsService.getGameConfigFields(game);
   }
 
@@ -268,12 +265,12 @@ export class SettingsController {
     description: 'Configuration found',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards configuration detail',
+        prisoner: {
+          summary: "Prisoner's Dilemma configuration detail",
           value: {
             id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
-            configName: 'Cards Config Level 1',
-            game: 'cards',
+            configName: "Prisoner's Config Level 1",
+            game: 'prisoner',
             userViewPoints: true,
             limitRounds: 10,
           },
@@ -312,10 +309,10 @@ export class SettingsController {
     example: 'c7fb8887-9739-4aab-8934-df34707d8d98',
   })
   @ApiBody({
-    description: 'Cards and Roulette partial update examples',
+    description: "Prisoner's Dilemma and Roulette partial update examples",
     examples: {
-      cards: {
-        summary: 'Cards configuration update',
+      prisoner: {
+        summary: "Prisoner's Dilemma configuration update",
         value: {
           userViewPoints: false,
           limitRounds: 12,
@@ -327,10 +324,7 @@ export class SettingsController {
           timeLimit: 45,
           pointsLimit: 600,
           initMoney: 1200,
-          popup: {
-            message: 'Ultimos segundos!',
-            players: 1,
-          },
+          popup: { message: 'Ultimos segundos!', players: 1 },
         },
       },
     },
@@ -338,29 +332,6 @@ export class SettingsController {
   @ApiResponse({
     status: 200,
     description: 'Configuration updated successfully',
-    schema: {
-      examples: {
-        cards: {
-          summary: 'Cards configuration updated',
-          value: {
-            id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
-            game: 'cards',
-            userViewPoints: false,
-            limitRounds: 12,
-          },
-        },
-        roulette: {
-          summary: 'Roulette configuration updated',
-          value: {
-            id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-            game: 'roulette',
-            timeLimit: 45,
-            pointsLimit: 600,
-            initMoney: 1200,
-          },
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 404,
@@ -386,26 +357,6 @@ export class SettingsController {
   @ApiResponse({
     status: 201,
     description: 'Configuration copied successfully',
-    schema: {
-      examples: {
-        cards: {
-          summary: 'Cards configuration copy',
-          value: {
-            id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
-            configName: 'Cards Config Level 1 (copy)',
-            game: 'cards',
-          },
-        },
-        roulette: {
-          summary: 'Roulette configuration copy',
-          value: {
-            id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
-            configName: 'Roulette Config Beginner (copy)',
-            game: 'roulette',
-          },
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 404,
@@ -418,14 +369,14 @@ export class SettingsController {
       properties: {
         configName: {
           type: 'string',
-          example: 'Roulette Config Beginner (copy custom name)',
+          example: "Prisoner's Config Level 1 - Turma B",
         },
       },
     },
     examples: {
       withName: {
         summary: 'Provide custom copy name',
-        value: { configName: 'Cards Config Level 1 - Turma B' },
+        value: { configName: "Prisoner's Config Level 1 - Turma B" },
       },
       withoutName: {
         summary: 'No custom name (optional)',

@@ -37,12 +37,12 @@ export class SessionController {
   @ApiBody({
     type: CreateSessionDto,
     examples: {
-      cards: {
-        summary: 'Cards session creation',
+      prisoner: {
+        summary: "Prisoner's Dilemma session creation",
         value: {
-          game: 'cards',
+          game: 'prisoner',
           settings: {
-            configName: 'Cards Config Level 1',
+            configName: "Prisoner's Config Level 1",
             userViewPoints: true,
             limitRounds: 10,
           },
@@ -72,11 +72,11 @@ export class SessionController {
     description: 'Session created successfully',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards session created',
+        prisoner: {
+          summary: "Prisoner's Dilemma session created",
           value: {
             id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-            game: 'cards',
+            game: 'prisoner',
             inputInfo: ['educationLevel', 'semester', 'profession'],
             inviteCode: 'F4LVTX',
             isActive: true,
@@ -109,13 +109,13 @@ export class SessionController {
   @ApiOperation({
     summary: 'Join session by invite code',
     description:
-      'Registers a player in a session using invite code. Cards allows up to 2 players and roulette allows only 1 player. A match is auto-created when the room is full for the game mode.',
+      "Registers a player in a session using invite code. Prisoner's Dilemma allows up to 2 players and roulette allows only 1 player. A match is auto-created when the room is full.",
   })
   @ApiBody({
     type: JoinSessionDto,
     examples: {
-      cards: {
-        summary: 'Join cards session',
+      prisoner: {
+        summary: "Join Prisoner's Dilemma session",
         value: {
           inviteCode: 'F4LVTX',
           educationLevel: 'bachelor',
@@ -137,8 +137,8 @@ export class SessionController {
     description: 'Player joined session successfully',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards join response',
+        prisoner: {
+          summary: "Prisoner's Dilemma join response",
           value: {
             playersCount: 2,
             maxPlayers: 2,
@@ -204,7 +204,7 @@ export class SessionController {
       example: [
         {
           id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-          game: 'cards',
+          game: 'prisoner',
           inviteCode: 'F4LVTX',
           isActive: true,
         },
@@ -236,18 +236,18 @@ export class SessionController {
   })
   @ApiParam({
     name: 'codigo',
-    description: 'Session invite code (ex: EVRF4)',
+    description: 'Session invite code (ex: F4LVTX)',
   })
   @ApiResponse({
     status: 200,
     description: 'Session found',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards session by invite code',
+        prisoner: {
+          summary: "Prisoner's Dilemma session by invite code",
           value: {
             id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-            game: 'cards',
+            game: 'prisoner',
             inviteCode: 'F4LVTX',
             isActive: true,
           },
@@ -286,11 +286,11 @@ export class SessionController {
     description: 'Statistics returned successfully',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards session stats',
+        prisoner: {
+          summary: "Prisoner's Dilemma session stats",
           value: {
             sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-            game: 'cards',
+            game: 'prisoner',
             totalPlayers: 2,
             inviteCode: 'F4LVTX',
           },
@@ -329,11 +329,11 @@ export class SessionController {
     description: 'Session found',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards session details',
+        prisoner: {
+          summary: "Prisoner's Dilemma session details",
           value: {
             id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
-            game: 'cards',
+            game: 'prisoner',
             inviteCode: 'F4LVTX',
             isActive: true,
           },
@@ -371,12 +371,12 @@ export class SessionController {
     type: UpdateSessionDto,
     description: 'Partial payload. All fields are optional.',
     examples: {
-      cards: {
-        summary: 'Cards session update',
+      deactivate: {
+        summary: 'Deactivate session',
         value: { isActive: false },
       },
-      roulette: {
-        summary: 'Roulette session update',
+      activate: {
+        summary: 'Activate session',
         value: { isActive: true },
       },
     },
@@ -384,18 +384,6 @@ export class SessionController {
   @ApiResponse({
     status: 200,
     description: 'Session updated successfully',
-    schema: {
-      examples: {
-        cards: {
-          summary: 'Cards session updated',
-          value: { id: 'd7fb8887-9739-4aab-8934-df34707d8d98', isActive: false },
-        },
-        roulette: {
-          summary: 'Roulette session updated',
-          value: { id: 'e7fb8887-9739-4aab-8934-df34707d8d98', isActive: true },
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 404,
@@ -420,18 +408,6 @@ export class SessionController {
   @ApiResponse({
     status: 201,
     description: 'Session finished successfully',
-    schema: {
-      examples: {
-        cards: {
-          summary: 'Cards session finished',
-          value: { id: 'd7fb8887-9739-4aab-8934-df34707d8d98', isActive: false },
-        },
-        roulette: {
-          summary: 'Roulette session finished',
-          value: { id: 'e7fb8887-9739-4aab-8934-df34707d8d98', isActive: false },
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 404,

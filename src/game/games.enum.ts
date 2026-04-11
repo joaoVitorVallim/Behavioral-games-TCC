@@ -1,6 +1,6 @@
 export enum GameType {
-  CARDS = 'cards',
   ROULETTE = 'roulette',
+  PRISONER = 'prisoner',
 }
 
 export interface GameConfig {
@@ -10,15 +10,15 @@ export interface GameConfig {
 }
 
 export const GAMES_CONFIG: Record<GameType, GameConfig> = {
-  [GameType.CARDS]: {
-    name: 'Card Game',
-    description: 'A strategic and educational card game',
-    redirectUrl: 'https://cards-game.example.com',
-  },
   [GameType.ROULETTE]: {
     name: 'Roulette Betting Game',
     description: 'A roulette-style betting game',
     redirectUrl: 'https://roulette-game.example.com',
+  },
+  [GameType.PRISONER]: {
+    name: "Prisoner's Dilemma",
+    description: "A behavioral game based on the classic Prisoner's Dilemma theory",
+    redirectUrl: 'http://localhost:3001',
   },
 };
 

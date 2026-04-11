@@ -16,20 +16,10 @@ export enum MatchStatus {
   CANCELADA = 'cancelada',
 }
 
-export enum CardsMoveOption {
-  VERMELHO = 'vermelho',
-  PRETO = 'preto',
-}
-
 export enum RouletteMoveOption {
   AZUL = 'azul',
   VERMELHO = 'vermelho',
   PRETO = 'preto',
-}
-
-export interface CardsRoundMove {
-  jogador1: CardsMoveOption;
-  jogador2: CardsMoveOption;
 }
 
 export interface RouletteRoundMove {
@@ -39,7 +29,14 @@ export interface RouletteRoundMove {
   winrate: boolean;
 }
 
-export type RoundMove = CardsRoundMove | RouletteRoundMove;
+export interface PrisonerRoundMove {
+  player1Choice: 'cooperate' | 'defect';
+  player2Choice: 'cooperate' | 'defect';
+  player1Points: number;
+  player2Points: number;
+}
+
+export type RoundMove = RouletteRoundMove | PrisonerRoundMove;
 export type MatchMoves = Record<string, RoundMove>;
 
 @Entity('matches')

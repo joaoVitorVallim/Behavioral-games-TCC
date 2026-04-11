@@ -31,20 +31,20 @@ export class MatchController {
   @Post()
   @ApiOperation({
     summary: 'Create new match',
-    description: 'Creates a new match for cards (2 players) or roulette (single player)',
+    description: "Creates a new match for Prisoner's Dilemma (2 players) or roulette (single player)",
   })
   @ApiBody({
-    description: 'Cards and Roulette payload examples',
+    description: "Prisoner's Dilemma and Roulette payload examples",
     examples: {
-      cards: {
-        summary: 'Cards match creation',
+      prisoner: {
+        summary: "Prisoner's Dilemma match creation",
         value: {
           sessionId: 'd7fb8887-9739-4aab-8934-df34707d8d98',
           player1Id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
           player2Id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
           moves: {
-            '1': { jogador1: 'vermelho', jogador2: 'preto' },
-            '2': { jogador1: 'preto', jogador2: 'vermelho' },
+            '1': { player1Choice: 'cooperate', player2Choice: 'defect', player1Points: 0, player2Points: 5 },
+            '2': { player1Choice: 'cooperate', player2Choice: 'cooperate', player1Points: 3, player2Points: 3 },
           },
           status: 'aguardando',
         },
@@ -68,15 +68,15 @@ export class MatchController {
     description: 'Match created successfully',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards match response',
+        prisoner: {
+          summary: "Prisoner's Dilemma match response",
           value: {
             id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
             session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
             player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
             player2_id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
             moves: {
-              '1': { jogador1: 'vermelho', jogador2: 'preto' },
+              '1': { player1Choice: 'cooperate', player2Choice: 'defect', player1Points: 0, player2Points: 5 },
             },
             status: 'aguardando',
           },
@@ -128,7 +128,7 @@ export class MatchController {
           session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
           player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
           player2_id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
-          moves: { '1': { jogador1: 'vermelho', jogador2: 'preto' } },
+          moves: { '1': { player1Choice: 'cooperate', player2Choice: 'defect', player1Points: 0, player2Points: 5 } },
           status: 'aguardando',
         },
         {
@@ -136,9 +136,7 @@ export class MatchController {
           session_id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
           player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
           player2_id: null,
-          moves: {
-            '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true },
-          },
+          moves: { '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true } },
           status: 'aguardando',
         },
       ],
@@ -165,14 +163,14 @@ export class MatchController {
     description: 'Match found',
     schema: {
       examples: {
-        cards: {
-          summary: 'Cards match',
+        prisoner: {
+          summary: "Prisoner's Dilemma match",
           value: {
             id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
             session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
             player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
             player2_id: 'f7fb8887-9739-4aab-8934-df34707d8d98',
-            moves: { '1': { jogador1: 'vermelho', jogador2: 'preto' } },
+            moves: { '1': { player1Choice: 'cooperate', player2Choice: 'defect', player1Points: 0, player2Points: 5 } },
             status: 'aguardando',
           },
         },
@@ -183,9 +181,7 @@ export class MatchController {
             session_id: 'c7fb8887-9739-4aab-8934-df34707d8d98',
             player1_id: 'e7fb8887-9739-4aab-8934-df34707d8d98',
             player2_id: null,
-            moves: {
-              '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true },
-            },
+            moves: { '1': { coinsAmount: 1000, aposta: 100, opcao: 'azul', winrate: true } },
             status: 'aguardando',
           },
         },
@@ -211,14 +207,14 @@ export class MatchController {
   })
   @ApiBody({
     type: UpdateMatchStatusDto,
-    description: 'Partial payload. Only status is accepted (required).',
+    description: 'Only status is accepted (required).',
     examples: {
-      cards: {
-        summary: 'Cards status update',
+      start: {
+        summary: 'Start match',
         value: { status: 'em_partida' },
       },
-      roulette: {
-        summary: 'Roulette status update',
+      finish: {
+        summary: 'Finish match',
         value: { status: 'finalizada' },
       },
     },
@@ -226,24 +222,6 @@ export class MatchController {
   @ApiResponse({
     status: 200,
     description: 'Status updated successfully',
-    schema: {
-      examples: {
-        cards: {
-          summary: 'Cards status changed',
-          value: {
-            id: 'a7fb8887-9739-4aab-8934-df34707d8d98',
-            status: 'em_partida',
-          },
-        },
-        roulette: {
-          summary: 'Roulette status changed',
-          value: {
-            id: 'b7fb8887-9739-4aab-8934-df34707d8d98',
-            status: 'finalizada',
-          },
-        },
-      },
-    },
   })
   async updateStatus(
     @Param('id') id: string,
