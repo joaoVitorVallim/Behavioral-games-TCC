@@ -55,6 +55,14 @@ export class CreateSettingsDto {
   limitRounds?: number;
 
   @ApiPropertyOptional({
+    example: 30,
+    description: 'Time limit in seconds per round (Prisoner only). Null = no limit.',
+  })
+  @IsOptional()
+  @IsNumber()
+  roundTimeLimit?: number | null;
+
+  @ApiPropertyOptional({
     example: 60,
     description: 'Time limit in seconds (Roulette only)',
   })

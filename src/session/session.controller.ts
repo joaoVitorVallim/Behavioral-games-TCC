@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -103,6 +104,29 @@ export class SessionController {
   })
   create(@Body() createSessionDto: CreateSessionDto) {
     return this.sessionService.create(createSessionDto);
+  }
+
+  @Post('demo')
+  @ApiOperation({
+    summary: 'Create demo session',
+    description:
+      "Creates a quick Prisoner's Dilemma demo session with preset config: 3 rounds, 30s per round, opponent score visible. No player fields required.",
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['user_id'],
+      properties: {
+        user_id: { type: 'string', example: 'ab5d10f7-8522-498c-a585-97cdc9d0956d' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Demo session created' })
+  createDemo(@Body('user_id') userId: string) {
+    if (!userId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      throw new BadRequestException('user_id must be a valid UUID');
+    }
+    return this.sessionService.createDemo(userId);
   }
 
   @Post('join')

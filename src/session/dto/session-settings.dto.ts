@@ -9,14 +9,14 @@ class SessionRoulettePopupDto {
   })
   @IsNotEmpty()
   @IsString()
-  message: string;
+  message!: string;
 
   @ApiProperty({
     example: 2,
     description: 'Number of players that should receive this popup',
   })
   @IsNumber()
-  players: number;
+  players!: number;
 }
 
 /**
@@ -30,7 +30,7 @@ export class SessionSettingsDto {
   })
   @IsNotEmpty()
   @IsString()
-  configName: string;
+  configName!: string;
 
   @ApiPropertyOptional({
     example: true,
@@ -47,6 +47,14 @@ export class SessionSettingsDto {
   @IsOptional()
   @IsNumber()
   limitRounds?: number;
+
+  @ApiPropertyOptional({
+    example: 30,
+    description: 'Time limit in seconds per round (Prisoner). Null = no limit.',
+  })
+  @IsOptional()
+  @IsNumber()
+  roundTimeLimit?: number | null;
 
   // Game-specific fields for Roulette (optional)
   @ApiPropertyOptional({

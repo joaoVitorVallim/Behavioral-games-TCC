@@ -26,6 +26,9 @@ export interface PrisonerMatchState {
   };
   moves: PrisonerMoves;
   status: 'waiting' | 'in_progress' | 'finished';
+  userViewPoints: boolean;
+  roundTimeLimit: number | null;
+  roundTimer: ReturnType<typeof setTimeout> | null;
 }
 
 export const PRISONER_PAYOFF = {

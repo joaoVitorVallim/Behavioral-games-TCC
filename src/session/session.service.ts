@@ -107,6 +107,7 @@ export class SessionService {
           game: dto.game,
           userViewPoints: dto.settings.userViewPoints,
           limitRounds: dto.settings.limitRounds,
+          roundTimeLimit: dto.settings.roundTimeLimit,
           timeLimit: dto.settings.timeLimit,
           pointsLimit: dto.settings.pointsLimit,
           popup: dto.settings.popup,
@@ -147,6 +148,45 @@ export class SessionService {
       inviteCode: inviteCode,
       user_id: dto.user_id,
       inputInfo: validatedInputInfo,
+      isActive: true,
+    });
+
+    return await this.sessionRepository.save(session);
+  }
+
+  async createDemo(userId: string): Promise<Session> {
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException(`User with ID ${userId} not found`);
+
+    const settings = await this.settingsService.create(
+      {
+        configName: 'Demo - Dilema do Prisioneiro',
+        game: GameType.PRISONER,
+        userViewPoints: true,
+        limitRounds: 3,
+        roundTimeLimit: 30,
+      },
+      'prisoner',
+    );
+
+    const sessionSettings = await this.settingsService.createCopy(
+      settings.id,
+      'Demo - Dilema do Prisioneiro (Session)',
+    );
+
+    let inviteCode = this.generateInviteCode();
+    let codeExists = await this.sessionRepository.findOne({ where: { inviteCode } });
+    while (codeExists) {
+      inviteCode = this.generateInviteCode();
+      codeExists = await this.sessionRepository.findOne({ where: { inviteCode } });
+    }
+
+    const session = this.sessionRepository.create({
+      game: GameType.PRISONER,
+      settings_id: sessionSettings.id,
+      inviteCode,
+      user_id: userId,
+      inputInfo: [],
       isActive: true,
     });
 

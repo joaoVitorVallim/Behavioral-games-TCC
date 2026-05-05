@@ -86,6 +86,7 @@ export class SettingsService {
         game: dto.game,
         userViewPoints: dto.userViewPoints ?? false,
         limitRounds: dto.limitRounds ?? 10,
+        roundTimeLimit: dto.roundTimeLimit ?? null,
       });
       settings = await this.settingsPrisonerRepository.save(prisonerSettings);
     } else {

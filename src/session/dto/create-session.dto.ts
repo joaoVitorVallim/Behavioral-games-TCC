@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum, ValidateNested, IsOptional, IsArray } from 'class-validator';
+import { IsNotEmpty, IsEnum, ValidateNested, IsOptional, IsArray, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
@@ -14,7 +14,7 @@ export class CreateSessionDto {
   })
   @IsNotEmpty()
   @IsEnum(GameType)
-  game: GameType;
+  game!: GameType;
 
   @ApiProperty({
     description: 'Session configurations',
@@ -23,7 +23,7 @@ export class CreateSessionDto {
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => SessionSettingsDto)
-  settings: SessionSettingsDto;
+  settings!: SessionSettingsDto;
 
   @ApiPropertyOptional({
     example: ['educationLevel', 'semester', 'profession'],
@@ -41,5 +41,6 @@ export class CreateSessionDto {
     description: 'ID of the user/teacher creating the session',
   })
   @IsNotEmpty()
-  user_id: string;
+  @IsUUID()
+  user_id!: string;
 }

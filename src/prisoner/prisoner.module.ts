@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Match } from '../match/match.entity';
-import { SettingsGamePrisoner } from '../settings/settings-game-prisoner.entity';
 import { PrisonerGateway } from './prisoner.gateway';
 import { PrisonerService } from './prisoner.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Match, SettingsGamePrisoner])],
+  imports: [TypeOrmModule.forFeature([Match])],
   providers: [PrisonerGateway, PrisonerService],
   exports: [PrisonerService],
 })

@@ -4,6 +4,7 @@ import {
   SubscribeMessage,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
@@ -15,11 +16,50 @@ import { SubmitChoiceDto } from './dto/submit-choice.dto';
 import { ParseSocketBodyPipe } from '../common/pipes/parse-socket-body.pipe';
 
 @WebSocketGateway({ namespace: '/prisoner', cors: { origin: '*' } })
-export class PrisonerGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
   constructor(private readonly prisonerService: PrisonerService) {}
+
+  afterInit() {
+    this.prisonerService.setRoundTimeoutCallback((matchId) => {
+      this.handleRoundTimeout(matchId);
+    });
+  }
+
+  private async handleRoundTimeout(matchId: string) {
+    const result = this.prisonerService.forceResolveRound(matchId);
+    if (!result) return;
+
+    const { state } = result;
+    const roundNumber = state.status === 'finished' ? state.totalRounds : state.currentRound - 1;
+
+    this.server.to(matchId).emit('roundTimeout', { matchId, round: roundNumber });
+
+    this.server.to(matchId).emit('roundResult', {
+      round: roundNumber,
+      result: state.moves[String(roundNumber)],
+      totalPoints: {
+        player1: state.player1TotalPoints,
+        player2: state.player2TotalPoints,
+      },
+      nextRound: state.status === 'finished' ? null : state.currentRound,
+      timedOut: true,
+    });
+
+    if (state.status === 'finished') {
+      await this.prisonerService.finalizeMatch(matchId);
+      this.server.to(matchId).emit('matchFinished', {
+        matchId,
+        moves: state.moves,
+        finalScore: {
+          player1: state.player1TotalPoints,
+          player2: state.player2TotalPoints,
+        },
+      });
+    }
+  }
 
   handleConnection(client: Socket) {
     console.log(`[Prisoner] Client connected: ${client.id}`);
@@ -53,6 +93,8 @@ export class PrisonerGateway implements OnGatewayConnection, OnGatewayDisconnect
         matchId: dto.matchId,
         playerId: dto.playerId,
         totalRounds: state.totalRounds,
+        roundTimeLimit: state.roundTimeLimit,
+        userViewPoints: state.userViewPoints,
         status: 'waiting',
       });
 
@@ -61,6 +103,10 @@ export class PrisonerGateway implements OnGatewayConnection, OnGatewayDisconnect
           matchId: dto.matchId,
           currentRound: state.currentRound,
           totalRounds: state.totalRounds,
+          roundTimeLimit: state.roundTimeLimit,
+          userViewPoints: state.userViewPoints,
+          player1Id: state.player1Id,
+          player2Id: state.player2Id,
         });
       }
     } catch (err: unknown) {
@@ -96,6 +142,7 @@ export class PrisonerGateway implements OnGatewayConnection, OnGatewayDisconnect
             player2: state.player2TotalPoints,
           },
           nextRound: state.status === 'finished' ? null : state.currentRound,
+          timedOut: false,
         });
 
         if (state.status === 'finished') {
@@ -126,6 +173,8 @@ export class PrisonerGateway implements OnGatewayConnection, OnGatewayDisconnect
         matchId: state.matchId,
         currentRound: state.currentRound,
         totalRounds: state.totalRounds,
+        roundTimeLimit: state.roundTimeLimit,
+        userViewPoints: state.userViewPoints,
         status: state.status,
         totalPoints: {
           player1: state.player1TotalPoints,
