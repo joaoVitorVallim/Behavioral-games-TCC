@@ -260,7 +260,7 @@ export class SessionService {
 
       if (!lockedSession) {
         throw new NotFoundException(
-          `Session with invite code ${inviteCode} not found`,
+          `Código de sessão "${inviteCode}" não encontrado. Verifique o código e tente novamente.`,
         );
       }
 
@@ -270,11 +270,11 @@ export class SessionService {
       });
 
       if (!session) {
-        throw new NotFoundException(`Session with invite code ${inviteCode} not found`);
+        throw new NotFoundException(`Código de sessão "${inviteCode}" não encontrado. Verifique o código e tente novamente.`);
       }
 
       if (!session.isActive) {
-        throw new BadRequestException('Session is not active');
+        throw new BadRequestException('Esta sessão já foi encerrada. Solicite um novo código ao professor.');
       }
 
       this.validateRequiredPlayerFields(session.inputInfo, payload);
@@ -282,17 +282,7 @@ export class SessionService {
       const playerRepo = manager.getRepository(Player);
       const matchRepo = manager.getRepository(Match);
 
-      const maxPlayers = this.getMaxPlayersForGame(session.game);
-      const currentPlayersCount = await playerRepo.count({
-        where: { session_id: session.id },
-      });
-
-      if (currentPlayersCount >= maxPlayers) {
-        throw new BadRequestException(
-          `Session is full for ${session.game} mode`,
-        );
-      }
-
+      // Criar o novo jogador
       const player = playerRepo.create({
         session_id: session.id,
         educationLevel: payload.educationLevel,
@@ -304,50 +294,50 @@ export class SessionService {
       });
 
       const savedPlayer = await playerRepo.save(player);
-      const playersCount = currentPlayersCount + 1;
 
-      const targetPlayers = maxPlayers;
       let createdMatch: Match | null = null;
 
-      if (playersCount === targetPlayers) {
-        const existingMatch = await matchRepo.findOne({
-          where: { session_id: session.id },
-        });
+      if (session.game === GameType.PRISONER) {
+        // Busca jogadores desta sessão que ainda não estão em nenhuma partida
+        const unmatchedPlayers = await playerRepo
+          .createQueryBuilder('player')
+          .where('player.session_id = :sessionId', { sessionId: session.id })
+          .andWhere(
+            'player.id NOT IN ' +
+            '(SELECT m.player1_id FROM matches m WHERE m.session_id = :sessionId ' +
+            'UNION SELECT m.player2_id FROM matches m WHERE m.session_id = :sessionId' +
+            ')',
+            { sessionId: session.id },
+          )
+          .orderBy('player.created_at', 'ASC')
+          .getMany();
 
-        if (!existingMatch) {
-          if (session.game === GameType.PRISONER) {
-            const players = await playerRepo.find({
-              where: { session_id: session.id },
-              order: { created_at: 'ASC' },
-              take: 2,
-            });
-
-            if (players.length < 2) {
-              throw new BadRequestException(
-                'Not enough players to create prisoner match',
-              );
-            }
-
-            createdMatch = matchRepo.create({
-              session_id: session.id,
-              player1_id: players[0].id,
-              player2_id: players[1].id,
-              status: MatchStatus.AGUARDANDO,
-              moves: {},
-            });
-          } else {
-            createdMatch = matchRepo.create({
-              session_id: session.id,
-              player1_id: savedPlayer.id,
-              player2_id: null,
-              status: MatchStatus.AGUARDANDO,
-              moves: {},
-            });
-          }
-
+        // Se há exatamente 2 jogadores sem par (o que acabou de entrar + 1 aguardando), cria a partida
+        if (unmatchedPlayers.length === 2) {
+          createdMatch = matchRepo.create({
+            session_id: session.id,
+            player1_id: unmatchedPlayers[0].id,
+            player2_id: unmatchedPlayers[1].id,
+            status: MatchStatus.AGUARDANDO,
+            moves: {},
+          });
           createdMatch = await matchRepo.save(createdMatch);
         }
+      } else {
+        // Para outros jogos (roulette etc.), comportamento original
+        createdMatch = matchRepo.create({
+          session_id: session.id,
+          player1_id: savedPlayer.id,
+          player2_id: null,
+          status: MatchStatus.AGUARDANDO,
+          moves: {},
+        });
+        createdMatch = await matchRepo.save(createdMatch);
       }
+
+      const totalPlayersCount = await playerRepo.count({
+        where: { session_id: session.id },
+      });
 
       const updatedSession = await manager.getRepository(Session).findOne({
         where: { id: session.id },
@@ -357,8 +347,8 @@ export class SessionService {
       return {
         session: updatedSession,
         player: savedPlayer,
-        playersCount,
-        maxPlayers,
+        playersCount: totalPlayersCount,
+        maxPlayers: 2,
         match: createdMatch,
       };
     });
