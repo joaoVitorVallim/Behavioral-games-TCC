@@ -1,12 +1,24 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import { GraduationCap, FlaskConical, ArrowRight } from 'lucide-react'
-import { useNavigate } from "react-router-dom"
-import { Header } from "../../../shared/components/Header"
+import { AxiosError } from 'axios'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Header } from '../../../shared/components/Header'
+import { useAuth } from '../hooks/useAuth'
+import { validateEmail } from '../../../shared/utils/validation'
+import { RateLimiter } from '../../../shared/utils/security'
+
+const rate_limiter = new RateLimiter(5, 60000)
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const root_ref = useRef<HTMLDivElement | null>(null)
+  const { login } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error_message, setErrorMessage] = useState('')
+  const [is_submitting, setIsSubmitting] = useState(false)
+  const [show_success, setShowSuccess] = useState(false)
 
   useEffect(() => {
     if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -15,14 +27,25 @@ export function LoginPage() {
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '[data-intro="kicker"], [data-intro="title"], [data-intro="text"], [data-intro="cta"], [data-intro="meta"]',
+        '[data-auth="intro"]',
         { y: 22, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          duration: 0.7,
+          duration: 0.6,
+          ease: 'power2.out'
+        }
+      )
+
+      gsap.fromTo(
+        '[data-auth="form"]',
+        { y: 22, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
           ease: 'power2.out',
-          stagger: 0.1
+          delay: 0.08
         }
       )
     }, root_ref)
@@ -30,59 +53,134 @@ export function LoginPage() {
     return () => ctx.revert()
   }, [])
 
+  useEffect(() => {
+    const state = location.state as { registered?: boolean } | null
+    setShowSuccess(Boolean(state?.registered))
+  }, [location.state])
+
+  const handleSubmit = useCallback(async (event: React.FormEvent) => {
+    event.preventDefault()
+    setErrorMessage('')
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Preencha todos os campos')
+      return
+    }
+
+    if (!validateEmail(email)) {
+      setErrorMessage('E-mail inválido')
+      return
+    }
+
+    if (!rate_limiter.canAttempt('login')) {
+      setErrorMessage('Muitas tentativas. Aguarde um momento.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await login(email, password)
+      rate_limiter.reset('login')
+
+      const state = location.state as { from?: string } | null
+      const redirect_target = state?.from && typeof state.from === 'string' ? state.from : '/sessions'
+      navigate(redirect_target)
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 401) {
+          setErrorMessage('E-mail ou senha incorretos. Tente novamente.')
+        } else if (error.response && error.response.status >= 500) {
+          setErrorMessage('Erro no servidor. Tente novamente mais tarde.')
+        } else if (error.code === 'ERR_NETWORK') {
+          setErrorMessage('Erro de conexão. Verifique se o servidor está rodando.')
+        } else {
+          setErrorMessage('Erro ao autenticar. Tente novamente.')
+        }
+      } else {
+        setErrorMessage('Erro inesperado. Tente novamente.')
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [email, password, login, location.state, navigate])
+
   return (
     <div ref={root_ref} className="app-shell flex flex-col text-foreground">
-        <Header />
+      <Header hide_auth_cta />
 
       <main className="relative z-10 flex flex-1 items-center px-4 py-10 md:px-8 md:py-14">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.85fr] lg:items-center">
-          <section className="surface-panel p-7 md:p-10 lg:p-12">
-            <p data-intro="kicker" className="heading-kicker mb-4">Plataforma oficial de experimentacao</p>
-            <h1 data-intro="title" className="max-w-3xl text-4xl leading-tight text-foreground md:text-5xl">
-              Pesquisa comportamental com experiencia profissional, estavel e orientada por dados.
-            </h1>
-            <p data-intro="text" className="mt-5 max-w-3xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              Esta plataforma foi desenvolvida em parceria com a Fundacao Herminio Ometto para apoiar atividades academicas em Analise Comportamental com fluxo seguro para docentes e participantes.
-            </p>
-
-            <div data-intro="cta" className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                onClick={() => navigate('/sessions')}
-                className="btn-primary w-full sm:w-auto"
-              >
-                Ver sessoes disponiveis
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              <div className="surface-subtle flex items-center gap-3 px-4 py-3">
-                <div className="rounded-lg border border-primary/30 bg-primary/10 p-2 text-primary">
-                  <FlaskConical className="h-4 w-4" />
-                </div>
-                <p className="text-sm text-muted-foreground">Ambiente validado para uso em sala e laboratorio.</p>
-              </div>
-            </div>
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.85fr] lg:items-center">
+          <section data-auth="intro" className="surface-panel p-7 md:p-10">
+            <p className="heading-kicker mb-4">Acesso institucional</p>
+            <h1 className="text-4xl leading-tight text-foreground md:text-5xl">Acesso ao BehaviorLab</h1>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
+                Entre com seu e-mail institucional para continuar.
+              </p>
           </section>
 
-          <aside data-intro="meta" className="surface-panel p-7 md:p-9">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-xl border border-primary/35 bg-primary/10 p-3 text-primary">
-                <GraduationCap className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="heading-kicker mb-1">Institucional</p>
-                <h2 className="text-2xl leading-tight text-foreground">Desenvolvido em parceria com a FHO</h2>
-              </div>
+          <aside data-auth="form" className="surface-panel p-7 md:p-9">
+            <div className="mb-6">
+              <p className="heading-kicker mb-2">Credenciais</p>
+              <h2 className="text-2xl text-foreground">Entrar</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Use o e-mail institucional cadastrado.</p>
             </div>
 
-            <div className="space-y-4 text-sm text-muted-foreground">
-              <div className="surface-subtle p-4">
-                <p className="heading-kicker mb-2">Foco</p>
-                <p>Engajar estudantes com dinâmicas gamificadas sem perder rigor academico.</p>
+            {show_success && (
+              <div className="mb-4 rounded-xl border border-success/40 bg-success/20 px-4 py-3 text-sm font-semibold text-success">
+                Conta criada com sucesso. Faça login para continuar.
               </div>
-              <div className="surface-subtle p-4">
-                <p className="heading-kicker mb-2">Contexto</p>
-                <p>Uso docente com controle de sessao, configuracoes customizadas e entrada monitorada.</p>
+            )}
+
+            {error_message && (
+              <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error_message}
               </div>
-            </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                E-mail
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="nome@instituicao.edu.br"
+                  className="input-shell text-sm"
+                  autoComplete="email"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Senha
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  className="input-shell text-sm"
+                  autoComplete="current-password"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={is_submitting}
+                className="btn-primary w-full disabled:opacity-50"
+              >
+                {is_submitting ? 'Entrando...' : 'Entrar no sistema'}
+              </button>
+            </form>
+
+            <p className="mt-6 text-sm text-muted-foreground">
+              Não tem conta?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="font-semibold text-foreground transition-colors hover:text-primary"
+              >
+                Criar conta
+              </button>
+            </p>
           </aside>
         </div>
       </main>

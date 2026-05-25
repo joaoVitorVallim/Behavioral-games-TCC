@@ -110,7 +110,7 @@ export function ConfigurationForm({
               className={select_class}
               disabled={options.length === 0}
             >
-              {options.length === 0 && <option value="">Sem opcoes disponiveis</option>}
+              {options.length === 0 && <option value="">Sem opções disponíveis</option>}
               {options.map((option) => (
                 <option key={option} value={option}>
                   {option}
@@ -140,17 +140,17 @@ export function ConfigurationForm({
   return (
     <div className="space-y-8">
       <fieldset>
-        <legend className={section_label_class}>Configuracoes Comuns</legend>
+        <legend className={section_label_class}>Configurações Comuns</legend>
         <div className="space-y-4">
           {common_fields.map(render_field)}
         </div>
       </fieldset>
 
       <fieldset>
-        <legend className={section_label_class}>Configuracoes Especificas do Jogo</legend>
+        <legend className={section_label_class}>Configurações Específicas do Jogo</legend>
         <div className="space-y-4">
           {game_fields.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhum campo especifico para este jogo.</p>
+            <p className="text-sm text-muted-foreground">Nenhum campo específico para este jogo.</p>
           )}
           {game_fields.map(render_field)}
         </div>

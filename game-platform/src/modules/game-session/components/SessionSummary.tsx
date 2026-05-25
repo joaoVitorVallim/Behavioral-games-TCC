@@ -77,7 +77,7 @@ export function SessionSummary({
         className="btn-primary w-full py-4 text-lg disabled:cursor-not-allowed"
       >
         <Settings className="w-5 h-5" />
-        {is_creating ? 'Criando Sessao...' : 'Criar Sessão'}
+        {is_creating ? 'Criando Sessão...' : 'Criar Sessão'}
       </button>
       {create_error && (
         <p className="text-sm text-destructive mt-3">{create_error}</p>

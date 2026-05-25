@@ -1,5 +1,5 @@
 import { api_client } from '../../../infrastructure/api/api-client'
-import type { LoginRequest, LoginResponse, User } from '../types'
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User } from '../types'
 
 const TOKEN_KEY = 'auth_token'
 
@@ -13,6 +13,11 @@ export const authService = {
       password
     } as LoginRequest)
     
+    return response.data
+  },
+
+  register: async (payload: RegisterRequest): Promise<RegisterResponse> => {
+    const response = await api_client.post<RegisterResponse>('/users', payload)
     return response.data
   },
 
@@ -60,7 +65,8 @@ export const authService = {
       // Retorna user extraído
       return {
         id: payload.sub,
-        login: payload.login
+        login: payload.login,
+        ...(payload.name ? { name: payload.name } : {})
       }
     } catch {
       return null

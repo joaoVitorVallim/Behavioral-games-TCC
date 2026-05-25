@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { authService } from '../../modules/auth/services/authService'
-import type { AuthContextType, User } from '../../modules/auth/types'
+import type { AuthContextType, RegisterRequest, User } from '../../modules/auth/types'
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -82,6 +82,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
+  const register = useCallback(async (payload: RegisterRequest): Promise<void> => {
+    await authService.register(payload)
+  }, [])
+
   const logout = useCallback(() => {
     authService.logout()
     setUser(null)
@@ -94,6 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     is_authenticated: !!user && !!access_token,
     is_loading,
     login,
+    register,
     logout
   }
 

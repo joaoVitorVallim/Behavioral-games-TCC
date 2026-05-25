@@ -57,7 +57,7 @@ export function ConfigSelector({
       .replace(/^./, (char) => char.toUpperCase())
 
   const safe_value = (value: unknown): string => {
-    if (typeof value === 'boolean') return value ? 'Sim' : 'Nao'
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
     if (typeof value === 'number') return String(value)
     if (typeof value === 'string') return value
     return '-'
@@ -127,10 +127,10 @@ export function ConfigSelector({
               className="input-shell text-left disabled:opacity-70"
             >
               {configs_loading
-                ? 'Carregando configuracoes...'
+                ? 'Carregando configurações...'
                 : selected_config
                   ? selected_config.configName
-                  : 'Selecione uma configuracao'}
+                  : 'Selecione uma configuração'}
             </button>
             <ChevronDown
               className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none transition-transform ${
@@ -140,7 +140,7 @@ export function ConfigSelector({
 
             {is_dropdown_open && !configs_loading && !configs_error && configs_for_game.length > 0 && (
               <div className="surface-panel absolute z-50 mt-2 max-h-64 w-full overflow-auto p-2">
-                <ul role="listbox" aria-label="Configuracoes existentes" className="p-2 space-y-1">
+                <ul role="listbox" aria-label="Configurações existentes" className="p-2 space-y-1">
                   {configs_for_game.map((cfg) => {
                     const is_selected = cfg.id === selected_config_id
                     const is_deleting_item = is_deleting_config && deleting_config_id === cfg.id
@@ -172,8 +172,8 @@ export function ConfigSelector({
                             }}
                             disabled={is_deleting_item}
                             className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity px-2 py-1.5 rounded-md border border-destructive/50 text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                            aria-label={`Excluir configuracao ${cfg.configName}`}
-                            title="Excluir configuracao"
+                            aria-label={`Excluir configuração ${cfg.configName}`}
+                            title="Excluir configuração"
                           >
                             {is_deleting_item ? (
                               <span className="text-xs">Excluindo...</span>
@@ -192,7 +192,7 @@ export function ConfigSelector({
 
           {configs_error && (
             <p className="text-xs text-destructive mt-2">
-              Nao foi possivel carregar as configuracoes deste jogo.
+              Não foi possível carregar as configurações deste jogo.
             </p>
           )}
 
@@ -228,11 +228,11 @@ export function ConfigSelector({
       {config_mode === 'create' && (
         <div>
           {fields_loading && (
-            <p className="text-sm text-muted-foreground mb-4">Carregando campos de configuracao...</p>
+            <p className="text-sm text-muted-foreground mb-4">Carregando campos de configuração...</p>
           )}
           {fields_error && (
             <p className="text-sm text-destructive mb-4">
-              Nao foi possivel carregar os campos da configuracao para este jogo.
+              Não foi possível carregar os campos da configuração para este jogo.
             </p>
           )}
           <ConfigurationForm

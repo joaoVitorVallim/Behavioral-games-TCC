@@ -46,14 +46,14 @@ export function SessionDataForm({
           <label htmlFor="session-name" className="block text-sm font-medium text-foreground mb-2">
             Nome da Sessão *
           </label>
-          <input
-            id="session-name"
-            type="text"
-            value={session_name}
-            onChange={(e) => dispatch({ type: 'SET_SESSION_NAME', payload: e.target.value })}
-            className="input-shell"
-            placeholder="Ex: Sessao Turma A - Manha"
-          />
+            <input
+              id="session-name"
+              type="text"
+              value={session_name}
+              onChange={(e) => dispatch({ type: 'SET_SESSION_NAME', payload: e.target.value })}
+              className="input-shell"
+              placeholder="Ex: Sessão Turma A - Manhã"
+            />
         </div>
 
         {/* Game Selection */}
@@ -88,7 +88,7 @@ export function SessionDataForm({
           </div>
           {games_error && (
             <p className="text-xs text-destructive mt-2">
-              Nao foi possivel carregar os jogos no momento.
+              Não foi possível carregar os jogos no momento.
             </p>
           )}
         </div>
@@ -103,12 +103,12 @@ export function SessionDataForm({
           </p>
           {player_fields_loading && (
             <p className="text-xs text-muted-foreground mb-3">
-              Carregando campos disponiveis do jogador...
+              Carregando campos disponíveis do jogador...
             </p>
           )}
           {player_fields_error && (
             <p className="text-xs text-destructive mb-3">
-              Nao foi possivel carregar os campos do jogador.
+              Não foi possível carregar os campos do jogador.
             </p>
           )}
           <div className="flex flex-wrap gap-3">
@@ -129,7 +129,7 @@ export function SessionDataForm({
           </div>
           {!player_fields_loading && !player_fields_error && player_field_options.length === 0 && (
             <p className="text-xs text-muted-foreground mt-2">
-              Nenhum campo disponivel para selecionar.
+              Nenhum campo disponível para selecionar.
             </p>
           )}
           {input_info.length === 0 && (

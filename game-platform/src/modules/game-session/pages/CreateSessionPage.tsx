@@ -60,7 +60,6 @@ const extract_invite_code = (response: CreateSessionResponse): string | null => 
   }
 
   if ('session' in response) {
-    if (typeof response.inviteCode === 'string') return response.inviteCode
     if (typeof response.invite_code === 'string') return response.invite_code
     if (typeof response.session?.inviteCode === 'string') return response.session.inviteCode
     if (typeof (response.session as { invite_code?: string }).invite_code === 'string') {
@@ -265,12 +264,12 @@ export function CreateSessionPage() {
     setCreateError(null)
 
     if (!user?.id) {
-      setCreateError('Usuario autenticado nao encontrado. Faca login novamente.')
+      setCreateError('Usuário autenticado não encontrado. Faça login novamente.')
       return
     }
 
     if (!selected_game_for_query || !session_settings) {
-      setCreateError('Preencha os dados da sessao e da configuracao antes de criar.')
+      setCreateError('Preencha os dados da sessão e da configuração antes de criar.')
       return
     }
 
@@ -299,28 +298,24 @@ export function CreateSessionPage() {
         user_id: user.id
       }
 
-      console.log('[CreateSessionPage] createSession payload', payload)
-
       const response = await createSession(payload)
-
-      console.log('[CreateSessionPage] createSession response', response)
 
       const invite_code = extract_invite_code(response)
 
       if (!invite_code) {
-        setCreateError('Sessao criada, mas nao foi possivel obter o codigo de convite.')
+        setCreateError('Sessão criada, mas não foi possível obter o código de convite.')
         return
       }
 
       dispatch({ type: 'OPEN_SESSION_MODAL', payload: invite_code })
     } catch {
-      setCreateError('Nao foi possivel criar a sessao. Tente novamente.')
+      setCreateError('Não foi possível criar a sessão. Tente novamente.')
     }
   }
 
   const handleDeleteConfig = async (id: string) => {
     const target = configs.find((config) => config.id === id)
-    const target_name = target?.configName ?? 'esta configuracao'
+    const target_name = target?.configName ?? 'esta configuração'
 
     try {
       await deleteConfig(id)
@@ -329,9 +324,9 @@ export function CreateSessionPage() {
         dispatch({ type: 'SELECT_CONFIG', payload: '' })
       }
 
-      showDeleteToast('success', `Configuracao ${target_name} excluida.`)
+      showDeleteToast('success', `Configuração ${target_name} excluída.`)
     } catch {
-      showDeleteToast('error', 'Nao foi possivel excluir a configuracao. Tente novamente.')
+      showDeleteToast('error', 'Não foi possível excluir a configuração. Tente novamente.')
     }
   }
 
