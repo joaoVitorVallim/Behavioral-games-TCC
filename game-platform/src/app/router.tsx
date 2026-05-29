@@ -5,6 +5,9 @@ import { RegisterPage } from '../modules/auth/pages/RegisterPage'
 import { SessionsPage } from '../modules/game-session/pages/SessionsPage'
 import { CreateSessionPage } from '../modules/game-session/pages/CreateSessionPage'
 import { ReportsPage } from '../modules/reports/pages/ReportsPage'
+import { WaitingPage } from '../modules/prisoner/pages/WaitingPage'
+import { GamePage } from '../modules/prisoner/pages/GamePage'
+import { ResultPage } from '../modules/prisoner/pages/ResultPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 export const router = createBrowserRouter([
@@ -39,5 +42,17 @@ export const router = createBrowserRouter([
         <ReportsPage />
       </ProtectedRoute>
     ),
-  }
+  },
+  {
+    path: '/prisoner/waiting',
+    element: <WaitingPage />,
+  },
+  {
+    path: '/prisoner/game',
+    element: <GamePage />,
+  },
+  {
+    path: '/prisoner/result',
+    element: <ResultPage />,
+  },
 ])

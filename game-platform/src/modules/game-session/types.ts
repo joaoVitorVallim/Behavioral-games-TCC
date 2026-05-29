@@ -102,17 +102,36 @@ export type CreateSessionResponse =
 export interface SessionRequirement {
   field: string
   label: string
-  type: 'text' | 'email' | 'number'
+  type: 'text' | 'email' | 'number' | 'select'
   required: boolean
   placeholder: string
 }
 
-export interface ValidateCodeResponse {
-  valid: boolean
-  requirements: SessionRequirement[]
+export interface JoinSessionPayload {
+  inviteCode: string
+  educationLevel?: string
+  semester?: number
+  course?: string
+  age?: number
+  gender?: string
+  profession?: string
 }
 
-export interface JoinSessionPayload {
-  code: string
-  [key: string]: string
+export interface JoinSessionPlayer {
+  id: string
+  session_id: string
+  educationLevel?: string
+  semester?: number
+  course?: string
+  age?: number
+  gender?: string
+  profession?: string
+}
+
+export interface JoinSessionResponse {
+  session: Session
+  player: JoinSessionPlayer
+  playersCount: number
+  maxPlayers: number
+  match: { id: string; status: string } | null
 }
