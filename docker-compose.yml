@@ -1,28 +1,10 @@
 services:
-  postgres:
-    image: postgres:16
-    container_name: postgres_nest
-    restart: always
-    environment:
-      POSTGRES_USER: nest
-      POSTGRES_PASSWORD: nest
-      POSTGRES_DB: nest_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nest -d nest_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   api:
     build: .
     container_name: nestjs_app
     restart: always
     environment:
-      DATABASE_HOST: postgres
+      DATABASE_HOST: 18.220.91.129
       DATABASE_PORT: 5432
       DATABASE_USER: nest
       DATABASE_PASSWORD: nest
@@ -31,13 +13,7 @@ services:
       NODE_ENV: development
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - .:/app
       - /app/node_modules
     command: npm run start:dev
-
-volumes:
-  postgres_data:

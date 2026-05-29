@@ -26,13 +26,24 @@ export class PrisonerService {
   }
 
   async initMatch(matchId: string): Promise<PrisonerMatchState> {
+    const existingBefore = this.activeMatches.get(matchId);
+    if (existingBefore) return existingBefore;
+
     const match = await this.matchRepository.findOne({
       where: { id: matchId },
       relations: ['session', 'session.settings'],
     });
 
+    // Re-check after await — concurrent call may have set state while DB query was running
+    const existingAfter = this.activeMatches.get(matchId);
+    if (existingAfter) return existingAfter;
+
     if (!match) {
       throw new NotFoundException(`Match ${matchId} not found`);
+    }
+
+    if (match.status === MatchStatus.FINALIZADA || match.status === MatchStatus.CANCELADA) {
+      throw new BadRequestException(`Match ${matchId} is already ${match.status}`);
     }
 
     if (!match.player2_id) {

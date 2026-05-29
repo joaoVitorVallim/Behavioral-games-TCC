@@ -82,9 +82,8 @@ export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      if (!this.prisonerService.hasState(dto.matchId)) {
-        await this.prisonerService.initMatch(dto.matchId);
-      }
+      // Always call initMatch — it's idempotent and handles concurrent calls safely
+      await this.prisonerService.initMatch(dto.matchId);
 
       const state = this.prisonerService.connectPlayer(dto.matchId, dto.playerId, client.id);
       client.join(dto.matchId);

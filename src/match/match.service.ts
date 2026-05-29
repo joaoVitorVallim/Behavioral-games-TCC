@@ -24,7 +24,7 @@ export class MatchService {
     return await this.matchRepository.save(match);
   }
 
-  async findAll(filters?: { sessionId?: string; status?: MatchStatus }): Promise<Match[]> {
+  async findAll(filters?: { sessionId?: string; status?: MatchStatus; playerId?: string }): Promise<Match[]> {
     const query = this.matchRepository.createQueryBuilder('match');
 
     if (filters?.sessionId) {
@@ -33,6 +33,13 @@ export class MatchService {
 
     if (filters?.status) {
       query.andWhere('match.status = :status', { status: filters.status });
+    }
+
+    if (filters?.playerId) {
+      query.andWhere(
+        '(match.player1_id = :playerId OR match.player2_id = :playerId)',
+        { playerId: filters.playerId },
+      );
     }
 
     return await query.getMany();

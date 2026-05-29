@@ -13,12 +13,15 @@ import { isValidPlayerField, PLAYER_OPTIONAL_FIELDS } from '../common/constants/
 import { Player } from '../player/player.entity';
 import { Match, MatchStatus } from '../match/match.entity';
 import { JoinSessionDto } from './dto/join-session.dto';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class SessionService {
   constructor(
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
+    @InjectRepository(Match)
+    private matchRepository: Repository<Match>,
     private dataSource: DataSource,
     private gameService: GameService,
     private settingsService: SettingsService,
@@ -303,17 +306,17 @@ export class SessionService {
           .createQueryBuilder('player')
           .where('player.session_id = :sessionId', { sessionId: session.id })
           .andWhere(
-            'player.id NOT IN ' +
-            '(SELECT m.player1_id FROM matches m WHERE m.session_id = :sessionId ' +
-            'UNION SELECT m.player2_id FROM matches m WHERE m.session_id = :sessionId' +
+            'NOT EXISTS (' +
+            'SELECT 1 FROM matches m WHERE m.session_id = :sessionId ' +
+            'AND (m.player1_id = player.id OR m.player2_id = player.id)' +
             ')',
             { sessionId: session.id },
           )
           .orderBy('player.created_at', 'ASC')
           .getMany();
 
-        // Se há exatamente 2 jogadores sem par (o que acabou de entrar + 1 aguardando), cria a partida
-        if (unmatchedPlayers.length === 2) {
+        // Cria partida com os dois primeiros sem par (o mais antigo + o que acabou de entrar)
+        if (unmatchedPlayers.length >= 2) {
           createdMatch = matchRepo.create({
             session_id: session.id,
             player1_id: unmatchedPlayers[0].id,
@@ -395,6 +398,48 @@ export class SessionService {
       finishedAt: session.finished_at,
       settings: session.settings,
       redirectUrl: this.gameService.getRedirectUrl(session.game, session.inviteCode),
+    };
+  }
+
+  async getReport(id: string) {
+    const session = await this.sessionRepository.findOne({
+      where: { id },
+      relations: ['settings', 'user', 'players'],
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+
+    const matches = await this.matchRepository.find({
+      where: { session_id: id },
+      order: { created_at: 'ASC' },
+    });
+
+    const { password_hash, ...createdBy } = session.user as User & { password_hash: string };
+
+    return {
+      session: {
+        id: session.id,
+        game: session.game,
+        inviteCode: session.inviteCode,
+        isActive: session.isActive,
+        inputInfo: session.inputInfo ?? [],
+        settings: session.settings,
+        createdBy,
+        created_at: session.created_at,
+        finished_at: session.finished_at ?? null,
+      },
+      players: session.players,
+      matches: matches.map((match) => ({
+        id: match.id,
+        player1_id: match.player1_id,
+        player2_id: match.player2_id ?? null,
+        status: match.status,
+        matchTime: match.matchTime ?? null,
+        moves: match.moves ?? {},
+        created_at: match.created_at,
+      })),
     };
   }
 }

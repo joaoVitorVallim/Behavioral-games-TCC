@@ -117,6 +117,11 @@ export class MatchController {
     enum: MatchStatus,
     description: 'Filter by match status (optional)',
   })
+  @ApiQuery({
+    name: 'playerId',
+    required: false,
+    description: 'Filter matches where player is player1 or player2 (optional)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Matches list returned successfully',
@@ -145,8 +150,9 @@ export class MatchController {
   async findAll(
     @Query('sessionId') sessionId?: string,
     @Query('status') status?: MatchStatus,
+    @Query('playerId') playerId?: string,
   ): Promise<Match[]> {
-    return await this.matchService.findAll({ sessionId, status });
+    return await this.matchService.findAll({ sessionId, status, playerId });
   }
 
   @Get(':id')

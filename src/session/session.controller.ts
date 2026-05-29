@@ -339,6 +339,75 @@ export class SessionController {
     return this.sessionService.getSessionStats(id);
   }
 
+  @Get(':id/report')
+  @ApiOperation({
+    summary: 'Get session report',
+    description:
+      'Returns all raw data for a session: metadata, settings, creator, players and all matches with move history. Intended for platform-side report generation.',
+  })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Report data returned successfully',
+    schema: {
+      example: {
+        session: {
+          id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+          game: 'prisoner',
+          inviteCode: 'F4LVTX',
+          isActive: false,
+          inputInfo: ['educationLevel', 'semester'],
+          settings: {
+            id: 'settings-uuid',
+            configName: "Prisoner's Config Level 1",
+            game: 'prisoner',
+            userViewPoints: true,
+            limitRounds: 10,
+            roundTimeLimit: 30,
+          },
+          createdBy: { id: 'user-uuid', name: 'Professor João', login: 'joao' },
+          created_at: '2026-03-07T17:05:59.734Z',
+          finished_at: '2026-03-07T18:00:00.000Z',
+        },
+        players: [
+          {
+            id: 'player1-uuid',
+            educationLevel: 'bachelor',
+            semester: 6,
+            course: 'Economia',
+            age: 22,
+            gender: 'M',
+            profession: null,
+            session_id: 'd7fb8887-9739-4aab-8934-df34707d8d98',
+            created_at: '2026-03-07T17:10:00.000Z',
+          },
+        ],
+        matches: [
+          {
+            id: 'match-uuid',
+            player1_id: 'player1-uuid',
+            player2_id: 'player2-uuid',
+            status: 'finalizada',
+            matchTime: 120,
+            moves: {
+              '1': {
+                player1Choice: 'cooperate',
+                player2Choice: 'defect',
+                player1Points: 0,
+                player2Points: 5,
+              },
+            },
+            created_at: '2026-03-07T17:10:05.000Z',
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Session not found' })
+  getReport(@Param('id') id: string) {
+    return this.sessionService.getReport(id);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get session details',
