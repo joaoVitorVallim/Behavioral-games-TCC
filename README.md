@@ -61,11 +61,13 @@ src/
 |--------|------|-----------|
 | POST | `/sessions` | Criar sessão |
 | GET | `/sessions` | Listar sessões |
+| GET | `/sessions/results` | Listar sessões finalizadas para a tela de resultados |
 | GET | `/sessions/:id` | Buscar sessão |
 | GET | `/sessions/codigo/:codigo` | Buscar por código de convite |
+| GET | `/sessions/:id/results` | Listar partidas de uma sessão finalizada |
+| GET | `/sessions/:id/results/:matchId` | Listar jogadas de uma partida |
 | PATCH | `/sessions/:id` | Atualizar sessão |
 | DELETE | `/sessions/:id` | Remover sessão |
-| GET | `/sessions/:id/results` | Ver resultados (sessão, summary, players, matches) |
 | GET | `/sessions/:id/export` | Exportar dados em CSV (download automático) |
 
 ### Players

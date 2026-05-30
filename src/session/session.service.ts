@@ -81,6 +81,31 @@ export class SessionService {
     return Array.from(new Set(inputInfo));
   }
 
+  private formatMatch(match: Match) {
+    return {
+      id: match.id,
+      player1_id: match.player1_id,
+      player2_id: match.player2_id ?? null,
+      status: match.status,
+      matchTime: match.matchTime ?? null,
+      moves: match.moves ?? {},
+      created_at: match.created_at,
+    };
+  }
+
+  private async findSessionForResults(id: string): Promise<Session> {
+    const session = await this.sessionRepository.findOne({
+      where: { id },
+      relations: ['settings', 'user', 'players'],
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+
+    return session;
+  }
+
   async create(dto: CreateSessionDto): Promise<Session> {
     // Verify game type is valid
     if (!this.gameService.isValidGameType(dto.game)) {
@@ -222,6 +247,31 @@ export class SessionService {
     }
 
     return await this.sessionRepository.find(findOptions);
+  }
+
+  async findFinishedSessions() {
+    const sessions = await this.sessionRepository.find({
+      where: { isActive: false },
+      relations: ['settings', 'user', 'players'],
+      order: { finished_at: 'DESC', created_at: 'DESC' },
+    });
+
+    return sessions.map((session) => {
+      const { password_hash, ...createdBy } = session.user as User & { password_hash: string };
+
+      return {
+        id: session.id,
+        game: session.game,
+        inviteCode: session.inviteCode,
+        isActive: session.isActive,
+        inputInfo: session.inputInfo ?? [],
+        settings: session.settings,
+        createdBy,
+        playersCount: session.players.length,
+        created_at: session.created_at,
+        finished_at: session.finished_at ?? null,
+      };
+    });
   }
 
   async findOne(id: string): Promise<Session> {
@@ -401,16 +451,8 @@ export class SessionService {
     };
   }
 
-  async getReport(id: string) {
-    const session = await this.sessionRepository.findOne({
-      where: { id },
-      relations: ['settings', 'user', 'players'],
-    });
-
-    if (!session) {
-      throw new NotFoundException(`Session with ID ${id} not found`);
-    }
-
+  async getSessionResults(id: string) {
+    const session = await this.findSessionForResults(id);
     const matches = await this.matchRepository.find({
       where: { session_id: id },
       order: { created_at: 'ASC' },
@@ -431,15 +473,54 @@ export class SessionService {
         finished_at: session.finished_at ?? null,
       },
       players: session.players,
-      matches: matches.map((match) => ({
-        id: match.id,
-        player1_id: match.player1_id,
-        player2_id: match.player2_id ?? null,
-        status: match.status,
-        matchTime: match.matchTime ?? null,
-        moves: match.moves ?? {},
-        created_at: match.created_at,
-      })),
+      matches: matches.map((match) => this.formatMatch(match)),
     };
+  }
+
+  async getMatchResults(sessionId: string, matchId: string) {
+    const session = await this.findSessionForResults(sessionId);
+    const match = await this.matchRepository.findOne({
+      where: { id: matchId, session_id: sessionId },
+      relations: ['player1', 'player2'],
+    });
+
+    if (!match) {
+      throw new NotFoundException(
+        `Match with ID ${matchId} not found for session ${sessionId}`,
+      );
+    }
+
+    const { password_hash, ...createdBy } = session.user as User & { password_hash: string };
+
+    return {
+      session: {
+        id: session.id,
+        game: session.game,
+        inviteCode: session.inviteCode,
+        isActive: session.isActive,
+        inputInfo: session.inputInfo ?? [],
+        settings: session.settings,
+        createdBy,
+        created_at: session.created_at,
+        finished_at: session.finished_at ?? null,
+      },
+      players: [
+        {
+          role: 'player1',
+          ...match.player1,
+        },
+        match.player2
+          ? {
+              role: 'player2',
+              ...match.player2,
+            }
+          : null,
+      ].filter((player): player is { role: 'player1' | 'player2' } & NonNullable<typeof player> => Boolean(player)),
+      match: this.formatMatch(match),
+    };
+  }
+
+  async getReport(id: string) {
+    return await this.getSessionResults(id);
   }
 }

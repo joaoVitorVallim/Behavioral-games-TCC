@@ -253,6 +253,66 @@ export class SessionController {
     });
   }
 
+  @Get('results')
+  @ApiOperation({
+    summary: 'List finished sessions for results',
+    description: 'Returns all finalized sessions to power the results dashboard',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Finished sessions returned successfully',
+    isArray: true,
+  })
+  findFinishedSessions() {
+    return this.sessionService.findFinishedSessions();
+  }
+
+  @Get(':id/results')
+  @ApiOperation({
+    summary: 'Get session results',
+    description: 'Returns session metadata, players and all matches for one session',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Session ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Session results returned successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Session not found',
+  })
+  getResults(@Param('id') id: string) {
+    return this.sessionService.getSessionResults(id);
+  }
+
+  @Get(':id/results/:matchId')
+  @ApiOperation({
+    summary: 'Get match results',
+    description: 'Returns session context plus the moves of one specific match',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Session ID',
+  })
+  @ApiParam({
+    name: 'matchId',
+    description: 'Match ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Match results returned successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Session or match not found',
+  })
+  getMatchResults(@Param('id') id: string, @Param('matchId') matchId: string) {
+    return this.sessionService.getMatchResults(id, matchId);
+  }
+
   @Get('codigo/:codigo')
   @ApiOperation({
     summary: 'Find session by invite code',
