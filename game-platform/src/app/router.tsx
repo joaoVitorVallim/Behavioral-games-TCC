@@ -5,6 +5,8 @@ import { RegisterPage } from '../modules/auth/pages/RegisterPage'
 import { SessionsPage } from '../modules/game-session/pages/SessionsPage'
 import { CreateSessionPage } from '../modules/game-session/pages/CreateSessionPage'
 import { ReportsPage } from '../modules/reports/pages/ReportsPage'
+import { SessionMatchesPage } from '../modules/reports/pages/SessionMatchesPage'
+import { MatchDetailPage } from '../modules/reports/pages/MatchDetailPage'
 import { WaitingPage } from '../modules/prisoner/pages/WaitingPage'
 import { GamePage } from '../modules/prisoner/pages/GamePage'
 import { ResultPage } from '../modules/prisoner/pages/ResultPage'
@@ -40,6 +42,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ReportsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/reports/:sessionId',
+    element: (
+      <ProtectedRoute>
+        <SessionMatchesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/reports/:sessionId/matches/:matchId',
+    element: (
+      <ProtectedRoute>
+        <MatchDetailPage />
       </ProtectedRoute>
     ),
   },
