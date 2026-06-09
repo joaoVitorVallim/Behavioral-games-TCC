@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
@@ -49,4 +50,7 @@ export class Session {
 
   @Column({ type: 'timestamp', nullable: true })
   finished_at?: Date;
+
+  @DeleteDateColumn()
+  deleted_at?: Date;
 }

@@ -430,7 +430,11 @@ export class SessionService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.sessionRepository.delete(id);
+    const result = await this.sessionRepository.softDelete(id);
+
+    if (!result.affected) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
   }
 
   async getSessionStats(id: string) {
