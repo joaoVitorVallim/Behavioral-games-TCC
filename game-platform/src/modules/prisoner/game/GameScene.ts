@@ -391,13 +391,13 @@ export class GameScene extends Phaser.Scene {
     const card  = choice === 'cooperate' ? this.myCardCooperate : this.myCardDefect;
     const other = choice === 'cooperate' ? this.myCardDefect    : this.myCardCooperate;
 
+    this.myPlayedCard = card;
+
     this.tweens.add({ targets: other, alpha: 0, duration: 200 });
 
     const tableY = this.cy;
     card.flip('back', () => {
-      card.moveToPos(this.cx - 65, tableY, 320, () => {
-        this.myPlayedCard = card;
-      });
+      card.moveToPos(this.cx - 65, tableY, 320);
     });
 
     if (this.timerTween) { this.timerTween.stop(); this.timerBar.clear(); this.timerText.setText(''); }
@@ -427,11 +427,12 @@ export class GameScene extends Phaser.Scene {
 
     if (!this.myPlayedCard) {
       this.myPlayedCard = new CardSprite(this, myCardX, tableY, 'back');
+      this.myPlayedCard.dealIn(tableY + 170, tableY, 0);
     }
 
     if (!this.oppPlayedCard) {
       this.oppPlayedCard = new CardSprite(this, oppCardX, tableY, 'back');
-      this.oppPlayedCard.dealIn(tableY - 160, tableY, 0);
+      this.oppPlayedCard.dealIn(tableY - 170, tableY, 0);
     }
 
     this.myCardLabel?.destroy();
@@ -443,7 +444,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: '11px', color: '#3a5a70', ...mono,
     }).setOrigin(0.5).setDepth(10);
 
-    this.time.delayedCall(300, () => {
+    this.time.delayedCall(750, () => {
       this.myPlayedCard!.flip(myChoice);
       this.oppPlayedCard!.flip(oppChoice, () => {
         this.floatPoints(myPts, myCardX, tableY);

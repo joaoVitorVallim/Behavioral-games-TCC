@@ -141,7 +141,7 @@ export class CardSprite extends Phaser.GameObjects.Container {
       text: cornerChar,
       style: cornerStyle,
       add: false,
-    }).setOrigin(1, 1).setAngle(180);
+    }).setOrigin(1, 1);
 
     const mainLabel = this.scene.make.text({
       x: 0, y: 0,
