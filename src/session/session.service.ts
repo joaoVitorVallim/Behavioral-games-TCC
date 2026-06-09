@@ -151,7 +151,7 @@ export class SessionService {
     try {
       sessionSettings = await this.settingsService.createCopy(
         settings.id,
-        `${dto.settings.configName} (Session)`,
+        dto.settings.configName,
       );
     } catch (error: unknown) {
       throw new BadRequestException(`Failed to create settings snapshot: ${(error as Error).message}`);
@@ -199,7 +199,7 @@ export class SessionService {
 
     const sessionSettings = await this.settingsService.createCopy(
       settings.id,
-      'Demo - Dilema do Prisioneiro (Session)',
+      'Demo - Dilema do Prisioneiro',
     );
 
     let inviteCode = this.generateInviteCode();
