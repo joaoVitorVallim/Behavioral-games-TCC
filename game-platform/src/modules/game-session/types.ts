@@ -83,6 +83,7 @@ export interface CreateConfigPayload {
 // -- Session Creation Types --
 
 export interface CreateSessionPayload {
+  session_name: string
   game: string
   inputInfo: string[]
   settings: Omit<CreateConfigPayload, 'game'>

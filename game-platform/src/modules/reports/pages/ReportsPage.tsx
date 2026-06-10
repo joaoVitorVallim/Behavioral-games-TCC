@@ -5,6 +5,7 @@ import { FileText, RefreshCw, Users, ChevronRight } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { useSessionsResults } from '../hooks/useSessionsResults'
 import { format_date } from '../utils/format'
+import { get_session_label } from '../../game-session/utils/session-label'
 
 export function ReportsPage() {
   const navigate = useNavigate()
@@ -110,7 +111,7 @@ export function ReportsPage() {
                       className="border-t border-border/70 bg-card/35 transition-colors hover:bg-card/60"
                     >
                       <td className="px-4 py-3 text-foreground">
-                        <p className="font-medium">{session.settings?.configName ?? '—'}</p>
+                        <p className="font-medium">{get_session_label(session)}</p>
                         <p className="text-xs text-muted-foreground">
                           Código: {session.inviteCode}
                         </p>

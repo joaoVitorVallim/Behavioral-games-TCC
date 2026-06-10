@@ -18,6 +18,7 @@ export interface SessionResultsCreator {
 
 export interface SessionResultsListItem {
   id: string
+  session_name?: string | null
   game: string
   inviteCode: string
   isActive: boolean
@@ -31,6 +32,7 @@ export interface SessionResultsListItem {
 
 export interface SessionResultsInfo {
   id: string
+  session_name?: string | null
   game: string
   inviteCode: string
   isActive: boolean

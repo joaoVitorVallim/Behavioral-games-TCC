@@ -17,6 +17,7 @@ import {
 } from '../utils/chart-data'
 import { PointsChart } from '../components/PointsChart'
 import { CooperationChart } from '../components/CooperationChart'
+import { get_session_label } from '../../game-session/utils/session-label'
 import type { PlayerResultWithRole } from '../types'
 
 export function MatchDetailPage() {
@@ -105,7 +106,7 @@ export function MatchDetailPage() {
               <p className="text-sm text-muted-foreground md:text-base">
                 Sessão{' '}
                 <span className="text-foreground">
-                  {data.session.settings?.configName ?? '—'}
+                  {get_session_label(data.session)}
                 </span>{' '}
                 · Jogo <span className="text-foreground capitalize">{data.session.game}</span>{' '}
                 · Iniciada em{' '}

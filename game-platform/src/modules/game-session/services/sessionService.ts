@@ -47,6 +47,14 @@ export const sessionService = {
     return response.data
   },
 
+  deleteSession: async (id: string): Promise<void> => {
+    await api_client.delete(`/sessions/${id}`)
+  },
+
+  finishSession: async (id: string): Promise<void> => {
+    await api_client.post(`/sessions/${id}/finish`)
+  },
+
   // Config endpoints
   getConfigsByGame: async (game: string): Promise<GameConfig[]> => {
     const response = await api_client.get(`/settings/game/${game}`)

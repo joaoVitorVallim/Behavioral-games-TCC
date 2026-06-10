@@ -292,6 +292,7 @@ export function CreateSessionPage() {
       }
 
       const payload: CreateSessionPayload = {
+        session_name: state.session_name.trim(),
         game: selected_game_for_query,
         settings: settings_for_session,
         inputInfo: state.input_info.filter((field) => valid_player_field_values.has(field)),

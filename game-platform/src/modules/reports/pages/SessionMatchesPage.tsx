@@ -17,6 +17,7 @@ import {
   format_datetime,
   format_player_summary
 } from '../utils/format'
+import { get_session_label } from '../../game-session/utils/session-label'
 import type { PlayerResult } from '../types'
 
 export function SessionMatchesPage() {
@@ -98,7 +99,7 @@ export function SessionMatchesPage() {
                   <div className="mb-3 flex items-center gap-3">
                     <FileText className="h-9 w-9 text-primary" />
                     <h1 className="text-3xl text-foreground md:text-4xl">
-                      {data.session.settings?.configName ?? 'Sessão'}
+                      {get_session_label(data.session)}
                     </h1>
                   </div>
                   <p className="text-sm text-muted-foreground md:text-base">

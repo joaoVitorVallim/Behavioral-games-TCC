@@ -56,6 +56,8 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
     }))
 
   const handleJoin = useCallback((extra_data: Record<string, string>) => {
+    console.log('[JoinSessionModal] handleJoin start', { code, extra_data, requirements })
+
     const payload: JoinSessionPayload = {
       inviteCode: code.trim().toUpperCase(),
     }
@@ -68,8 +70,12 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
       mutable[req.field] = req.type === 'number' ? Number(raw) : sanitizeString(raw)
     }
 
+    console.log('[JoinSessionModal] POST /sessions/join payload', payload)
+
     joinSession(payload, {
       onSuccess: (data: JoinSessionResponse) => {
+        console.log('[JoinSessionModal] POST /sessions/join response', data)
+
         sessionStorage.setItem('playerId', data.player.id)
         sessionStorage.setItem('sessionId', data.session.id)
         sessionStorage.setItem('matchId', data.match?.id ?? '')
@@ -82,7 +88,8 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
           navigate(game_route)
         }
       },
-      onError: () => {
+      onError: (error) => {
+        console.error('[JoinSessionModal] POST /sessions/join failed', error)
         setValidationError('Não foi possível entrar na sessão. Verifique o código e tente novamente.')
       }
     })

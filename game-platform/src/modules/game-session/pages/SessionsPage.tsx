@@ -1,19 +1,38 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SessionCard } from '../components/SessionCard'
 import { SessionCardSkeleton } from '../components/SessionCardSkeleton'
 import { JoinSessionModal } from '../components/JoinSessionModal'
+import { ConfirmDeleteSessionModal } from '../components/ConfirmDeleteSessionModal'
+import { ConfirmFinishSessionModal } from '../components/ConfirmFinishSessionModal'
 import { Header } from '../../../shared/components/Header'
 import { useSessions } from '../hooks/useSessions'
+import { useAuth } from '../../auth/hooks/useAuth'
+import { get_session_label } from '../utils/session-label'
 import { RefreshCw } from 'lucide-react'
 import type { Session } from '../types'
 
 export const SessionsPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { sessions, is_loading, refetch } = useSessions()
+  const { is_authenticated } = useAuth()
+  const {
+    sessions,
+    is_loading,
+    refetch,
+    deleteSession,
+    is_deleting,
+    deleting_id,
+    finishSession,
+    is_finishing,
+    finishing_id
+  } = useSessions()
   const [selected_session, setSelectedSession] = useState<Session | null>(null)
+  const [session_to_delete, setSessionToDelete] = useState<Session | null>(null)
+  const [session_to_finish, setSessionToFinish] = useState<Session | null>(null)
+  const [action_toast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const action_toast_timeout_ref = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!location.state || typeof location.state !== 'object') return
@@ -49,6 +68,27 @@ export const SessionsPage = () => {
     )
   }, [is_loading, sessions])
 
+  useEffect(() => {
+    return () => {
+      if (action_toast_timeout_ref.current) {
+        clearTimeout(action_toast_timeout_ref.current)
+      }
+    }
+  }, [])
+
+  const showActionToast = (type: 'success' | 'error', message: string) => {
+    setActionToast({ type, message })
+
+    if (action_toast_timeout_ref.current) {
+      clearTimeout(action_toast_timeout_ref.current)
+    }
+
+    action_toast_timeout_ref.current = setTimeout(() => {
+      setActionToast(null)
+      action_toast_timeout_ref.current = null
+    }, 2800)
+  }
+
   const handleEnterSession = (session: Session) => {
     setSelectedSession(session)
   }
@@ -63,6 +103,54 @@ export const SessionsPage = () => {
 
   const handleReload = () => {
     refetch()
+  }
+
+  const handleRequestDelete = (session: Session) => {
+    if (!is_authenticated) return
+    setSessionToDelete(session)
+  }
+
+  const handleCancelDelete = () => {
+    if (is_deleting) return
+    setSessionToDelete(null)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!session_to_delete) return
+
+    const target_name = get_session_label(session_to_delete)
+
+    try {
+      await deleteSession(session_to_delete.id)
+      setSessionToDelete(null)
+      showActionToast('success', `Sessão ${target_name} excluída.`)
+    } catch {
+      showActionToast('error', 'Não foi possível excluir a sessão. Tente novamente.')
+    }
+  }
+
+  const handleRequestFinish = (session: Session) => {
+    if (!is_authenticated) return
+    setSessionToFinish(session)
+  }
+
+  const handleCancelFinish = () => {
+    if (is_finishing) return
+    setSessionToFinish(null)
+  }
+
+  const handleConfirmFinish = async () => {
+    if (!session_to_finish) return
+
+    const target_name = get_session_label(session_to_finish)
+
+    try {
+      await finishSession(session_to_finish.id)
+      setSessionToFinish(null)
+      showActionToast('success', `Sessão ${target_name} finalizada.`)
+    } catch {
+      showActionToast('error', 'Não foi possível finalizar a sessão. Tente novamente.')
+    }
   }
 
   return (
@@ -106,6 +194,10 @@ export const SessionsPage = () => {
                 key={session.id}
                 session={session}
                 onEnter={() => handleEnterSession(session)}
+                onDelete={is_authenticated ? () => handleRequestDelete(session) : undefined}
+                is_deleting={is_deleting && deleting_id === session.id}
+                onFinish={is_authenticated ? () => handleRequestFinish(session) : undefined}
+                is_finishing={is_finishing && finishing_id === session.id}
               />
             ))}
           </div>
@@ -118,6 +210,40 @@ export const SessionsPage = () => {
           onClose={handleCloseModal}
           onSuccess={handleJoinSuccess}
         />
+      )}
+
+      {session_to_delete && (
+        <ConfirmDeleteSessionModal
+          session={session_to_delete}
+          is_deleting={is_deleting}
+          onCancel={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
+
+      {session_to_finish && (
+        <ConfirmFinishSessionModal
+          session={session_to_finish}
+          is_finishing={is_finishing}
+          onCancel={handleCancelFinish}
+          onConfirm={handleConfirmFinish}
+        />
+      )}
+
+      {action_toast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div
+            className={`min-w-64 max-w-sm rounded-xl border px-4 py-3 shadow-xl backdrop-blur-sm ${
+              action_toast.type === 'success'
+                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-100'
+                : 'border-destructive/40 bg-destructive/20 text-red-100'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <p className="text-sm font-medium">{action_toast.message}</p>
+          </div>
+        </div>
       )}
     </div>
   )
