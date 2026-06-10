@@ -30,7 +30,7 @@ export class Player {
   @Column({ type: 'int', nullable: true })
   age?: number;
 
-  @Column({ length: 1, nullable: true })
+  @Column({ length: 50, nullable: true })
   gender?: string;
 
   @Column({ length: 255, nullable: true })

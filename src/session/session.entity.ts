@@ -18,6 +18,9 @@ export class Session {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  session_name?: string;
+
   @Column({ type: 'enum', enum: GameType, nullable: false })
   game: GameType;
 

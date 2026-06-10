@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum, ValidateNested, IsOptional, IsArray, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsEnum, ValidateNested, IsOptional, IsArray, IsUUID, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
@@ -7,6 +7,14 @@ import { IsValidInputInfos } from '../../common/validators/valid-input-infos.val
 import { PLAYER_OPTIONAL_FIELDS } from '../../common/constants/player-fields.constants';
 
 export class CreateSessionDto {
+  @ApiProperty({
+    example: 'Turma A - Quinta-feira',
+    description: 'Name of the session (distinct from the settings config name)',
+  })
+  @IsNotEmpty()
+  @IsString()
+  session_name!: string;
+
   @ApiProperty({
     enum: GameType,
     example: 'cards',

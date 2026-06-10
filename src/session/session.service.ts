@@ -171,6 +171,7 @@ export class SessionService {
     }
 
     const session = this.sessionRepository.create({
+      session_name: dto.session_name,
       game: dto.game as GameType,
       settings_id: sessionSettings.id,
       inviteCode: inviteCode,
@@ -210,6 +211,7 @@ export class SessionService {
     }
 
     const session = this.sessionRepository.create({
+      session_name: 'Demo - Dilema do Prisioneiro',
       game: GameType.PRISONER,
       settings_id: sessionSettings.id,
       inviteCode,
@@ -261,6 +263,7 @@ export class SessionService {
 
       return {
         id: session.id,
+        session_name: session.session_name ?? null,
         game: session.game,
         inviteCode: session.inviteCode,
         isActive: session.isActive,
@@ -443,6 +446,7 @@ export class SessionService {
 
     return {
       sessionId: session.id,
+      session_name: session.session_name ?? null,
       game: session.game,
       gameName: gameInfo?.name,
       inviteCode: session.inviteCode,
@@ -467,6 +471,7 @@ export class SessionService {
     return {
       session: {
         id: session.id,
+        session_name: session.session_name ?? null,
         game: session.game,
         inviteCode: session.inviteCode,
         isActive: session.isActive,
@@ -499,6 +504,7 @@ export class SessionService {
     return {
       session: {
         id: session.id,
+        session_name: session.session_name ?? null,
         game: session.game,
         inviteCode: session.inviteCode,
         isActive: session.isActive,
