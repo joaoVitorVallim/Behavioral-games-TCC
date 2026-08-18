@@ -35,6 +35,7 @@ export class SettingsService {
     const prisoner = [
       { name: 'userViewPoints', type: 'boolean' },
       { name: 'limitRounds', type: 'number' },
+      { name: 'roundTimeLimit', type: 'number' },
     ];
 
     const roulette = [
@@ -141,6 +142,7 @@ export class SettingsService {
     } else if (settings instanceof SettingsGamePrisoner) {
       if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;
       if (dto.limitRounds !== undefined) settings.limitRounds = dto.limitRounds;
+      if (dto.roundTimeLimit !== undefined) settings.roundTimeLimit = dto.roundTimeLimit;
       return await this.settingsPrisonerRepository.save(settings);
     }
 

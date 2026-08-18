@@ -5,6 +5,8 @@ export interface PrisonerRoundResult {
   player2Choice: PrisonerChoice;
   player1Points: number;
   player2Points: number;
+  player1TimedOut?: boolean;
+  player2TimedOut?: boolean;
 }
 
 export type PrisonerMoves = Record<string, PrisonerRoundResult>;
@@ -29,6 +31,9 @@ export interface PrisonerMatchState {
   userViewPoints: boolean;
   roundTimeLimit: number | null;
   roundTimer: ReturnType<typeof setTimeout> | null;
+  roundDeadline: number | null;
+  pausedRemainingMs: number | null;
+  pausedRound: number | null;
 }
 
 export const PRISONER_PAYOFF = {

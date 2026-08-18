@@ -34,6 +34,8 @@ export interface PrisonerRoundMove {
   player2Choice: 'cooperate' | 'defect';
   player1Points: number;
   player2Points: number;
+  player1TimedOut?: boolean;
+  player2TimedOut?: boolean;
 }
 
 export type RoundMove = RouletteRoundMove | PrisonerRoundMove;

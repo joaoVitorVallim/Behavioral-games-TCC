@@ -13,6 +13,8 @@ export type RoundTimeoutCallback = (matchId: string) => void;
 
 @Injectable()
 export class PrisonerService {
+  private static readonly REVEAL_GRACE_MS = 4000;
+  private static readonly BOOT_GRACE_MS = 1500;
   private readonly activeMatches = new Map<string, PrisonerMatchState>();
   private onRoundTimeout: RoundTimeoutCallback | null = null;
 
@@ -70,6 +72,9 @@ export class PrisonerService {
       userViewPoints: settings?.userViewPoints ?? false,
       roundTimeLimit: settings?.roundTimeLimit ?? null,
       roundTimer: null,
+      roundDeadline: null,
+      pausedRemainingMs: null,
+      pausedRound: null,
     };
 
     this.activeMatches.set(matchId, state);
@@ -86,10 +91,23 @@ export class PrisonerService {
     } else {
       throw new BadRequestException(`Player ${playerId} is not part of match ${matchId}`);
     }
+    if (state.status === 'finished') return state;
 
     if (state.player1SocketId && state.player2SocketId) {
       state.status = 'in_progress';
-      this.startRoundTimer(state);
+
+      if (state.roundTimer === null && state.roundDeadline === null) {
+        const resuming =
+          state.pausedRemainingMs !== null && state.pausedRound === state.currentRound;
+        if (resuming) {
+          this.armRoundTimer(
+            state,
+            state.pausedRemainingMs! + PrisonerService.BOOT_GRACE_MS,
+          );
+        } else {
+          this.startRoundTimer(state, PrisonerService.BOOT_GRACE_MS);
+        }
+      }
     }
 
     return state;
@@ -100,8 +118,14 @@ export class PrisonerService {
       if (state.player1SocketId === socketId || state.player2SocketId === socketId) {
         if (state.player1SocketId === socketId) state.player1SocketId = null;
         if (state.player2SocketId === socketId) state.player2SocketId = null;
-        state.status = 'waiting';
-        this.clearRoundTimer(state);
+        if (state.status !== 'finished') {
+          state.status = 'waiting';
+          if (state.roundDeadline !== null) {
+            state.pausedRemainingMs = Math.max(0, state.roundDeadline - Date.now());
+            state.pausedRound = state.currentRound;
+          }
+          this.clearRoundTimer(state);
+        }
         return state;
       }
     }
@@ -112,11 +136,17 @@ export class PrisonerService {
     matchId: string,
     playerId: string,
     choice: PrisonerChoice,
+    round?: number,
   ): { state: PrisonerMatchState; roundResolved: boolean } {
     const state = this.getState(matchId);
 
     if (state.status !== 'in_progress') {
       throw new BadRequestException('Match is not in progress');
+    }
+    if (round !== undefined && round !== state.currentRound) {
+      throw new BadRequestException(
+        `Choice was for round ${round}, but the match is now on round ${state.currentRound}`,
+      );
     }
 
     if (state.player1Id === playerId) {
@@ -141,7 +171,7 @@ export class PrisonerService {
       this.clearRoundTimer(state);
       this.resolveRound(state);
       if (state.status === 'in_progress') {
-        this.startRoundTimer(state);
+        this.startRoundTimer(state, PrisonerService.REVEAL_GRACE_MS);
       }
       return { state, roundResolved: true };
     }
@@ -153,25 +183,45 @@ export class PrisonerService {
     const state = this.activeMatches.get(matchId);
     if (!state || state.status !== 'in_progress') return null;
 
-    // Auto-defect for whoever didn't submit
-    if (state.pendingChoices.player1 === undefined) state.pendingChoices.player1 = 'defect';
-    if (state.pendingChoices.player2 === undefined) state.pendingChoices.player2 = 'defect';
+    const p1TimedOut = state.pendingChoices.player1 === undefined;
+    const p2TimedOut = state.pendingChoices.player2 === undefined;
+    if (p1TimedOut) state.pendingChoices.player1 = 'defect';
+    if (p2TimedOut) state.pendingChoices.player2 = 'defect';
 
-    this.resolveRound(state);
+    this.resolveRound(state, { player1: p1TimedOut, player2: p2TimedOut });
     if (state.status === 'in_progress') {
-      this.startRoundTimer(state);
+      this.startRoundTimer(state, PrisonerService.REVEAL_GRACE_MS);
     }
     return { state, roundResolved: true };
   }
 
-  private startRoundTimer(state: PrisonerMatchState): void {
+  private startRoundTimer(state: PrisonerMatchState, graceMs = 0): void {
+    if (!state.roundTimeLimit || state.roundTimeLimit <= 0) return;
+    this.armRoundTimer(state, state.roundTimeLimit * 1000 + graceMs);
+  }
+
+  private armRoundTimer(state: PrisonerMatchState, durationMs: number): void {
+    this.clearRoundTimer(state);
+
     if (!state.roundTimeLimit || state.roundTimeLimit <= 0) return;
 
+    state.pausedRemainingMs = null;
+    state.pausedRound = null;
+
+    const scheduledRound = state.currentRound;
+
+    state.roundDeadline = Date.now() + durationMs;
+
     state.roundTimer = setTimeout(() => {
+      state.roundTimer = null;
+      if (state.status !== 'in_progress' || state.currentRound !== scheduledRound) {
+        return;
+      }
+
       if (this.onRoundTimeout) {
         this.onRoundTimeout(state.matchId);
       }
-    }, state.roundTimeLimit * 1000);
+    }, durationMs);
   }
 
   private clearRoundTimer(state: PrisonerMatchState): void {
@@ -179,9 +229,13 @@ export class PrisonerService {
       clearTimeout(state.roundTimer);
       state.roundTimer = null;
     }
+    state.roundDeadline = null;
   }
 
-  private resolveRound(state: PrisonerMatchState): void {
+  private resolveRound(
+    state: PrisonerMatchState,
+    timedOut?: { player1: boolean; player2: boolean },
+  ): void {
     const c1 = state.pendingChoices.player1!;
     const c2 = state.pendingChoices.player2!;
     const [points1, points2] = PRISONER_PAYOFF[c1][c2];
@@ -194,6 +248,8 @@ export class PrisonerService {
       player2Choice: c2,
       player1Points: points1,
       player2Points: points2,
+      ...(timedOut?.player1 ? { player1TimedOut: true } : {}),
+      ...(timedOut?.player2 ? { player2TimedOut: true } : {}),
     };
 
     state.pendingChoices = {};
@@ -218,6 +274,29 @@ export class PrisonerService {
 
     this.activeMatches.delete(matchId);
     return saved;
+  }
+
+  async getFinishedMatchPayload(matchId: string, playerId: string): Promise<{
+    matchId: string;
+    moves: Record<string, unknown>;
+    finalScore: { player1: number; player2: number };
+  } | null> {
+    const match = await this.matchRepository.findOne({ where: { id: matchId } });
+    if (!match || match.status !== MatchStatus.FINALIZADA) return null;
+    if (match.player1_id !== playerId && match.player2_id !== playerId) return null;
+
+    const moves = (match.moves ?? {}) as Record<
+      string,
+      { player1Points?: number; player2Points?: number }
+    >;
+    let player1 = 0;
+    let player2 = 0;
+    for (const move of Object.values(moves)) {
+      player1 += move.player1Points ?? 0;
+      player2 += move.player2Points ?? 0;
+    }
+
+    return { matchId, moves, finalScore: { player1, player2 } };
   }
 
   getState(matchId: string): PrisonerMatchState {

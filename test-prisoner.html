@@ -259,6 +259,10 @@
         <label>Rounds</label>
         <input id="limitRounds" type="number" value="3" min="1" max="20" />
       </div>
+      <div>
+        <label>Tempo por rodada (s) — vazio = sem limite</label>
+        <input id="roundTimeLimit" type="number" placeholder="ex: 10" min="1" max="120" />
+      </div>
     </div>
     <div class="row" style="margin-top:8px;">
       <button class="action" onclick="setupAll()">Setup Completo (criar usuário → sessão → 2 jogadores)</button>
@@ -446,6 +450,7 @@ const state = {
   autoPlaying: false,
   autoInterval: null,
   matchReady: false,
+  deadlineInterval: null,
 };
 
 // ─── LOGGING ─────────────────────────────────────────────────────────────────
@@ -504,12 +509,14 @@ async function setupAll() {
 
     // 2. Create session
     log('log-setup', 'Criando sessão...', 'info');
+    const rtl = parseInt(document.getElementById('roundTimeLimit').value);
     const session = await api('POST', '/sessions', {
       game: 'prisoner',
       settings: {
         configName: 'Teste Dilema',
         userViewPoints: true,
         limitRounds: state.totalRounds,
+        ...(rtl > 0 ? { roundTimeLimit: rtl } : {}),
       },
       inputInfo: [],
       user_id: state.userId,
@@ -633,6 +640,25 @@ function setupSocketEvents(socket, playerNum) {
     document.getElementById(`p${playerNum}-waiting`).style.display = 'block';
   });
 
+  socket.on('roundStart', (data) => {
+    if (playerNum !== 1) return;
+    if (state.deadlineInterval) clearInterval(state.deadlineInterval);
+    if (!data.roundEndsAt) return;
+    const offset = (data.serverNow ?? Date.now()) - Date.now();
+    const tick = () => {
+      const remaining = Math.max(0, data.roundEndsAt - (Date.now() + offset));
+      const el = document.getElementById('autoplay-status');
+      if (el) el.textContent = `⏱ Rodada ${data.round}: ${(remaining / 1000).toFixed(1)}s restantes (deadline do servidor)`;
+      if (remaining <= 0 && state.deadlineInterval) clearInterval(state.deadlineInterval);
+    };
+    tick();
+    state.deadlineInterval = setInterval(tick, 200);
+  });
+
+  socket.on('roundTimeout', (data) => {
+    log(logId, `⏰ TEMPO ESGOTADO na rodada ${data.round} — auto-delação de quem não jogou`, 'warn');
+  });
+
   socket.on('roundResult', (data) => {
     const myChoice = playerNum === 1 ? data.result.player1Choice : data.result.player2Choice;
     const myPts = playerNum === 1 ? data.result.player1Points : data.result.player2Points;
@@ -729,11 +755,13 @@ function updateScoreHeader() {
 function addRoundRow(round, result) {
   const tbody = document.getElementById('rounds-table');
   const tr = document.createElement('tr');
+  const to1 = result.player1TimedOut ? ' <small style="color:#ffaa00">(tempo)</small>' : '';
+  const to2 = result.player2TimedOut ? ' <small style="color:#ffaa00">(tempo)</small>' : '';
   tr.innerHTML = `
     <td>${round}</td>
-    <td class="${result.player1Choice === 'cooperate' ? 'c' : 'd'}">${result.player1Choice === 'cooperate' ? 'Cooperar' : 'Trair'}</td>
+    <td class="${result.player1Choice === 'cooperate' ? 'c' : 'd'}">${result.player1Choice === 'cooperate' ? 'Cooperar' : 'Trair'}${to1}</td>
     <td>+${result.player1Points}</td>
-    <td class="${result.player2Choice === 'cooperate' ? 'c' : 'd'}">${result.player2Choice === 'cooperate' ? 'Cooperar' : 'Trair'}</td>
+    <td class="${result.player2Choice === 'cooperate' ? 'c' : 'd'}">${result.player2Choice === 'cooperate' ? 'Cooperar' : 'Trair'}${to2}</td>
     <td>+${result.player2Points}</td>
   `;
   tbody.appendChild(tr);
