@@ -30,6 +30,9 @@ export class CardSprite extends Phaser.GameObjects.Container {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = this.scene.make.graphics({ add: false } as any);
 
+    g.fillStyle(0x000000, 0.35);
+    g.fillEllipse(0, CARD_H / 2 + 6, CARD_W * 0.82, 14);
+
     if (type === 'back') {
       this.buildBack(g);
       this.add(g);
@@ -104,6 +107,9 @@ export class CardSprite extends Phaser.GameObjects.Container {
     g.fillStyle(0xf0ebe0, 1);
     g.fillRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, R);
 
+    g.fillStyle(0xffffff, 0.35);
+    g.fillRoundedRect(-CARD_W / 2 + 2, -CARD_H / 2 + 2, CARD_W - 4, 18, { tl: R - 2, tr: R - 2, bl: 0, br: 0 });
+
     g.lineStyle(2.5, accentHex, 1);
     g.strokeRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, R);
 
@@ -160,26 +166,32 @@ export class CardSprite extends Phaser.GameObjects.Container {
   }
 
   get cardType() { return this._cardType; }
-
-  rebuildAs(type: CardType) {
-    this.build(type);
-    this.scaleX = 1;
-    this.scaleY = 1;
+  killAnims() {
+    this.scene.tweens.killTweensOf(this);
   }
 
-  flip(toType: CardType, onComplete?: () => void) {
+  rebuildAs(type: CardType) {
+    this.killAnims();
+    this.build(type);
+    this.setScale(1);
+    this.setAlpha(1);
+    this._elevated = false;
+  }
+
+  flip(toType: CardType, onComplete?: () => void, duration = 140) {
+    this.killAnims();
     this.scene.tweens.add({
       targets: this,
       scaleX: 0,
-      duration: 140,
-      ease: 'Linear',
+      duration,
+      ease: 'Cubic.In',
       onComplete: () => {
         this.build(toType);
         this.scene.tweens.add({
           targets: this,
           scaleX: 1,
-          duration: 140,
-          ease: 'Linear',
+          duration,
+          ease: 'Cubic.Out',
           onComplete,
         });
       },
@@ -210,43 +222,63 @@ export class CardSprite extends Phaser.GameObjects.Container {
   }
 
   moveToPos(tx: number, ty: number, duration = 400, onComplete?: () => void) {
+    this.killAnims();
+    this._elevated = false;
+    this.setScale(1);
     this.scene.tweens.add({
       targets: this,
       x: tx, y: ty,
       duration,
-      ease: 'Back.Out',
+      ease: 'Cubic.Out',
       onComplete,
     });
   }
 
-  flyOut(onComplete?: () => void) {
+  flyOut(onComplete?: () => void, duration = 400) {
+    this.killAnims();
     this.scene.tweens.add({
       targets: this,
       y: this.y - 600,
       alpha: 0,
-      duration: 400,
+      duration,
       ease: 'Cubic.In',
       onComplete,
     });
   }
 
-  dealIn(fromY: number, toY: number, delay = 0) {
-    this.scene.tweens.killTweensOf(this);
+  dealIn(fromY: number, toY: number, delay = 0, duration = 500) {
+    this.killAnims();
     this._elevated = false;
     this._handY = toY;
     this.y = fromY;
     this.alpha = 0;
+    this.setScale(1);
     this.scene.tweens.add({
       targets: this,
       y: toY, alpha: 1,
       delay,
-      duration: 500,
+      duration,
       ease: 'Back.Out',
+    });
+  }
+
+  slideIn(fromX: number, fromY: number, tx: number, ty: number, duration = 380, onComplete?: () => void) {
+    this.killAnims();
+    this.setPosition(fromX, fromY);
+    this.setAlpha(0);
+    this.setScale(1);
+    this.scene.tweens.add({
+      targets: this,
+      x: tx, y: ty, alpha: 1,
+      duration,
+      ease: 'Cubic.Out',
+      onComplete,
     });
   }
 
   shake() {
     const origX = this.x;
+    this.scene.tweens.killTweensOf(this);
     this.scene.tweens.add({
       targets: this,
       x: { from: origX - 8, to: origX + 8 },

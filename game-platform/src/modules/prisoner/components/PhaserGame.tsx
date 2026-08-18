@@ -5,7 +5,7 @@ import { eventBus, GAME_EVENTS, PLAYER_EVENTS } from '../game/events';
 
 interface PhaserGameProps {
   isPlayer1: boolean;
-  onChoice: (choice: 'cooperate' | 'defect') => void;
+  onChoice: (choice: 'cooperate' | 'defect', round?: number) => void;
 }
 
 export function PhaserGame({ onChoice }: PhaserGameProps) {
@@ -30,7 +30,8 @@ export function PhaserGame({ onChoice }: PhaserGameProps) {
       },
     });
 
-    const onSubmit = (choice: unknown) => onChoice(choice as 'cooperate' | 'defect');
+    const onSubmit = (choice: unknown, round?: unknown) =>
+      onChoice(choice as 'cooperate' | 'defect', round as number | undefined);
     eventBus.on(PLAYER_EVENTS.SUBMIT_CHOICE, onSubmit);
 
     return () => {

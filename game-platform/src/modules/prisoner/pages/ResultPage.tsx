@@ -7,6 +7,8 @@ interface MoveData {
   player2Choice: 'cooperate' | 'defect';
   player1Points: number;
   player2Points: number;
+  player1TimedOut?: boolean;
+  player2TimedOut?: boolean;
 }
 
 interface MatchResult {
@@ -48,6 +50,8 @@ export function ResultPage() {
       myChoice:  isPlayer1 ? m.player1Choice : m.player2Choice,
       oppChoice: isPlayer1 ? m.player2Choice : m.player1Choice,
       myPts:     isPlayer1 ? m.player1Points  : m.player2Points,
+      myTimedOut:  isPlayer1 ? !!m.player1TimedOut : !!m.player2TimedOut,
+      oppTimedOut: isPlayer1 ? !!m.player2TimedOut : !!m.player1TimedOut,
     }));
 
   return (
@@ -86,8 +90,12 @@ export function ResultPage() {
               {rounds.map(r => (
                 <tr key={r.round}>
                   <td style={s.td}>{r.round}</td>
-                  <td style={{ ...s.td, color: CHOICE_COLOR[r.myChoice] }}>{CHOICE_LABEL[r.myChoice]}</td>
-                  <td style={{ ...s.td, color: CHOICE_COLOR[r.oppChoice] }}>{CHOICE_LABEL[r.oppChoice]}</td>
+                  <td style={{ ...s.td, color: CHOICE_COLOR[r.myChoice] }}>
+                    {CHOICE_LABEL[r.myChoice]}{r.myTimedOut && <span style={s.timeoutTag}> (tempo)</span>}
+                  </td>
+                  <td style={{ ...s.td, color: CHOICE_COLOR[r.oppChoice] }}>
+                    {CHOICE_LABEL[r.oppChoice]}{r.oppTimedOut && <span style={s.timeoutTag}> (tempo)</span>}
+                  </td>
                   <td style={{ ...s.td, color: r.myPts > 0 ? '#3ab880' : '#c04040' }}>
                     {r.myPts > 0 ? `+${r.myPts}` : r.myPts}
                   </td>
@@ -141,5 +149,6 @@ const s: Record<string, React.CSSProperties> = {
   table: { width: '100%', borderCollapse: 'collapse', marginBottom: 24 },
   th: { background: 'rgba(3, 8, 16, 0.8)', color: '#3a6888', fontSize: 10, padding: '8px 10px', textAlign: 'left' as const, letterSpacing: 1.5, borderBottom: '1px solid #1a3050' },
   td: { color: '#8ab8d8', fontSize: 13, padding: '7px 10px', borderBottom: '1px solid #0a1828' },
+  timeoutTag: { color: '#7a5a40', fontSize: 10, fontStyle: 'italic' },
   btn: { width: '100%', background: '#071830', border: '1px solid #2a70b8', borderRadius: 2, color: '#6abcec', cursor: 'pointer', fontSize: 14, fontWeight: 700, letterSpacing: 3, padding: 15, fontFamily: 'monospace' },
 };

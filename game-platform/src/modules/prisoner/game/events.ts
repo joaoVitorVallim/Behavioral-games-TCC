@@ -26,6 +26,7 @@ export const eventBus = new EventBus();
 
 export const GAME_EVENTS = {
   MATCH_READY: 'matchReady',
+  ROUND_START: 'roundStart',
   CHOICE_RECEIVED: 'choiceReceived',
   ROUND_RESULT: 'roundResult',
   ROUND_TIMEOUT: 'roundTimeout',
@@ -35,4 +36,8 @@ export const GAME_EVENTS = {
 
 export const PLAYER_EVENTS = {
   SUBMIT_CHOICE: 'submitChoice',
+} as const;
+
+export const UI_EVENTS = {
+  SCENE_DONE: 'sceneDone',
 } as const;

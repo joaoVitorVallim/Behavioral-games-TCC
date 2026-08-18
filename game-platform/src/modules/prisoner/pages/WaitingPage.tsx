@@ -37,7 +37,10 @@ export function WaitingPage() {
       const isPlayer1 = d.player1Id === playerId;
       sessionStorage.setItem('isPlayer1', String(isPlayer1));
       sessionStorage.setItem('matchId', d.matchId ?? resolvedMatchId.current);
-      sessionStorage.setItem('matchReadyData', JSON.stringify(data));
+      sessionStorage.setItem(
+        'matchReadyData',
+        JSON.stringify({ ...(data as Record<string, unknown>), receivedAt: Date.now() }),
+      );
       navigate('/prisoner/game');
     };
 
