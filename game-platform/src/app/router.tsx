@@ -10,6 +10,7 @@ import { MatchDetailPage } from '../modules/reports/pages/MatchDetailPage'
 import { WaitingPage } from '../modules/prisoner/pages/WaitingPage'
 import { GamePage } from '../modules/prisoner/pages/GamePage'
 import { ResultPage } from '../modules/prisoner/pages/ResultPage'
+import { RouletteGamePage } from '../modules/roulette/pages/RouletteGamePage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 export const router = createBrowserRouter([
@@ -72,5 +73,9 @@ export const router = createBrowserRouter([
   {
     path: '/prisoner/result',
     element: <ResultPage />,
+  },
+  {
+    path: '/roulette/game',
+    element: <RouletteGamePage />,
   },
 ])

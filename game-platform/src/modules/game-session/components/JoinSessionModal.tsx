@@ -33,8 +33,22 @@ const PLAYER_FIELD_DEFS: Record<string, Omit<SessionRequirement, 'field' | 'requ
   profession:     { label: 'Profissão',             type: 'text',   placeholder: 'Ex: Estudante' },
 }
 
-const GAME_ROUTES: Record<string, string> = {
-  prisoner: '/prisoner/waiting',
+function resolveGameRoute(game: string, matchId: string, playerId: string): string | null {
+  const game_key = game.trim().toLowerCase()
+
+  if (game_key === 'prisoner') {
+    return '/prisoner/waiting'
+  }
+
+  if (game_key.includes('roulette')) {
+    if (!matchId) {
+      return null
+    }
+    const params = new URLSearchParams({ matchId, playerId })
+    return `/roulette/game?${params.toString()}`
+  }
+
+  return null
 }
 
 export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionModalProps) => {
@@ -80,13 +94,16 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
         sessionStorage.setItem('sessionId', data.session.id)
         sessionStorage.setItem('matchId', data.match?.id ?? '')
 
+        const game_route = resolveGameRoute(session.game, data.match?.id ?? '', data.player.id)
+
+        if (!game_route) {
+          setValidationError('Não foi possível iniciar o jogo desta sessão. Tente novamente.')
+          return
+        }
+
         onSuccess()
         onClose()
-
-        const game_route = GAME_ROUTES[session.game]
-        if (game_route) {
-          navigate(game_route)
-        }
+        navigate(game_route)
       },
       onError: (error) => {
         console.error('[JoinSessionModal] POST /sessions/join failed', error)
