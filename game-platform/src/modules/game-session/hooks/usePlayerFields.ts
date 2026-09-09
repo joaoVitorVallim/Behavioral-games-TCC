@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { sessionService } from '../services/sessionService'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
 import type { PlayerInfoOption } from '../types'
 
 const PLAYER_FIELD_LABEL_DICTIONARY_PT: Record<string, string> = {
@@ -14,11 +15,6 @@ const PLAYER_FIELD_LABEL_DICTIONARY_PT: Record<string, string> = {
   name: 'Nome',
   email: 'E-mail'
 }
-
-const humanize_field_label = (field_name: string): string =>
-  field_name
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/^./, (char) => char.toUpperCase())
 
 export const usePlayerFields = () => {
   const player_fields_query = useQuery({
@@ -34,7 +30,7 @@ export const usePlayerFields = () => {
 
     return unique_values.map((value) => ({
       value,
-      label: PLAYER_FIELD_LABEL_DICTIONARY_PT[value] ?? humanize_field_label(value)
+      label: PLAYER_FIELD_LABEL_DICTIONARY_PT[value] ?? humanizeLabel(value)
     }))
   }, [player_fields_query.data])
 

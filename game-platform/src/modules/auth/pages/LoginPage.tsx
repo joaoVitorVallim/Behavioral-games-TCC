@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { gsap } from 'gsap'
-import { AxiosError } from 'axios'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Header } from '../../../shared/components/Header'
 import { useAuth } from '../hooks/useAuth'
 import { validateEmail } from '../../../shared/utils/validation'
 import { RateLimiter } from '../../../shared/utils/security'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { mapAuthError } from '../../../shared/utils/mapAuthError'
 
 const rate_limiter = new RateLimiter(5, 60000)
 
@@ -20,38 +20,7 @@ export function LoginPage() {
   const [is_submitting, setIsSubmitting] = useState(false)
   const [show_success, setShowSuccess] = useState(false)
 
-  useEffect(() => {
-    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-auth="intro"]',
-        { y: 22, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out'
-        }
-      )
-
-      gsap.fromTo(
-        '[data-auth="form"]',
-        { y: 22, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
-          delay: 0.08
-        }
-      )
-    }, root_ref)
-
-    return () => ctx.revert()
-  }, [])
+  useGsapReveal('[data-auth="intro"], [data-auth="form"]', { root: root_ref, stagger: 0.08 })
 
   useEffect(() => {
     const state = location.state as { registered?: boolean } | null
@@ -87,19 +56,11 @@ export function LoginPage() {
       const redirect_target = state?.from && typeof state.from === 'string' ? state.from : '/sessions'
       navigate(redirect_target)
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
-          setErrorMessage('E-mail ou senha incorretos. Tente novamente.')
-        } else if (error.response && error.response.status >= 500) {
-          setErrorMessage('Erro no servidor. Tente novamente mais tarde.')
-        } else if (error.code === 'ERR_NETWORK') {
-          setErrorMessage('Erro de conexão. Verifique se o servidor está rodando.')
-        } else {
-          setErrorMessage('Erro ao autenticar. Tente novamente.')
-        }
-      } else {
-        setErrorMessage('Erro inesperado. Tente novamente.')
-      }
+      setErrorMessage(mapAuthError(error, {
+        status: 401,
+        message: 'E-mail ou senha incorretos. Tente novamente.',
+        fallback_message: 'Erro ao autenticar. Tente novamente.'
+      }))
     } finally {
       setIsSubmitting(false)
     }

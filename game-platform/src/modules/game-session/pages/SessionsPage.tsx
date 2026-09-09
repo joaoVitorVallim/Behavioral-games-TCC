@@ -1,16 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
-import { gsap } from 'gsap'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SessionCard } from '../components/SessionCard'
 import { SessionCardSkeleton } from '../components/SessionCardSkeleton'
 import { JoinSessionModal } from '../components/JoinSessionModal'
-import { ConfirmDeleteSessionModal } from '../components/ConfirmDeleteSessionModal'
-import { ConfirmFinishSessionModal } from '../components/ConfirmFinishSessionModal'
+import { ConfirmActionModal } from '../components/ConfirmActionModal'
 import { Header } from '../../../shared/components/Header'
+import { Toast } from '../../../shared/components/Toast'
 import { useSessions } from '../hooks/useSessions'
 import { useAuth } from '../../auth/hooks/useAuth'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { useToast } from '../../../shared/hooks/useToast'
 import { get_session_label } from '../utils/session-label'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import type { Session } from '../types'
 
 export const SessionsPage = () => {
@@ -31,8 +32,7 @@ export const SessionsPage = () => {
   const [selected_session, setSelectedSession] = useState<Session | null>(null)
   const [session_to_delete, setSessionToDelete] = useState<Session | null>(null)
   const [session_to_finish, setSessionToFinish] = useState<Session | null>(null)
-  const [action_toast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const action_toast_timeout_ref = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { toast, showToast } = useToast()
 
   useEffect(() => {
     if (!location.state || typeof location.state !== 'object') return
@@ -45,49 +45,12 @@ export const SessionsPage = () => {
     navigate('/sessions', { replace: true })
   }, [location.state, refetch, navigate])
 
-  useEffect(() => {
-    if (is_loading || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const cards = document.querySelectorAll('[data-session-card="true"]')
-    if (cards.length === 0) {
-      return
-    }
-
-    gsap.fromTo(
-      cards,
-      { y: 20, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.55,
-        ease: 'power2.out',
-        stagger: 0.08
-      }
-    )
-  }, [is_loading, sessions])
-
-  useEffect(() => {
-    return () => {
-      if (action_toast_timeout_ref.current) {
-        clearTimeout(action_toast_timeout_ref.current)
-      }
-    }
-  }, [])
-
-  const showActionToast = (type: 'success' | 'error', message: string) => {
-    setActionToast({ type, message })
-
-    if (action_toast_timeout_ref.current) {
-      clearTimeout(action_toast_timeout_ref.current)
-    }
-
-    action_toast_timeout_ref.current = setTimeout(() => {
-      setActionToast(null)
-      action_toast_timeout_ref.current = null
-    }, 2800)
-  }
+  useGsapReveal('[data-session-card="true"]', {
+    deps: [is_loading, sessions],
+    y: 20,
+    duration: 0.55,
+    stagger: 0.08
+  })
 
   const handleEnterSession = (session: Session) => {
     setSelectedSession(session)
@@ -123,9 +86,9 @@ export const SessionsPage = () => {
     try {
       await deleteSession(session_to_delete.id)
       setSessionToDelete(null)
-      showActionToast('success', `Sessão ${target_name} excluída.`)
+      showToast('success', `Sessão ${target_name} excluída.`)
     } catch {
-      showActionToast('error', 'Não foi possível excluir a sessão. Tente novamente.')
+      showToast('error', 'Não foi possível excluir a sessão. Tente novamente.')
     }
   }
 
@@ -147,9 +110,9 @@ export const SessionsPage = () => {
     try {
       await finishSession(session_to_finish.id)
       setSessionToFinish(null)
-      showActionToast('success', `Sessão ${target_name} finalizada.`)
+      showToast('success', `Sessão ${target_name} finalizada.`)
     } catch {
-      showActionToast('error', 'Não foi possível finalizar a sessão. Tente novamente.')
+      showToast('error', 'Não foi possível finalizar a sessão. Tente novamente.')
     }
   }
 
@@ -213,38 +176,46 @@ export const SessionsPage = () => {
       )}
 
       {session_to_delete && (
-        <ConfirmDeleteSessionModal
-          session={session_to_delete}
-          is_deleting={is_deleting}
+        <ConfirmActionModal
+          icon={AlertTriangle}
+          title="Excluir sessão"
+          description="Tem certeza que deseja excluir a sessão abaixo? Esta ação não pode ser desfeita."
+          tone="destructive"
+          session_label={get_session_label(session_to_delete)}
+          session_game={session_to_delete.game}
+          confirm_label="Excluir"
+          confirming_label="Excluindo..."
+          is_confirming={is_deleting}
           onCancel={handleCancelDelete}
           onConfirm={handleConfirmDelete}
+          warning={
+            session_to_delete.isActive
+              ? {
+                  title: 'Sessão em andamento',
+                  message: 'Esta sessão está ativa. Excluir agora pode interromper partidas que estão sendo jogadas e desconectar os participantes.'
+                }
+              : undefined
+          }
         />
       )}
 
       {session_to_finish && (
-        <ConfirmFinishSessionModal
-          session={session_to_finish}
-          is_finishing={is_finishing}
+        <ConfirmActionModal
+          icon={CheckCircle2}
+          title="Finalizar sessão"
+          description="Após finalizada, a sessão não aceitará mais novos participantes nem novas partidas. Esta ação não pode ser desfeita."
+          tone="success"
+          session_label={get_session_label(session_to_finish)}
+          session_game={session_to_finish.game}
+          confirm_label="Finalizar"
+          confirming_label="Finalizando..."
+          is_confirming={is_finishing}
           onCancel={handleCancelFinish}
           onConfirm={handleConfirmFinish}
         />
       )}
 
-      {action_toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div
-            className={`min-w-64 max-w-sm rounded-xl border px-4 py-3 shadow-xl backdrop-blur-sm ${
-              action_toast.type === 'success'
-                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-100'
-                : 'border-destructive/40 bg-destructive/20 text-red-100'
-            }`}
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-sm font-medium">{action_toast.message}</p>
-          </div>
-        </div>
-      )}
+      <Toast toast={toast} />
     </div>
   )
 }

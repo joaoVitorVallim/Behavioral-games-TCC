@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
 import type { CreateConfigPayload, GameConfigFieldDefinition } from '../types'
 
 function Toggle({ value, onToggle }: { value: boolean; onToggle: (v: boolean) => void }) {
@@ -31,11 +32,6 @@ const label_class = 'block text-sm font-medium text-foreground mb-2'
 
 const section_label_class = 'text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-4'
 
-const format_label = (name: string): string =>
-  name
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/^./, (char) => char.toUpperCase())
-
 const parse_enum_options = (field_type: string): string[] => {
   const match = /^enum\((.+)\)$/.exec(field_type)
   if (!match) return []
@@ -65,7 +61,7 @@ export function ConfigurationForm({
   const render_field = (field: GameConfigFieldDefinition) => {
     if (field.name === 'game') return null
 
-    const field_label = format_label(field.name)
+    const field_label = humanizeLabel(field.name)
     const field_value = config[field.name]
 
     if (field.type === 'boolean') {

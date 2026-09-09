@@ -1,34 +1,17 @@
-import { useEffect, useRef } from 'react'
-import { gsap } from 'gsap'
+import { useRef } from 'react'
 import { GraduationCap, FlaskConical, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../shared/components/Header'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 
 export function HomePage() {
   const navigate = useNavigate()
   const root_ref = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-intro="kicker"], [data-intro="title"], [data-intro="text"], [data-intro="cta"], [data-intro="meta"]',
-        { y: 22, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.7,
-          ease: 'power2.out',
-          stagger: 0.1
-        }
-      )
-    }, root_ref)
-
-    return () => ctx.revert()
-  }, [])
+  useGsapReveal(
+    '[data-intro="kicker"], [data-intro="title"], [data-intro="text"], [data-intro="cta"], [data-intro="meta"]',
+    { root: root_ref, duration: 0.7, stagger: 0.1 }
+  )
 
   return (
     <div ref={root_ref} className="app-shell flex flex-col text-foreground">

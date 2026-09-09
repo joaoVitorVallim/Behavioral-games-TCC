@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { gsap } from 'gsap'
+import { useCallback, useRef, useState } from 'react'
 import { Mail, User, Lock } from 'lucide-react'
-import { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../shared/components/Header'
 import { useAuth } from '../hooks/useAuth'
 import { validateEmail } from '../../../shared/utils/validation'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { mapAuthError } from '../../../shared/utils/mapAuthError'
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -18,38 +18,7 @@ export function RegisterPage() {
   const [error_message, setErrorMessage] = useState('')
   const [is_submitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-auth="intro"]',
-        { y: 22, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out'
-        }
-      )
-
-      gsap.fromTo(
-        '[data-auth="form"]',
-        { y: 22, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
-          delay: 0.08
-        }
-      )
-    }, root_ref)
-
-    return () => ctx.revert()
-  }, [])
+  useGsapReveal('[data-auth="intro"], [data-auth="form"]', { root: root_ref, stagger: 0.08 })
 
   const handleSubmit = useCallback(async (event: React.FormEvent) => {
     event.preventDefault()
@@ -81,19 +50,11 @@ export function RegisterPage() {
       await register({ name: name.trim(), login: email.trim(), password })
       navigate('/login', { state: { registered: true } })
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 409) {
-          setErrorMessage('Este e-mail já está cadastrado')
-        } else if (error.response && error.response.status >= 500) {
-          setErrorMessage('Erro no servidor. Tente novamente mais tarde.')
-        } else if (error.code === 'ERR_NETWORK') {
-          setErrorMessage('Erro de conexão. Verifique se o servidor está rodando.')
-        } else {
-          setErrorMessage('Erro ao criar conta. Tente novamente.')
-        }
-      } else {
-        setErrorMessage('Erro inesperado. Tente novamente.')
-      }
+      setErrorMessage(mapAuthError(error, {
+        status: 409,
+        message: 'Este e-mail já está cadastrado',
+        fallback_message: 'Erro ao criar conta. Tente novamente.'
+      }))
     } finally {
       setIsSubmitting(false)
     }

@@ -1,7 +1,21 @@
 import { api_client } from '../../../infrastructure/api/api-client'
+import { AUTH_TOKEN_STORAGE_KEY } from '../../../shared/constants/storageKeys'
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User } from '../types'
 
-const TOKEN_KEY = 'auth_token'
+/**
+ * Parses a JWT's payload segment (header.payload.signature). Returns null for
+ * any malformed token instead of throwing — the shared parsing step previously
+ * duplicated verbatim in both decodeToken and isTokenExpired.
+ */
+const parseJwtPayload = (token: string): Record<string, unknown> | null => {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    return JSON.parse(atob(parts[1])) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
 
 export const authService = {
   /**
@@ -25,21 +39,21 @@ export const authService = {
    * Obtém token armazenado no localStorage
    */
   getStoredToken: (): string | null => {
-    return localStorage.getItem(TOKEN_KEY)
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
   },
 
   /**
    * Armazena token no localStorage
    */
   storeToken: (token: string): void => {
-    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token)
   },
 
   /**
    * Remove token do localStorage
    */
   removeToken: (): void => {
-    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
   },
 
   /**
@@ -47,29 +61,17 @@ export const authService = {
    * Valida formato antes de decodificar
    */
   decodeToken: (token: string): User | null => {
-    try {
-      // Valida formato JWT (3 partes separadas por .)
-      const parts = token.split('.')
-      if (parts.length !== 3) {
-        return null
-      }
+    const payload = parseJwtPayload(token)
+    if (!payload) return null
 
-      // Decodifica payload (segunda parte)
-      const payload = JSON.parse(atob(parts[1]))
+    // Valida campos obrigatórios (tipados, não mais `any` implícito via JSON.parse)
+    const { sub, login, name } = payload
+    if (typeof sub !== 'string' || typeof login !== 'string') return null
 
-      // Valida campos obrigatórios
-      if (!payload.sub || !payload.login) {
-        return null
-      }
-
-      // Retorna user extraído
-      return {
-        id: payload.sub,
-        login: payload.login,
-        ...(payload.name ? { name: payload.name } : {})
-      }
-    } catch {
-      return null
+    return {
+      id: sub,
+      login,
+      ...(typeof name === 'string' ? { name } : {})
     }
   },
 
@@ -77,20 +79,16 @@ export const authService = {
    * Verifica se token está expirado
    */
   isTokenExpired: (token: string): boolean => {
-    try {
-      const parts = token.split('.')
-      if (parts.length !== 3) return true
+    const payload = parseJwtPayload(token)
+    if (!payload) return true
 
-      const payload = JSON.parse(atob(parts[1]))
-      
-      // Se não tiver exp, considera não expirado (backend não configurou expiração)
-      if (!payload.exp) return false
+    // Se não tiver exp (ou não for numérico), considera não expirado
+    // (backend não configurou expiração)
+    const { exp } = payload
+    if (!exp || typeof exp !== 'number') return false
 
-      // exp está em seconds, Date.now() em milliseconds
-      return payload.exp * 1000 < Date.now()
-    } catch {
-      return true
-    }
+    // exp está em seconds, Date.now() em milliseconds
+    return exp * 1000 < Date.now()
   },
 
   /**

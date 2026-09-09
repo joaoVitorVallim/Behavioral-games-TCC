@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { gsap } from 'gsap'
 import { PlusCircle } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
+import { Toast } from '../../../shared/components/Toast'
 import { SessionCodeModal } from '../components/SessionCodeModal'
 import { SessionDataForm } from '../components/SessionDataForm'
 import { ConfigSelector } from '../components/ConfigSelector'
 import { SessionSummary } from '../components/SessionSummary'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { useToast } from '../../../shared/hooks/useToast'
 import { useSessionCreation } from '../hooks/useSessionCreation'
 import { useGames } from '../hooks/useGames'
 import { usePlayerFields } from '../hooks/usePlayerFields'
@@ -75,8 +77,7 @@ export function CreateSessionPage() {
   const { user } = useAuth()
   const [create_error, setCreateError] = useState<string | null>(null)
   const page_ref = useRef<HTMLDivElement | null>(null)
-  const [delete_toast, setDeleteToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const delete_toast_timeout_ref = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { toast, showToast } = useToast()
   const { games, is_loading: games_loading, is_error: games_error } = useGames()
   const {
     player_field_options,
@@ -161,35 +162,10 @@ export function CreateSessionPage() {
     dispatch
   ])
 
-  useEffect(() => {
-    if (!page_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-create-section="title"], [data-create-section="form"], [data-create-section="config"], [data-create-section="summary"]',
-        { y: 18, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.55,
-          stagger: 0.09,
-          ease: 'power2.out'
-        }
-      )
-    }, page_ref)
-
-    return () => ctx.revert()
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (delete_toast_timeout_ref.current) {
-        clearTimeout(delete_toast_timeout_ref.current)
-      }
-    }
-  }, [])
+  useGsapReveal(
+    '[data-create-section="title"], [data-create-section="form"], [data-create-section="config"], [data-create-section="summary"]',
+    { root: page_ref, y: 18, duration: 0.55, stagger: 0.09 }
+  )
 
   useEffect(() => {
     dispatch({ type: 'SYNC_CONFIG_MODE_FOR_EMPTY_LIST', payload: configs.length === 0 })
@@ -246,19 +222,6 @@ export function CreateSessionPage() {
     const { game: _game, ...settings } = active_config
     return sanitize_settings(settings, allowed_field_names)
   }, [active_config, allowed_field_names])
-
-  const showDeleteToast = (type: 'success' | 'error', message: string) => {
-    setDeleteToast({ type, message })
-
-    if (delete_toast_timeout_ref.current) {
-      clearTimeout(delete_toast_timeout_ref.current)
-    }
-
-    delete_toast_timeout_ref.current = setTimeout(() => {
-      setDeleteToast(null)
-      delete_toast_timeout_ref.current = null
-    }, 2800)
-  }
 
   const handleCreateSession = async () => {
     setCreateError(null)
@@ -325,9 +288,9 @@ export function CreateSessionPage() {
         dispatch({ type: 'SELECT_CONFIG', payload: '' })
       }
 
-      showDeleteToast('success', `Configuração ${target_name} excluída.`)
+      showToast('success', `Configuração ${target_name} excluída.`)
     } catch {
-      showDeleteToast('error', 'Não foi possível excluir a configuração. Tente novamente.')
+      showToast('error', 'Não foi possível excluir a configuração. Tente novamente.')
     }
   }
 
@@ -363,7 +326,9 @@ export function CreateSessionPage() {
             player_fields_loading={player_fields_loading}
             player_fields_error={player_fields_error}
             input_info={state.input_info}
-            dispatch={dispatch}
+            onSessionNameChange={(value) => dispatch({ type: 'SET_SESSION_NAME', payload: value })}
+            onGameChange={(value) => dispatch({ type: 'SET_GAME', payload: value })}
+            onTogglePlayerInfo={(field) => dispatch({ type: 'TOGGLE_PLAYER_INFO', payload: field })}
           />
         </div>
 
@@ -384,7 +349,9 @@ export function CreateSessionPage() {
             is_deleting_config={is_deleting_config}
             deleting_config_id={deleting_id}
             onDeleteConfig={handleDeleteConfig}
-            dispatch={dispatch}
+            onConfigModeChange={(mode) => dispatch({ type: 'SET_CONFIG_MODE', payload: mode })}
+            onSelectConfig={(id) => dispatch({ type: 'SELECT_CONFIG', payload: id })}
+            onNewConfigChange={(config) => dispatch({ type: 'UPDATE_NEW_CONFIG', payload: config })}
           />
         </div>
 
@@ -408,21 +375,7 @@ export function CreateSessionPage() {
         <SessionCodeModal invite_code={state.session_code} onClose={handleCloseModal} />
       )}
 
-      {delete_toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div
-            className={`min-w-64 max-w-sm rounded-xl border px-4 py-3 shadow-xl backdrop-blur-sm ${
-              delete_toast.type === 'success'
-                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-100'
-                : 'border-destructive/40 bg-destructive/20 text-red-100'
-            }`}
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-sm font-medium">{delete_toast.message}</p>
-          </div>
-        </div>
-      )}
+      <Toast toast={toast} />
     </div>
   )
 }

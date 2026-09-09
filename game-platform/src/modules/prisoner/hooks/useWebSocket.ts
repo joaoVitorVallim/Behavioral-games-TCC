@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { getSocket } from '../socket';
 import { eventBus, GAME_EVENTS } from '../game/events';
+import { matchSession } from '../session';
 
 interface UseWebSocketOptions {
   matchId: string;
@@ -36,9 +37,7 @@ export function useWebSocket({ matchId, playerId, onMatchFinished, onPlayerDisco
 
     const handleMatchReady = (d: unknown) => {
       const stamped = stampArrival(d);
-      try {
-        sessionStorage.setItem('matchReadyData', JSON.stringify(stamped));
-      } catch { }
+      matchSession.setMatchReadyData(stamped);
       eventBus.emit(GAME_EVENTS.MATCH_READY, stamped);
     };
     const handleRoundStart     = (d: unknown) => eventBus.emit(GAME_EVENTS.ROUND_START, stampArrival(d));

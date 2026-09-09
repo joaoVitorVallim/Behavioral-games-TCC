@@ -1,7 +1,6 @@
 import { ChevronDown, Users } from 'lucide-react'
 import type { GameCatalogItem } from '../types'
 import type { PlayerInfoOption } from '../types'
-import type { SessionAction } from '../hooks/useSessionCreation'
 
 interface SessionDataFormProps {
   session_name: string
@@ -13,7 +12,9 @@ interface SessionDataFormProps {
   player_fields_loading: boolean
   player_fields_error: boolean
   input_info: string[]
-  dispatch: React.Dispatch<SessionAction>
+  onSessionNameChange: (value: string) => void
+  onGameChange: (value: string) => void
+  onTogglePlayerInfo: (field: string) => void
 }
 
 export function SessionDataForm({
@@ -26,7 +27,9 @@ export function SessionDataForm({
   player_fields_loading,
   player_fields_error,
   input_info,
-  dispatch
+  onSessionNameChange,
+  onGameChange,
+  onTogglePlayerInfo
 }: SessionDataFormProps) {
   return (
     <section
@@ -50,7 +53,7 @@ export function SessionDataForm({
               id="session-name"
               type="text"
               value={session_name}
-              onChange={(e) => dispatch({ type: 'SET_SESSION_NAME', payload: e.target.value })}
+              onChange={(e) => onSessionNameChange(e.target.value)}
               className="input-shell"
               placeholder="Ex: Sessão Turma A - Manhã"
             />
@@ -65,7 +68,7 @@ export function SessionDataForm({
             <select
               id="session-game"
               value={selected_game}
-              onChange={(e) => dispatch({ type: 'SET_GAME', payload: e.target.value })}
+              onChange={(e) => onGameChange(e.target.value)}
               disabled={games_loading || games_error || games.length === 0}
               className="input-shell appearance-none"
             >
@@ -116,7 +119,7 @@ export function SessionDataForm({
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => dispatch({ type: 'TOGGLE_PLAYER_INFO', payload: opt.value })}
+                onClick={() => onTogglePlayerInfo(opt.value)}
                 className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                   input_info.includes(opt.value)
                     ? 'bg-primary text-primary-foreground border-primary'

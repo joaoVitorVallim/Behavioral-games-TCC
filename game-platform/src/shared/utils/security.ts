@@ -14,6 +14,9 @@ export const isSecureConnection = (): boolean => {
 
 /**
  * Valida se a API deve usar HTTPS em produção
+ * ponytail: documented no-op — enforcement (e.g. blocking HTTP outside localhost
+ * in prod) is tracked as future work in `main instructions.md` §8, not implemented
+ * here since it's a security-policy decision outside a code-quality refactor's scope.
  */
 export const validateSecureApi = (_api_url: string): void => {
   // Validation logic can be added here (e.g., throw in production)

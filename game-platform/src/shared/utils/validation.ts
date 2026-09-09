@@ -48,7 +48,9 @@ export const validateInput = (value: string, type: 'text' | 'email' | 'number'):
     case 'email':
       return validateEmail(value)
     case 'number':
-      return !isNaN(Number(value))
+      // ponytail bugfix: Number(' ') coerces to 0, so a whitespace-only value
+      // used to pass as a valid number without this trim check
+      return value.trim() !== '' && !isNaN(Number(value))
     case 'text':
       return value.length > 0 && value.length <= 500
     default:

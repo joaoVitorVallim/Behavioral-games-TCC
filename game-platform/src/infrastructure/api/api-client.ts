@@ -1,9 +1,10 @@
 import axios from 'axios'
 import { validateSecureApi } from '../../shared/utils/security'
+import { AUTH_TOKEN_STORAGE_KEY } from '../../shared/constants/storageKeys'
 
 const api_url = import.meta.env.VITE_API_URL || 'http://localhost:3000/'
 
-// Valida HTTPS em produção
+// Valida HTTPS em produção (ponytail: no-op hoje, ver comentário em shared/utils/security.ts)
 validateSecureApi(api_url)
 
 export const api_client = axios.create({
@@ -17,7 +18,7 @@ export const api_client = axios.create({
 
 api_client.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -34,15 +35,18 @@ api_client.interceptors.response.use(
   (error) => {
     // Não vazar informações sensíveis
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token')
+      localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
     }
     
-    // Mensagem genérica em produção
+    // Mensagem genérica em produção — mantém a instância de AxiosError (status/code)
+    // para os callers que fazem `error instanceof AxiosError`, só oculta o corpo da resposta
     if (import.meta.env.PROD) {
-      const generic_message = 'Ocorreu um erro. Tente novamente.'
-      return Promise.reject(new Error(generic_message))
+      error.message = 'Ocorreu um erro. Tente novamente.'
+      if (error.response) {
+        error.response.data = undefined
+      }
     }
-    
+
     return Promise.reject(error)
   }
 )

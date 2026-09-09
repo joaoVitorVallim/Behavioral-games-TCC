@@ -4,6 +4,7 @@ import type { Session, SessionRequirement, JoinSessionPayload, JoinSessionRespon
 import { useJoinSession } from '../hooks/useJoinSession'
 import { sanitizeString, validateSessionCode, validateInput } from '../../../shared/utils/validation'
 import { RateLimiter } from '../../../shared/utils/security'
+import { MATCH_SESSION_STORAGE_KEYS } from '../../../shared/constants/storageKeys'
 
 interface JoinSessionModalProps {
   session: Session
@@ -56,8 +57,6 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
     }))
 
   const handleJoin = useCallback((extra_data: Record<string, string>) => {
-    console.log('[JoinSessionModal] handleJoin start', { code, extra_data, requirements })
-
     const payload: JoinSessionPayload = {
       inviteCode: code.trim().toUpperCase(),
     }
@@ -70,15 +69,11 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
       mutable[req.field] = req.type === 'number' ? Number(raw) : sanitizeString(raw)
     }
 
-    console.log('[JoinSessionModal] POST /sessions/join payload', payload)
-
     joinSession(payload, {
       onSuccess: (data: JoinSessionResponse) => {
-        console.log('[JoinSessionModal] POST /sessions/join response', data)
-
-        sessionStorage.setItem('playerId', data.player.id)
-        sessionStorage.setItem('sessionId', data.session.id)
-        sessionStorage.setItem('matchId', data.match?.id ?? '')
+        sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.playerId, data.player.id)
+        sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.sessionId, data.session.id)
+        sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.matchId, data.match?.id ?? '')
 
         onSuccess()
         onClose()
@@ -88,8 +83,7 @@ export const JoinSessionModal = ({ session, onClose, onSuccess }: JoinSessionMod
           navigate(game_route)
         }
       },
-      onError: (error) => {
-        console.error('[JoinSessionModal] POST /sessions/join failed', error)
+      onError: () => {
         setValidationError('Não foi possível entrar na sessão. Verifique o código e tente novamente.')
       }
     })

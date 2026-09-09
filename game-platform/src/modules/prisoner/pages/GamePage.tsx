@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { PhaserGame } from '../components/PhaserGame';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { eventBus, UI_EVENTS } from '../game/events';
+import { matchSession } from '../session';
 
 export function GamePage() {
   const navigate = useNavigate();
-  const playerId  = sessionStorage.getItem('playerId') ?? '';
-  const matchId   = sessionStorage.getItem('matchId') ?? '';
-  const isPlayer1 = sessionStorage.getItem('isPlayer1') === 'true';
+  const playerId  = matchSession.getPlayerId();
+  const matchId   = matchSession.getMatchId();
   const finishedRef = useRef(false);
   const fallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -18,7 +18,7 @@ export function GamePage() {
     onMatchFinished: (data) => {
       if (finishedRef.current) return;
       finishedRef.current = true;
-      sessionStorage.setItem('matchResult', JSON.stringify(data));
+      matchSession.setMatchResult(data);
       fallbackRef.current = setTimeout(() => navigate('/prisoner/result'), 15000);
     },
   });
@@ -41,7 +41,7 @@ export function GamePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#100c08', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <PhaserGame isPlayer1={isPlayer1} onChoice={submitChoice} />
+      <PhaserGame onChoice={submitChoice} />
     </div>
   );
 }

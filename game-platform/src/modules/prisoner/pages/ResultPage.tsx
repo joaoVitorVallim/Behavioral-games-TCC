@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { disconnectSocket } from '../socket';
 
@@ -25,8 +25,13 @@ export function ResultPage() {
   const raw = sessionStorage.getItem('matchResult');
   const isPlayer1 = sessionStorage.getItem('isPlayer1') === 'true';
 
+  // ponytail bugfix: navigate() was called directly in the render body — move to
+  // an effect so it fires as a side effect instead of during render
+  useEffect(() => {
+    if (!raw) navigate('/sessions');
+  }, [raw, navigate]);
+
   if (!raw) {
-    navigate('/sessions');
     return null;
   }
 

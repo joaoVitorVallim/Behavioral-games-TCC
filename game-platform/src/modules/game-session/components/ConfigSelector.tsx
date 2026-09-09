@@ -2,8 +2,8 @@ import { useRef, useState } from 'react'
 import { ChevronDown, ListChecks, PlusCircle, Gamepad2, Trash2 } from 'lucide-react'
 import { ConfigurationForm } from './ConfigurationForm'
 import { useClickOutside } from '../../../shared/hooks/useClickOutside'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
 import type { CreateConfigPayload, GameConfig, GameConfigFieldDefinition } from '../types'
-import type { SessionAction } from '../hooks/useSessionCreation'
 
 interface ConfigSelectorProps {
   selected_game: string
@@ -21,7 +21,9 @@ interface ConfigSelectorProps {
   is_deleting_config: boolean
   deleting_config_id: string | null
   onDeleteConfig: (id: string) => Promise<void>
-  dispatch: React.Dispatch<SessionAction>
+  onConfigModeChange: (mode: 'select' | 'create') => void
+  onSelectConfig: (id: string) => void
+  onNewConfigChange: (config: CreateConfigPayload) => void
 }
 
 export function ConfigSelector({
@@ -40,7 +42,9 @@ export function ConfigSelector({
   is_deleting_config,
   deleting_config_id,
   onDeleteConfig,
-  dispatch
+  onConfigModeChange,
+  onSelectConfig,
+  onNewConfigChange
 }: ConfigSelectorProps) {
   const [is_dropdown_open, setIsDropdownOpen] = useState(false)
   const dropdown_ref = useRef<HTMLDivElement | null>(null)
@@ -50,11 +54,6 @@ export function ConfigSelector({
   const preview_entries = selected_config
     ? Object.entries(selected_config).filter(([key]) => !['id', 'createdAt', 'game'].includes(key))
     : []
-
-  const format_label = (name: string): string =>
-    name
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/^./, (char) => char.toUpperCase())
 
   const safe_value = (value: unknown): string => {
     if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
@@ -83,7 +82,7 @@ export function ConfigSelector({
       <div className="flex gap-3 mb-8">
         <button
           type="button"
-          onClick={() => dispatch({ type: 'SET_CONFIG_MODE', payload: 'select' })}
+          onClick={() => onConfigModeChange('select')}
           className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
             config_mode === 'select'
               ? 'bg-primary text-primary-foreground'
@@ -97,7 +96,7 @@ export function ConfigSelector({
         </button>
         <button
           type="button"
-          onClick={() => dispatch({ type: 'SET_CONFIG_MODE', payload: 'create' })}
+          onClick={() => onConfigModeChange('create')}
           className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
             config_mode === 'create'
               ? 'bg-primary text-primary-foreground'
@@ -157,7 +156,7 @@ export function ConfigSelector({
                           <button
                             type="button"
                             onClick={() => {
-                              dispatch({ type: 'SELECT_CONFIG', payload: cfg.id })
+                              onSelectConfig(cfg.id)
                               setIsDropdownOpen(false)
                             }}
                             className="flex-1 text-left px-2 py-1.5 text-sm text-foreground"
@@ -205,7 +204,7 @@ export function ConfigSelector({
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {preview_entries.map(([key, value]) => (
                   <div key={key}>
-                    <p className="text-xs text-muted-foreground">{format_label(key)}</p>
+                    <p className="text-xs text-muted-foreground">{humanizeLabel(key)}</p>
                     <p className="text-sm text-foreground font-medium">{safe_value(value)}</p>
                   </div>
                 ))}
@@ -239,9 +238,7 @@ export function ConfigSelector({
             config={new_config}
             common_fields={common_fields}
             game_fields={game_fields}
-            onChange={(config: CreateConfigPayload) =>
-              dispatch({ type: 'UPDATE_NEW_CONFIG', payload: config })
-            }
+            onChange={onNewConfigChange}
           />
         </div>
       )}
