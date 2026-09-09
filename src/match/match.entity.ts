@@ -27,6 +27,8 @@ export interface RouletteRoundMove {
   aposta: number;
   opcao: RouletteMoveOption;
   winrate: boolean;
+  winProbability?: number;
+  pityStreak?: number;
 }
 
 export interface PrisonerRoundMove {
