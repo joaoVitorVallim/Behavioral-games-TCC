@@ -41,6 +41,7 @@ src/
     router.tsx
     components/
       ProtectedRoute.tsx
+      NotFoundPage.tsx
     providers/
       AuthProvider.tsx
       QueryProvider.tsx
@@ -51,7 +52,6 @@ src/
 
   modules/
     auth/
-      components/
       hooks/
       pages/
       services/
@@ -62,14 +62,33 @@ src/
       hooks/
       pages/
       services/
-      mocks/
+      utils/
+      types.ts
+
+    prisoner/
+      components/
+      game/
+      hooks/
+      pages/
+      services/
+      session.ts
+      socket.ts
       types.ts
 
     reports/
+      components/
+      hooks/
       pages/
+      services/
+      utils/
+      types.ts
+
+    roulette/
+      (separate game module — out of scope for this doc; see its own files)
 
   shared/
     components/
+    constants/
     hooks/
     utils/
 ```
@@ -100,10 +119,19 @@ Ordem atual:
 
 Arquivo `src/app/router.tsx`:
 
-- `/` -> `LoginPage`
+- `/` -> `HomePage`
+- `/login` -> `LoginPage`
+- `/register` -> `RegisterPage`
 - `/sessions` -> `SessionsPage`
 - `/create-session` -> `CreateSessionPage` (protegida)
 - `/reports` -> `ReportsPage` (protegida)
+- `/reports/:sessionId` -> `SessionMatchesPage` (protegida)
+- `/reports/:sessionId/matches/:matchId` -> `MatchDetailPage` (protegida)
+- `/prisoner/waiting` -> `WaitingPage`
+- `/prisoner/game` -> `GamePage`
+- `/prisoner/result` -> `ResultPage`
+- `/roulette/game` -> `RouletteGamePage`
+- `*` -> `NotFoundPage` (qualquer rota nao mapeada)
 
 Protecao de rota em `ProtectedRoute`:
 
@@ -148,13 +176,16 @@ Arquivo central: `src/infrastructure/api/api-client.ts`.
 Arquivo: `src/modules/game-session/services/sessionService.ts`.
 
 - `GET /games`
-- `GET /settings/game/{game}`
 - `GET /settings/game-config/fields?game={game}`
-- `POST /settings`
+- `GET /settings/player-fields/valid`
 - `GET /sessions`
 - `POST /sessions`
-- `POST /sessions/{session_id}/validate-code`
-- `POST /sessions/{session_id}/join`
+- `POST /sessions/join`
+- `DELETE /sessions/{id}`
+- `POST /sessions/{id}/finish`
+- `GET /settings/game/{game}`
+- `POST /settings`
+- `DELETE /settings/{id}`
 
 ## 9) Modulo Game Session (estado atual)
 

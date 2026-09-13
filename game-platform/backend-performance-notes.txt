@@ -1,0 +1,51 @@
+BACKEND PERFORMANCE NOTE — reports endpoints slow (documented, not fixed)
+Date recorded: 2026-09-13
+Reported by: user, described as "reports session lagging / feels like input lag"
+
+SUMMARY
+Two backend endpoints used by the Relatorios (reports) pages are consistently
+2.5-3x slower than every other endpoint tested. This is a backend-side issue,
+not a frontend bug and not the user's machine. No frontend code was changed as
+a result of this investigation — documenting only, per user request.
+
+EVIDENCE (curl timings against http://localhost:3000, several runs each)
+
+  GET /sessions                                  ~170-180ms
+  GET /sessions/results                          ~170-190ms (after one cold-start hit of ~950ms-1s)
+  GET /settings/game/:game                       ~180ms (also has a path param, included as a control)
+
+  GET /sessions/:sessionId/results               ~480-510ms, EVERY run, no warmup improvement
+  GET /sessions/:sessionId/results/:matchId      ~480-500ms, including on a 404 (match not found)
+
+KEY OBSERVATION
+The two slow endpoints are slow even when the request fails (404 for an
+unknown matchId took the same ~480-500ms as a successful lookup). That points
+to a fixed, expensive chunk of work happening before the route even determines
+whether the requested resource exists — e.g. an N+1 query, an unnecessary
+join, or some setup work that runs unconditionally on these two handlers.
+
+It is NOT a generic "any route with a path param is slow" issue — /settings/game/:game
+also takes a path param and is fast, which is why that endpoint was tested as
+a control.
+
+FRONTEND SIDE (ruled out)
+- These are the exact same endpoint calls, URLs, and params as before the
+  ongoing platform refactor (Parts 0-4) — nothing about how or when the
+  frontend calls them changed.
+- reportsService.ts (src/modules/reports/services/reportsService.ts) just
+  wraps these two calls with typed api_client.get<T>() calls, unchanged in
+  shape from before.
+- The frontend hooks that consume them (useSessionResults, useMatchResult)
+  were refactored during Part 4 to use a shared query-wrapping hook
+  (useResourceQuery), but their queryKey, enabled condition, and staleTime/
+  gcTime are unchanged, and this changes nothing about network requests.
+
+WHAT TO CHECK ON THE BACKEND (for whoever owns it, not the frontend)
+- The handlers for GET /sessions/:sessionId/results and
+  GET /sessions/:sessionId/results/:matchId specifically.
+- Likely candidates: N+1 queries fetching players/moves per match instead of
+  one join, an unnecessary full-table scan before the not-found check,
+  or a slow shared middleware/decorator specific to those two routes.
+
+STATUS: Documented only. Not acted on. Revisit if reports pages are reported
+as slow again, or before any future backend-facing work on this endpoint.

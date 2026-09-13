@@ -12,6 +12,7 @@ import { GamePage } from '../modules/prisoner/pages/GamePage'
 import { ResultPage } from '../modules/prisoner/pages/ResultPage'
 import { RouletteGamePage } from '../modules/roulette/pages/RouletteGamePage'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { NotFoundPage } from './components/NotFoundPage'
 
 export const router = createBrowserRouter([
   {
@@ -77,5 +78,9 @@ export const router = createBrowserRouter([
   {
     path: '/roulette/game',
     element: <RouletteGamePage />,
+  },
+  {
+    path: '*',
+    element: <NotFoundPage />,
   },
 ])

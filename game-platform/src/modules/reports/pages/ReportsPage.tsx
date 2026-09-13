@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react'
-import { gsap } from 'gsap'
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, RefreshCw, Users, ChevronRight } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { useSessionsResults } from '../hooks/useSessionsResults'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 import { format_date } from '../utils/format'
 import { get_session_label } from '../../game-session/utils/session-label'
 
@@ -12,27 +12,12 @@ export function ReportsPage() {
   const root_ref = useRef<HTMLDivElement | null>(null)
   const { sessions, is_loading, is_fetching, is_error, refetch } = useSessionsResults()
 
-  useEffect(() => {
-    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-reports="title"], [data-reports="table"]',
-        { opacity: 0, y: 18 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.55,
-          ease: 'power2.out',
-          stagger: 0.08
-        }
-      )
-    }, root_ref)
-
-    return () => ctx.revert()
-  }, [])
+  useGsapReveal('[data-reports="title"], [data-reports="table"]', {
+    root: root_ref,
+    y: 18,
+    duration: 0.55,
+    stagger: 0.08
+  })
 
   const handleOpenSession = (sessionId: string) => {
     navigate(`/reports/${sessionId}`)

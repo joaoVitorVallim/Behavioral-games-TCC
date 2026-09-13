@@ -10,15 +10,19 @@ Este documento contém todas as regras e padrões de design estabelecidos para o
 Sempre use as cores do tema Tailwind CSS definidas em `src/index.css`:
 
 ```css
---color-background: oklch(0.15 0.02 240)     /* Fundo principal escuro */
---color-foreground: oklch(0.98 0.01 240)     /* Texto principal claro */
---color-card: oklch(0.2 0.02 240)            /* Fundo de cards */
---color-primary: oklch(0.65 0.25 200)        /* Azul primário */
+--color-background: oklch(0.16 0.03 250)     /* Fundo principal escuro */
+--color-foreground: oklch(0.96 0.01 240)     /* Texto principal claro */
+--color-card: oklch(0.22 0.03 246)           /* Fundo de cards */
+--color-primary: oklch(0.68 0.19 230)        /* Azul primário */
 --color-primary-foreground: oklch(0.15 0.02 240) /* Texto em botões primários */
---color-muted-foreground: oklch(0.6 0.01 240)    /* Texto secundário */
---color-border: oklch(0.28 0.02 240)         /* Bordas */
---color-destructive: oklch(0.55 0.25 25)     /* Erros/avisos */
+--color-muted-foreground: oklch(0.74 0.01 242)   /* Texto secundário */
+--color-border: oklch(0.34 0.03 245)         /* Bordas */
+--color-destructive: oklch(0.58 0.22 25)     /* Erros/avisos */
 ```
+
+(valores conferidos em `src/index.css`, que também define `--color-success`,
+`--color-secondary`, `--color-accent`, `--color-popover` e `--color-input` —
+consulte o arquivo diretamente para a paleta completa)
 
 ### Classes Tailwind a Usar
 - **Fundos**: `bg-background`, `bg-card`, `bg-primary`
@@ -68,10 +72,10 @@ Sempre use as cores do tema Tailwind CSS definidas em `src/index.css`:
 </button>
 ```
 
-### Modal de Login
-- Componente reutilizável: `LoginModal.tsx`
-- Aberto pelo botão "Sou Docente" em **todas as páginas**
-- Consistência: mesmo comportamento em `/` e `/sessions`
+### Acesso / Login
+- Login é uma **página dedicada** (`LoginPage.tsx`, rota `/login`), não um modal
+- O botão de acesso no `Header` (rótulo "Entrar") navega direto para `/login`
+- Consistência: mesmo `Header`/CTA em todas as páginas públicas
 
 ### Backdrop dos Modais
 ```tsx
@@ -123,7 +127,7 @@ className="bg-primary text-primary-foreground hover:scale-105 hover:text-backgro
 - **Cor do texto**: muda de `primary-foreground` (claro) para `background` (escuro)
 
 **Exemplos:**
-- "Sou Docente"
+- "Entrar" (CTA do Header)
 - "Ver Sessões Disponíveis"
 - "Entrar" (nos cards)
 - "Continuar" / "Entrar na Sessão" (modais)
@@ -305,8 +309,8 @@ Ao criar um novo componente, verifique:
       <h1>BehaviorLab</h1>
     </button>
     
-    <button onClick={() => setShowLoginModal(true)}>
-      Sou Docente
+    <button onClick={() => navigate('/login')}>
+      Entrar
     </button>
   </div>
 </header>

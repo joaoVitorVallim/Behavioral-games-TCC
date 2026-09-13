@@ -2,50 +2,8 @@ import Phaser from 'phaser';
 import { CardSprite } from './CardSprite';
 import type { CardType } from './CardSprite';
 import { eventBus, GAME_EVENTS, PLAYER_EVENTS, UI_EVENTS } from './events';
-
-type Choice = 'cooperate' | 'defect';
-type Phase = 'waiting' | 'dealing' | 'choosing' | 'committed' | 'revealing' | 'finished';
-
-interface RoundResultData {
-  round: number;
-  result: {
-    player1Choice: Choice;
-    player2Choice: Choice;
-    player1Points: number;
-    player2Points: number;
-    player1TimedOut?: boolean;
-    player2TimedOut?: boolean;
-  };
-  totalPoints: { player1: number | null; player2: number | null };
-  nextRound: number | null;
-  timedOut: boolean;
-}
-
-interface MatchReadyData {
-  currentRound: number;
-  totalRounds: number;
-  roundTimeLimit: number | null;
-  userViewPoints: boolean;
-  player1Id: string;
-  player2Id: string;
-  totalPoints?: { player1: number | null; player2: number | null };
-  pendingChoices?: { player1: boolean; player2: boolean };
-  roundEndsAt?: number | null;
-  serverNow?: number;
-  receivedAt?: number;
-}
-
-interface RoundStartData {
-  round: number;
-  totalRounds: number;
-  roundEndsAt: number | null;
-  serverNow: number;
-  receivedAt?: number;
-}
-
-interface MatchFinishedData {
-  finalScore: { player1: number; player2: number };
-}
+import { matchSession } from '../session';
+import type { Choice, Phase, RoundResultData, MatchReadyData, RoundStartData, MatchFinishedData } from '../types';
 
 export class GameScene extends Phaser.Scene {
   private queue: Array<{ type: string; data: unknown }> = [];
@@ -180,7 +138,7 @@ export class GameScene extends Phaser.Scene {
     this.myX = this.cx - 65;
     this.oppX = this.cx + 65;
 
-    this.isPlayer1 = sessionStorage.getItem('isPlayer1') === 'true';
+    this.isPlayer1 = matchSession.getIsPlayer1();
 
     const doCleanup = () => {
       this.busHandlers.forEach(({ event, fn }) => eventBus.off(event, fn));
@@ -196,22 +154,14 @@ export class GameScene extends Phaser.Scene {
 
     this.setStatus('Preparando o interrogatório...');
 
-    const raw = sessionStorage.getItem('matchReadyData');
-    if (raw) {
-      try {
-        this.enqueue(GAME_EVENTS.MATCH_READY, JSON.parse(raw));
-      } catch {
-      }
+    const matchReadyData = matchSession.getMatchReadyData();
+    if (matchReadyData) {
+      this.enqueue(GAME_EVENTS.MATCH_READY, matchReadyData);
     }
-    const rawResult = sessionStorage.getItem('matchResult');
-    if (rawResult) {
-      try {
-        const res = JSON.parse(rawResult) as { matchId?: string };
-        if (res?.matchId && res.matchId === sessionStorage.getItem('matchId')) {
-          this.enqueue(GAME_EVENTS.MATCH_FINISHED, res);
-        }
-      } catch {
-      }
+
+    const matchResult = matchSession.getMatchResult();
+    if (matchResult?.matchId && matchResult.matchId === matchSession.getMatchId()) {
+      this.enqueue(GAME_EVENTS.MATCH_FINISHED, matchResult);
     }
   }
 

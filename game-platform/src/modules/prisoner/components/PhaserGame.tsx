@@ -4,7 +4,6 @@ import { GameScene } from '../game/GameScene';
 import { eventBus, GAME_EVENTS, PLAYER_EVENTS } from '../game/events';
 
 interface PhaserGameProps {
-  isPlayer1: boolean;
   onChoice: (choice: 'cooperate' | 'defect', round?: number) => void;
 }
 

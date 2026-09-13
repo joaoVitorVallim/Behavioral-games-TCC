@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# BehaviorLab — game-platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend da BehaviorLab, plataforma de análise comportamental desenvolvida em
+parceria com a FHO. Docentes criam sessões de coleta de dados baseadas em
+jogos interativos (dilema do prisioneiro, roleta); alunos participam das
+sessões e os resultados alimentam relatórios para estudo.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19 + TypeScript, build com Vite
+- Roteamento: React Router
+- Estado remoto/cache: TanStack React Query
+- HTTP client: Axios
+- Estilização: Tailwind CSS
+- Jogos: Phaser (dilema do prisioneiro) + GSAP (transições), Socket.IO
+  (partidas em tempo real)
+- Gráficos: Recharts
+- Ícones: lucide-react
 
-## React Compiler
+## Rodando localmente
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev       # ambiente de desenvolvimento (Vite)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Configure a URL da API do backend em `.env` (veja `VITE_API_URL`; padrão
+`http://localhost:3000`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Outros scripts:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build      # typecheck (tsc -b) + build de produção (vite build)
+npm run lint       # ESLint
+npm run preview    # serve o build de produção localmente
 ```
+
+## Estrutura
+
+```text
+src/
+  app/            # bootstrap, rotas, providers globais, ProtectedRoute, NotFoundPage
+  infrastructure/ # cliente HTTP e integrações base
+  modules/        # um diretório por domínio: auth, game-session, prisoner, reports, roulette
+  shared/         # hooks, componentes e utilitários reutilizáveis entre domínios
+```
+
+Cada módulo de domínio segue o padrão `components/ hooks/ services/ types.ts
+pages/` — ver `main instructions.md` para a convenção completa de arquitetura
+e segurança adotada no projeto.
+
+## Documentação
+
+- [`documentation.md`](./documentation.md) — arquitetura, fluxo de dados, rotas, endpoints
+- [`DESIGN_RULES.md`](./DESIGN_RULES.md) — convenções visuais (cores, componentes, nomenclatura)
+- [`main instructions.md`](./main%20instructions.md) — arquitetura e segurança

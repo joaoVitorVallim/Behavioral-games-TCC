@@ -1,24 +1,21 @@
-import { useQuery } from '@tanstack/react-query'
+import { useResourceQuery } from '../../../shared/hooks/useResourceQuery'
 import { reportsService } from '../services/reportsService'
 
 export const useMatchResult = (
   sessionId: string | undefined,
   matchId: string | undefined
 ) => {
-  const query = useQuery({
+  const query = useResourceQuery({
     queryKey: ['reports', 'session', sessionId, 'match', matchId],
-    queryFn: () =>
-      reportsService.getMatchResult(sessionId as string, matchId as string),
-    enabled: !!sessionId && !!matchId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000
+    queryFn: () => reportsService.getMatchResult(sessionId as string, matchId as string),
+    enabled: !!sessionId && !!matchId
   })
 
   return {
     data: query.data ?? null,
-    is_loading: query.isLoading,
-    is_fetching: query.isFetching,
-    is_error: query.isError,
+    is_loading: query.is_loading,
+    is_fetching: query.is_fetching,
+    is_error: query.is_error,
     refetch: query.refetch
   }
 }

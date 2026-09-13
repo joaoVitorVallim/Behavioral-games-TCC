@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './app/providers/AuthProvider'
 import { QueryProvider } from './app/providers/QueryProvider'
+import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { router } from './app/router'
 import './index.css'
 
@@ -13,10 +14,12 @@ if (!root_element) {
 
 ReactDOM.createRoot(root_element).render(
   <React.StrictMode>
-    <AuthProvider>
-      <QueryProvider>
-        <RouterProvider router={router} />
-      </QueryProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <QueryProvider>
+          <RouterProvider router={router} />
+        </QueryProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

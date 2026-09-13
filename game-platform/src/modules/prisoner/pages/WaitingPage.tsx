@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSocket } from '../socket';
-import { api_client } from '../../../infrastructure/api/api-client';
+import { matchSession } from '../session';
+import { matchService } from '../services/matchService';
 
 export function WaitingPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('Conectando...');
   const [dots, setDots] = useState('');
-  const resolvedMatchId = useRef(sessionStorage.getItem('matchId') ?? '');
+  const resolvedMatchId = useRef(matchSession.getMatchId());
 
-  const playerId  = sessionStorage.getItem('playerId') ?? '';
-  const sessionId = sessionStorage.getItem('sessionId') ?? '';
+  const playerId  = matchSession.getPlayerId();
+  const sessionId = matchSession.getSessionId();
 
   useEffect(() => {
     if (!playerId) {
@@ -35,12 +36,9 @@ export function WaitingPage() {
     const onReady = (data: unknown) => {
       const d = data as { player1Id: string; matchId: string };
       const isPlayer1 = d.player1Id === playerId;
-      sessionStorage.setItem('isPlayer1', String(isPlayer1));
-      sessionStorage.setItem('matchId', d.matchId ?? resolvedMatchId.current);
-      sessionStorage.setItem(
-        'matchReadyData',
-        JSON.stringify({ ...(data as Record<string, unknown>), receivedAt: Date.now() }),
-      );
+      matchSession.setIsPlayer1(isPlayer1);
+      matchSession.setMatchId(d.matchId ?? resolvedMatchId.current);
+      matchSession.setMatchReadyData({ ...(data as Record<string, unknown>), receivedAt: Date.now() });
       navigate('/prisoner/game');
     };
 
@@ -60,10 +58,7 @@ export function WaitingPage() {
     if (sessionId) {
       pollInterval = setInterval(async () => {
         try {
-          const res = await api_client.get('/matches', {
-            params: { sessionId, playerId, status: 'aguardando' }
-          });
-          const matches: { id: string; player1_id: string; player2_id: string }[] = res.data;
+          const matches = await matchService.getAwaitingMatches(sessionId, playerId);
           const myMatch = matches.find(m => m.player1_id === playerId || m.player2_id === playerId);
           if (!myMatch) return;
           const mId = myMatch.id;
@@ -74,7 +69,7 @@ export function WaitingPage() {
           }
           // Found a different (or initial) match — update and join
           resolvedMatchId.current = mId;
-          sessionStorage.setItem('matchId', mId);
+          matchSession.setMatchId(mId);
           clearInterval(pollInterval!);
           if (socket.connected) joinMatch(mId);
         } catch {

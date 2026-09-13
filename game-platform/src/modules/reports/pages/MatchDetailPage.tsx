@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { gsap } from 'gsap'
+import { useMemo, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Swords, UserCircle } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { useMatchResult } from '../hooks/useMatchResult'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 import {
   compute_totals,
   format_datetime,
@@ -26,27 +26,13 @@ export function MatchDetailPage() {
   const root_ref = useRef<HTMLDivElement | null>(null)
   const { data, is_loading, is_error } = useMatchResult(sessionId, matchId)
 
-  useEffect(() => {
-    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-match="players"], [data-match="rounds"], [data-match="graph"]',
-        { opacity: 0, y: 18 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.55,
-          ease: 'power2.out',
-          stagger: 0.08
-        }
-      )
-    }, root_ref)
-
-    return () => ctx.revert()
-  }, [data])
+  useGsapReveal('[data-match="players"], [data-match="rounds"], [data-match="graph"]', {
+    root: root_ref,
+    y: 18,
+    duration: 0.55,
+    stagger: 0.08,
+    deps: [data]
+  })
 
   const player_by_role = useMemo(() => {
     const map: Record<'player1' | 'player2', PlayerResultWithRole | null> = {

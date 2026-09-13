@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { gsap } from 'gsap'
+import { useMemo, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -11,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { useSessionResults } from '../hooks/useSessionResults'
+import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 import {
   compute_totals,
   format_date,
@@ -26,27 +26,13 @@ export function SessionMatchesPage() {
   const root_ref = useRef<HTMLDivElement | null>(null)
   const { data, is_loading, is_fetching, is_error, refetch } = useSessionResults(sessionId)
 
-  useEffect(() => {
-    if (!root_ref.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-session="header"], [data-session="matches"]',
-        { opacity: 0, y: 18 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.55,
-          ease: 'power2.out',
-          stagger: 0.08
-        }
-      )
-    }, root_ref)
-
-    return () => ctx.revert()
-  }, [data])
+  useGsapReveal('[data-session="header"], [data-session="matches"]', {
+    root: root_ref,
+    y: 18,
+    duration: 0.55,
+    stagger: 0.08,
+    deps: [data]
+  })
 
   const players_by_id = useMemo(() => {
     const map = new Map<string, PlayerResult>()

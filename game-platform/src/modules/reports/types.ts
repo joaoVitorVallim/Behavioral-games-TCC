@@ -1,3 +1,6 @@
+import type { Choice } from '../prisoner/types'
+export type { Choice }
+
 export interface SessionResultsSettings {
   id: string
   configName: string
@@ -59,7 +62,13 @@ export interface PlayerResultWithRole extends PlayerResult {
   role: 'player1' | 'player2'
 }
 
-export type Choice = 'cooperate' | 'defect' | string
+// Choice above reuses prisoner's canonical type — was 'cooperate' | 'defect' | string
+// here, where the trailing `| string` collapsed the whole union to `string` and
+// silently defeated the type (a typo'd choice would type-check as valid).
+// RoundResult/MatchMoves/MatchSummary stay reports-local: they model this
+// module's own `/sessions/:id/results` REST response, a different backend
+// endpoint from prisoner's live socket events, so unifying those shapes would
+// assume a coupling that isn't actually guaranteed.
 
 export interface RoundResult {
   player1Choice: Choice
