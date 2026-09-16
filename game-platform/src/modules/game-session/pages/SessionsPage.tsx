@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SessionCard } from '../components/SessionCard'
 import { SessionCardSkeleton } from '../components/SessionCardSkeleton'
-import { JoinSessionModal } from '../components/JoinSessionModal'
 import { ConfirmActionModal } from '../components/ConfirmActionModal'
 import { Header } from '../../../shared/components/Header'
 import { Toast } from '../../../shared/components/Toast'
@@ -29,7 +28,6 @@ export const SessionsPage = () => {
     is_finishing,
     finishing_id
   } = useSessions()
-  const [selected_session, setSelectedSession] = useState<Session | null>(null)
   const [session_to_delete, setSessionToDelete] = useState<Session | null>(null)
   const [session_to_finish, setSessionToFinish] = useState<Session | null>(null)
   const { toast, showToast } = useToast()
@@ -51,18 +49,6 @@ export const SessionsPage = () => {
     duration: 0.55,
     stagger: 0.08
   })
-
-  const handleEnterSession = (session: Session) => {
-    setSelectedSession(session)
-  }
-
-  const handleCloseModal = () => {
-    setSelectedSession(null)
-  }
-
-  const handleJoinSuccess = () => {
-    refetch()
-  }
 
   const handleReload = () => {
     refetch()
@@ -156,7 +142,6 @@ export const SessionsPage = () => {
               <SessionCard
                 key={session.id}
                 session={session}
-                onEnter={() => handleEnterSession(session)}
                 onDelete={is_authenticated ? () => handleRequestDelete(session) : undefined}
                 is_deleting={is_deleting && deleting_id === session.id}
                 onFinish={is_authenticated ? () => handleRequestFinish(session) : undefined}
@@ -166,14 +151,6 @@ export const SessionsPage = () => {
           </div>
         )}
       </main>
-
-      {selected_session && (
-        <JoinSessionModal
-          session={selected_session}
-          onClose={handleCloseModal}
-          onSuccess={handleJoinSuccess}
-        />
-      )}
 
       {session_to_delete && (
         <ConfirmActionModal

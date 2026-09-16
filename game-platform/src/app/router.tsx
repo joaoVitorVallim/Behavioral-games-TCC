@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
-import { HomePage } from '../modules/auth/pages/HomePage'
+import { PlayLandingPage } from '../modules/play/pages/PlayLandingPage'
 import { LoginPage } from '../modules/auth/pages/LoginPage'
 import { RegisterPage } from '../modules/auth/pages/RegisterPage'
 import { SessionsPage } from '../modules/game-session/pages/SessionsPage'
@@ -17,7 +17,7 @@ import { NotFoundPage } from './components/NotFoundPage'
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <HomePage />,
+    element: <PlayLandingPage />,
   },
   {
     path: '/login',
@@ -29,7 +29,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/sessions',
-    element: <SessionsPage />,
+    element: (
+      <ProtectedRoute>
+        <SessionsPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/create-session',

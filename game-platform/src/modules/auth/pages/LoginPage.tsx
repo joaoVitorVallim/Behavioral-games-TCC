@@ -147,7 +147,7 @@ export function LoginPage() {
       </main>
 
       <footer className="border-t border-border/70 bg-background/65 px-4 py-5 text-center backdrop-blur-sm">
-        <p className="text-[11px] tracking-[0.13em] text-muted-foreground">© 2025 BehaviorLab - Todos os direitos reservados.</p>
+        <p className="text-[11px] tracking-[0.13em] text-muted-foreground">© 2026 BehaviorLab - Todos os direitos reservados.</p>
       </footer>
     </div>
   )
