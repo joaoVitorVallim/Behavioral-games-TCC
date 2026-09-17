@@ -31,4 +31,8 @@ dist-ssr
 # Visual brainstorming companion (local mockup scratch space)
 .superpowers/
 
-.docs/
+# Design/planning docs kept local, not committed
+docs/
+
+support.js
+*.dc.html
