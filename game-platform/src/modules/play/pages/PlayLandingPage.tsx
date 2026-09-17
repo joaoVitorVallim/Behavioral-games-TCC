@@ -10,19 +10,17 @@ const PLAY_STYLES = `
 
   [data-dctheme="warm"] {
     --bg:#FFFDF9; --text:#231F1A; --headline:#1F1A15; --p:#4A4139; --small:#6B6157;
-    --link:#E8590C; --link-hover:#B33E00;
-    --blob1:linear-gradient(150deg,#FFD500 0%,#FFA400 45%,#FF6A00 100%);
-    --blob2:linear-gradient(140deg,#FF8A00 0%,#FF4E00 70%,#F53B00 100%);
-    --ring-border:#FFD500;
-    --logo-bg:linear-gradient(135deg,#FF8A00,#F53B00); --logo-shadow:rgba(245,59,0,.32); --logo-text-shadow:rgba(150,60,0,.5);
-    --prof-border:rgba(245,59,0,.25); --prof-color:#E8590C;
-    --pulse-bg:#FF7A00;
-    --btn-bg:#F53B00; --btn-text:#fff; --btn-shadow:rgba(245,59,0,.38);
-    --modal-overlay:rgba(40,22,5,.55); --modal-bg:#fff; --modal-title:#1F1A15; --modal-text:#5C5349; --modal-btn:linear-gradient(135deg,#FF9500,#F53B00);
+    --blob1:linear-gradient(150deg,oklch(0.78 0.14 230) 0%,oklch(0.68 0.19 230) 45%,oklch(0.5 0.2 245) 100%);
+    --blob2:linear-gradient(140deg,oklch(0.65 0.2 225) 0%,oklch(0.5 0.2 245) 70%,oklch(0.4 0.18 250) 100%);
+    --ring-border:oklch(0.68 0.19 230);
+    --logo-bg:linear-gradient(135deg,oklch(0.65 0.2 225),oklch(0.5 0.2 245)); --logo-shadow:oklch(0.5 0.2 245 / .32); --logo-text-shadow:oklch(0.3 0.15 250 / .5);
+    --prof-border:oklch(0.5 0.2 245 / .35); --prof-color:oklch(0.68 0.19 230);
+    --pulse-bg:oklch(0.5 0.2 245);
+    --btn-bg:oklch(0.68 0.19 230); --btn-text:oklch(0.15 0.02 240); --btn-shadow:oklch(0.5 0.2 245 / .38);
+    --modal-overlay:oklch(0.1 0.05 250 / .6); --modal-bg:#fff; --modal-title:#1F1A15; --modal-text:#5C5349; --modal-btn:linear-gradient(135deg,oklch(0.65 0.2 225),oklch(0.5 0.2 245));
   }
   [data-dctheme="lab"] {
     --bg:oklch(0.20 0.035 250); --text:oklch(0.9 0.01 240); --headline:oklch(0.96 0.01 240); --p:oklch(0.82 0.01 242); --small:oklch(0.74 0.01 242);
-    --link:oklch(0.68 0.19 230); --link-hover:oklch(0.55 0.19 230);
     --blob1:linear-gradient(150deg,oklch(0.78 0.14 230) 0%,oklch(0.68 0.19 230) 45%,oklch(0.5 0.2 245) 100%);
     --blob2:linear-gradient(140deg,oklch(0.65 0.2 225) 0%,oklch(0.5 0.2 245) 70%,oklch(0.4 0.18 250) 100%);
     --ring-border:oklch(0.68 0.19 230);
@@ -33,14 +31,14 @@ const PLAY_STYLES = `
     --modal-overlay:oklch(0.1 0.05 250 / .6); --modal-bg:oklch(0.22 0.03 246); --modal-title:oklch(0.96 0.01 240); --modal-text:oklch(0.82 0.01 242); --modal-btn:linear-gradient(135deg,oklch(0.65 0.2 225),oklch(0.5 0.2 245));
   }
 
-  a.dc-link { color: var(--link); text-decoration: none; }
-  a.dc-link:hover { color: var(--link-hover); }
   @keyframes om-pulse { 0% { transform: scale(1); opacity: .55 } 70% { transform: scale(1.45); opacity: 0 } 100% { transform: scale(1.45); opacity: 0 } }
   @keyframes om-float-slow { 0% { transform: translate3d(0,0,0) scale(1) } 50% { transform: translate3d(14px,12px,0) scale(1.04) } 100% { transform: translate3d(0,0,0) scale(1) } }
   @keyframes om-enter-left { from { transform: translateX(-160px) } to { transform: translateX(0) } }
   @keyframes om-enter-right { from { transform: translateX(160px) } to { transform: translateX(0) } }
 
   .theme-btn { width:38px; height:38px; border-radius:999px; border:2px solid var(--prof-border); background:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--prof-color); font-size:15px; }
+  .prof-btn { border:2px solid var(--prof-border); color:var(--prof-color); background:none; transition:background .2s ease, color .2s ease, border-color .2s ease; }
+  .prof-btn:hover { background:var(--prof-color); border-color:var(--prof-color); color:#000; }
 `
 
 export function PlayLandingPage() {
@@ -104,8 +102,8 @@ export function PlayLandingPage() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="dc-link"
-              style={{ display: 'inline-flex', alignItems: 'center', padding: '10px 18px', borderRadius: 999, border: '2px solid var(--prof-border)', background: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 15.5, color: 'var(--prof-color)' }}
+              className="prof-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '10px 18px', borderRadius: 999, cursor: 'pointer', fontWeight: 600, fontSize: 15.5 }}
             >
               Sou professor
             </button>
