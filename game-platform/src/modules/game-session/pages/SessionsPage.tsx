@@ -112,7 +112,9 @@ export const SessionsPage = () => {
             <div>
               <p className="heading-kicker mb-2">Catalogo ativo</p>
               <h2 className="text-4xl text-foreground md:text-5xl">Sessões Disponíveis</h2>
-              <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">Escolha uma sessão para participar. A lista abaixo reflete as turmas e configurações publicadas pelos docentes.</p>
+              <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
+                Aqui estão as sessões criadas por você. Acompanhe o andamento das partidas e gerencie cada sessão.
+              </p>
             </div>
             <button
               onClick={handleReload}

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, PlusCircle, FileText, Menu, X, UserCircle, LogOut } from 'lucide-react'
+import { Brain, LayoutGrid, PlusCircle, FileText, Menu, X, UserCircle, LogOut } from 'lucide-react'
 import { useAuth } from '../../modules/auth/hooks/useAuth'
 import { useClickOutside } from '../hooks/useClickOutside'
 
@@ -52,11 +52,11 @@ export function Header({ hide_auth_cta = false }: HeaderProps) {
           {is_authenticated ? (
             <>
               <button
-                onClick={() => navigate('/create-session')}
-                  className="btn-primary"
+                onClick={() => navigate('/sessions')}
+                  className="btn-secondary"
               >
-                <PlusCircle className="w-4 h-4" />
-                Criar Sessão
+                <LayoutGrid className="w-4 h-4" />
+                Sessões disponíveis
               </button>
 
               <button
@@ -65,6 +65,14 @@ export function Header({ hide_auth_cta = false }: HeaderProps) {
               >
                 <FileText className="w-4 h-4" />
                 Relatórios
+              </button>
+
+              <button
+                onClick={() => navigate('/create-session')}
+                  className="btn-primary"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Criar Sessão
               </button>
 
               <div className="relative" ref={dropdown_ref}>
@@ -115,11 +123,11 @@ export function Header({ hide_auth_cta = false }: HeaderProps) {
           {is_authenticated ? (
             <>
               <button
-                onClick={() => { navigate('/create-session'); setShowMobileMenu(false) }}
-                  className="btn-primary w-full"
+                onClick={() => { navigate('/sessions'); setShowMobileMenu(false) }}
+                  className="btn-secondary w-full"
               >
-                <PlusCircle className="w-4 h-4" />
-                Criar Sessão
+                <LayoutGrid className="w-4 h-4" />
+                Sessões disponíveis
               </button>
 
               <button
@@ -128,6 +136,14 @@ export function Header({ hide_auth_cta = false }: HeaderProps) {
               >
                 <FileText className="w-4 h-4" />
                 Relatórios
+              </button>
+
+              <button
+                onClick={() => { navigate('/create-session'); setShowMobileMenu(false) }}
+                  className="btn-primary w-full"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Criar Sessão
               </button>
 
               <button
