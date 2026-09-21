@@ -622,6 +622,14 @@ function setupSocketEvents(socket, playerNum) {
     setStep(4);
   });
 
+  // Os dois estão na sala: no front aparece a tela de instruções; aqui confirma direto
+  socket.on('readyCheck', (data) => {
+    const ready = playerNum === 1 ? data.ready.player1 : data.ready.player2;
+    if (ready) return;
+    log(logId, 'readyCheck recebido — enviando playerReady', 'dim');
+    socket.emit('playerReady', { matchId: state.matchId, playerId });
+  });
+
   socket.on('matchReady', (data) => {
     log(logId, `Partida pronta! Rodada ${data.currentRound}/${data.totalRounds}`, 'ok');
     state.matchReady = true;

@@ -22,6 +22,8 @@ export interface PrisonerMatchState {
   player2TotalPoints: number;
   player1SocketId: string | null;
   player2SocketId: string | null;
+  player1Ready: boolean;
+  player2Ready: boolean;
   pendingChoices: {
     player1?: PrisonerChoice;
     player2?: PrisonerChoice;

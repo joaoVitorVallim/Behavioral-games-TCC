@@ -66,6 +66,8 @@ export class PrisonerService {
       player2TotalPoints: 0,
       player1SocketId: null,
       player2SocketId: null,
+      player1Ready: false,
+      player2Ready: false,
       pendingChoices: {},
       moves: {},
       status: 'waiting',
@@ -93,24 +95,46 @@ export class PrisonerService {
     }
     if (state.status === 'finished') return state;
 
-    if (state.player1SocketId && state.player2SocketId) {
-      state.status = 'in_progress';
+    this.startIfReady(state);
+    return state;
+  }
 
-      if (state.roundTimer === null && state.roundDeadline === null) {
-        const resuming =
-          state.pausedRemainingMs !== null && state.pausedRound === state.currentRound;
-        if (resuming) {
-          this.armRoundTimer(
-            state,
-            state.pausedRemainingMs! + PrisonerService.BOOT_GRACE_MS,
-          );
-        } else {
-          this.startRoundTimer(state, PrisonerService.BOOT_GRACE_MS);
-        }
+  markReady(matchId: string, playerId: string): { state: PrisonerMatchState; started: boolean } {
+    const state = this.getState(matchId);
+
+    if (state.player1Id === playerId) {
+      state.player1Ready = true;
+    } else if (state.player2Id === playerId) {
+      state.player2Ready = true;
+    } else {
+      throw new BadRequestException(`Player ${playerId} is not part of match ${matchId}`);
+    }
+    if (state.status !== 'waiting') return { state, started: false };
+
+    return { state, started: this.startIfReady(state) };
+  }
+
+  // The match (and its round timer) only starts once both players are connected
+  // and both confirmed the instructions screen.
+  private startIfReady(state: PrisonerMatchState): boolean {
+    if (!state.player1SocketId || !state.player2SocketId) return false;
+    if (!state.player1Ready || !state.player2Ready) return false;
+
+    state.status = 'in_progress';
+
+    if (state.roundTimer === null && state.roundDeadline === null) {
+      const resuming =
+        state.pausedRemainingMs !== null && state.pausedRound === state.currentRound;
+      if (resuming) {
+        this.armRoundTimer(
+          state,
+          state.pausedRemainingMs! + PrisonerService.BOOT_GRACE_MS,
+        );
+      } else {
+        this.startRoundTimer(state, PrisonerService.BOOT_GRACE_MS);
       }
     }
-
-    return state;
+    return true;
   }
 
   disconnectPlayer(socketId: string): PrisonerMatchState | null {

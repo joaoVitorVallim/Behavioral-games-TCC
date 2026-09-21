@@ -12,9 +12,10 @@ import { Server, Socket } from 'socket.io';
 import { UsePipes, ValidationPipe } from '@nestjs/common';
 import { PrisonerService } from './prisoner.service';
 import { JoinPrisonerMatchDto } from './dto/join-prisoner-match.dto';
+import { PlayerReadyDto } from './dto/player-ready.dto';
 import { SubmitChoiceDto } from './dto/submit-choice.dto';
 import { ParseSocketBodyPipe } from '../common/pipes/parse-socket-body.pipe';
-import { PrisonerMatchState } from './interfaces/prisoner-match.interface';
+import { PrisonerMatchState, PRISONER_PAYOFF } from './interfaces/prisoner-match.interface';
 
 @WebSocketGateway({ namespace: '/prisoner', cors: { origin: '*' } })
 export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -39,6 +40,55 @@ export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       roundEndsAt: state.roundDeadline,
       serverNow: Date.now(),
     });
+  }
+
+  private inInstructions(state: PrisonerMatchState) {
+    return state.status === 'waiting' && !(state.player1Ready && state.player2Ready);
+  }
+
+  // Sent while the players are on the instructions screen (before both click "Iniciar")
+  private emitReadyCheck(state: PrisonerMatchState) {
+    this.server.to(state.matchId).emit('readyCheck', {
+      matchId: state.matchId,
+      player1Id: state.player1Id,
+      player2Id: state.player2Id,
+      totalRounds: state.totalRounds,
+      payoff: PRISONER_PAYOFF,
+      ready: {
+        player1: state.player1Ready,
+        player2: state.player2Ready,
+      },
+      connected: {
+        player1: !!state.player1SocketId,
+        player2: !!state.player2SocketId,
+      },
+    });
+  }
+
+  private emitMatchReady(state: PrisonerMatchState) {
+    const sendReady = (socketId: string | null, isPlayer1: boolean) => {
+      if (!socketId) return;
+      this.server.to(socketId).emit('matchReady', {
+        matchId: state.matchId,
+        currentRound: state.currentRound,
+        totalRounds: state.totalRounds,
+        roundTimeLimit: state.roundTimeLimit,
+        userViewPoints: state.userViewPoints,
+        player1Id: state.player1Id,
+        player2Id: state.player2Id,
+        totalPoints: this.totalPointsFor(state, isPlayer1),
+        pendingChoices: {
+          player1: state.pendingChoices.player1 !== undefined,
+          player2: state.pendingChoices.player2 !== undefined,
+        },
+        roundEndsAt: state.roundDeadline,
+        serverNow: Date.now(),
+      });
+    };
+    sendReady(state.player1SocketId, true);
+    sendReady(state.player2SocketId, false);
+
+    this.emitRoundStart(state);
   }
 
   private totalPointsFor(state: PrisonerMatchState, isPlayer1: boolean) {
@@ -106,6 +156,7 @@ export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         matchId: state.matchId,
         status: state.status,
       });
+      if (this.inInstructions(state)) this.emitReadyCheck(state);
     }
   }
 
@@ -144,30 +195,9 @@ export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       });
 
       if (state.status === 'in_progress') {
-
-        const sendReady = (socketId: string | null, isPlayer1: boolean) => {
-          if (!socketId) return;
-          this.server.to(socketId).emit('matchReady', {
-            matchId: dto.matchId,
-            currentRound: state.currentRound,
-            totalRounds: state.totalRounds,
-            roundTimeLimit: state.roundTimeLimit,
-            userViewPoints: state.userViewPoints,
-            player1Id: state.player1Id,
-            player2Id: state.player2Id,
-            totalPoints: this.totalPointsFor(state, isPlayer1),
-            pendingChoices: {
-              player1: state.pendingChoices.player1 !== undefined,
-              player2: state.pendingChoices.player2 !== undefined,
-            },
-            roundEndsAt: state.roundDeadline,
-            serverNow: Date.now(),
-          });
-        };
-        sendReady(state.player1SocketId, true);
-        sendReady(state.player2SocketId, false);
-
-        this.emitRoundStart(state);
+        this.emitMatchReady(state);
+      } else if (state.player1SocketId && state.player2SocketId) {
+        this.emitReadyCheck(state);
       }
     } catch (err: unknown) {
 
@@ -179,6 +209,25 @@ export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         return;
       }
 
+      client.emit('error', { message: (err as Error).message });
+    }
+  }
+
+  @SubscribeMessage('playerReady')
+  @UsePipes(new ParseSocketBodyPipe(), new ValidationPipe({ whitelist: true }))
+  handlePlayerReady(
+    @MessageBody() dto: PlayerReadyDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const { state, started } = this.prisonerService.markReady(dto.matchId, dto.playerId);
+
+      if (started) {
+        this.emitMatchReady(state);
+      } else if (this.inInstructions(state)) {
+        this.emitReadyCheck(state);
+      }
+    } catch (err: unknown) {
       client.emit('error', { message: (err as Error).message });
     }
   }
