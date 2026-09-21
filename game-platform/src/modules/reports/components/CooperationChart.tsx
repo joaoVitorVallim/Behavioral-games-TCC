@@ -52,7 +52,7 @@ export function CooperationChart({ data }: CooperationChartProps) {
               color: 'var(--color-foreground)'
             }}
             labelStyle={{ color: 'var(--color-muted-foreground)' }}
-            labelFormatter={(label: number) => `Rodada ${label}`}
+            labelFormatter={(label) => `Rodada ${label}`}
           />
           <Legend
             wrapperStyle={{ color: 'var(--color-muted-foreground)', fontSize: 12 }}

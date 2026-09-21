@@ -1,5 +1,5 @@
-import { MATCH_SESSION_STORAGE_KEYS as KEYS } from '../../shared/constants/storageKeys'
-import type { MatchReadyData, MatchResult } from './types'
+import { MATCH_SESSION_STORAGE_KEYS as KEYS } from '../../../shared/constants/storageKeys'
+import type { MatchReadyData, MatchResult } from '../types'
 
 function readJson<T>(key: string): T | null {
   const raw = sessionStorage.getItem(key)
@@ -20,11 +20,9 @@ function writeJson(key: string, data: unknown): void {
 }
 
 /**
- * Typed accessors for the prisoner match/session sessionStorage keys — previously
- * accessed as raw string literals independently across GameScene.ts,
- * useWebSocket.ts, ResultPage.tsx, GamePage.tsx and WaitingPage.tsx, with JSON
- * parse-safety handled ad hoc (or not at all — ResultPage's JSON.parse had no
- * try/catch) at each call site.
+ * Typed accessors for the match sessionStorage keys — written by PlayGameModal
+ * when a player joins, then read/written by useMatchRoom and useMatchRound, so
+ * the match survives a page reload.
  */
 export const matchSession = {
   getPlayerId: (): string => sessionStorage.getItem(KEYS.playerId) ?? '',

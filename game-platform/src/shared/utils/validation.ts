@@ -41,7 +41,7 @@ export const truncateString = (str: string, max_length: number): string => {
 /**
  * Valida input baseado no tipo
  */
-export const validateInput = (value: string, type: 'text' | 'email' | 'number'): boolean => {
+export const validateInput = (value: string, type: 'text' | 'email' | 'number' | 'select'): boolean => {
   if (!value) return false
   
   switch (type) {

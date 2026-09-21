@@ -1,4 +1,4 @@
-import type { Choice } from '../prisoner/types'
+import type { Choice } from '../game-session/types'
 export type { Choice }
 
 export interface SessionResultsSettings {

@@ -58,8 +58,8 @@ export function PointsChart({ data }: PointsChartProps) {
               color: 'var(--color-foreground)'
             }}
             labelStyle={{ color: 'var(--color-muted-foreground)' }}
-            formatter={(value: number) => [value, 'Pontos']}
-            labelFormatter={(label: number) => `Rodada ${label}`}
+            formatter={(value) => [value, 'Pontos']}
+            labelFormatter={(label) => `Rodada ${label}`}
           />
           <Line
             type="monotone"

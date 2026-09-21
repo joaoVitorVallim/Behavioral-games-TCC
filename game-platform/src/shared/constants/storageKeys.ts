@@ -9,11 +9,10 @@
 export const AUTH_TOKEN_STORAGE_KEY = 'auth_token'
 
 /**
- * The prisoner match/session sessionStorage keys — written by game-session's
- * JoinSessionModal when a player joins, then read/written throughout the
- * prisoner module during gameplay. Kept in `shared` rather than prisoner-local
- * since both modules need the exact same raw key strings (previously duplicated
- * as raw literals in both places with no shared constant).
+ * The match/session sessionStorage keys — written by play's PlayGameModal when
+ * a player joins, then read/written by the game-session match screens during
+ * gameplay. Kept in `shared` since both modules need the exact same raw key
+ * strings (previously duplicated as raw literals with no shared constant).
  */
 export const MATCH_SESSION_STORAGE_KEYS = {
   playerId: 'playerId',

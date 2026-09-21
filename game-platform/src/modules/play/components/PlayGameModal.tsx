@@ -37,12 +37,12 @@ const PLAYER_FIELD_DEFS: Record<string, Omit<SessionRequirement, 'field' | 'requ
   profession:     { label: 'Profissão',             type: 'text',   placeholder: 'Ex: Estudante' }
 }
 
-// Relocated from the retired JoinSessionModal (game-session), unchanged.
-function resolveGameRoute(game: string, matchId: string, playerId: string): string | null {
+// Relocated from the retired JoinSessionModal (game-session).
+function resolveGameRoute(game: string, matchId: string, playerId: string, sessionId: string): string | null {
   const game_key = game.trim().toLowerCase()
 
   if (game_key === 'prisoner') {
-    return '/prisoner/waiting'
+    return `/partida/${sessionId}`
   }
 
   if (game_key.includes('roulette')) {
@@ -100,7 +100,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
         sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.sessionId, data.session.id)
         sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.matchId, data.match?.id ?? '')
 
-        const game_route = resolveGameRoute(target_session.game, data.match?.id ?? '', data.player.id)
+        const game_route = resolveGameRoute(target_session.game, data.match?.id ?? '', data.player.id, data.session.id)
 
         if (!game_route) {
           setValidationError('Não foi possível iniciar o jogo desta sessão. Tente novamente.')

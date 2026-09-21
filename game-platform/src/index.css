@@ -157,3 +157,38 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Keyframes das telas da partida (modules/game-session), usadas pelas classes animate-[dp...] */
+
+@keyframes dpFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-14px) rotate(var(--r, 0deg)); }
+}
+@keyframes dpPulse {
+  0% { transform: scale(1); opacity: .55; }
+  70%, 100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes dpShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
+@keyframes dpDot {
+  0%, 60%, 100% { opacity: .25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-5px); }
+}
+@keyframes dpBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes dpGlow {
+  0%, 100% { box-shadow: 0 14px 0 -4px #C9E9FB, 0 0 0 0 rgba(0,163,245,.45); }
+  50% { box-shadow: 0 14px 0 -4px #C9E9FB, 0 0 0 18px rgba(0,163,245,0); }
+}
+@keyframes dpFlip {
+  from { transform: rotateY(90deg) scale(.9); opacity: 0; }
+  to { transform: rotateY(0) scale(1); opacity: 1; }
+}
+@keyframes dpRise {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

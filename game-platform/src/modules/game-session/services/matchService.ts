@@ -7,10 +7,8 @@ interface AwaitingMatch {
 }
 
 /**
- * The one REST call prisoner makes — previously inlined directly in
- * WaitingPage.tsx's polling loop with no services/ wrapper and an untyped
- * `res.data as {...}[]` cast, unlike every sibling module's services/xService.ts
- * convention. Same endpoint, params and response shape as before.
+ * The one REST call the match screens make: useMatchRoom polls it to find the
+ * player's match, since whoever joins first may not have one yet.
  */
 export const matchService = {
   getAwaitingMatches: async (session_id: string, player_id: string): Promise<AwaitingMatch[]> => {
