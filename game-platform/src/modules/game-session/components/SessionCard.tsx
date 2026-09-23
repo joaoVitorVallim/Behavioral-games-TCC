@@ -54,40 +54,55 @@ export const SessionCard = ({
           </p>
         </div>
 
-        {can_delete && can_finish && (
-          <div className="relative shrink-0" ref={menu_ref}>
+        <div className="flex shrink-0 items-start gap-2">
+          {can_delete && !session.isActive && (
             <button
               type="button"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              aria-label="Mais opções"
-              aria-expanded={is_menu_open}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/65 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              onClick={onDelete}
+              disabled={is_deleting}
+              aria-label="Excluir sessão"
+              title="Excluir sessão"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-destructive/40 bg-destructive/15 text-destructive transition-colors hover:bg-destructive/25 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <MoreVertical className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             </button>
+          )}
 
-            {is_menu_open && (
-              <div className="surface-panel absolute right-0 z-10 mt-2 w-44 p-1.5">
-                <button
-                  type="button"
-                  onClick={handleDeleteClick}
-                  disabled={is_deleting}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {is_deleting ? 'Excluindo...' : 'Excluir sessão'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          {can_delete && can_finish && (
+            <div className="relative shrink-0" ref={menu_ref}>
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                aria-label="Mais opções"
+                aria-expanded={is_menu_open}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/65 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+
+              {is_menu_open && (
+                <div className="surface-panel absolute right-0 z-10 mt-2 w-44 p-1.5">
+                  <button
+                    type="button"
+                    onClick={handleDeleteClick}
+                    disabled={is_deleting}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {is_deleting ? 'Excluindo...' : 'Excluir sessão'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
         Criado por {session.user.name}
       </p>
 
-      <div className="mb-6 flex items-center justify-between rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-sm font-medium text-foreground">
+      <div className={`${can_finish ? 'mb-6 ' : ''}flex items-center justify-between rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-sm font-medium text-foreground`}>
         <span className="flex items-center gap-2">
           <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2"/>
@@ -108,22 +123,10 @@ export const SessionCard = ({
           type="button"
           onClick={onFinish}
           disabled={is_finishing}
-          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/40 bg-emerald-400/20 px-4 py-3 text-sm font-semibold text-emerald-100 transition-all hover:scale-[1.02] hover:bg-emerald-400/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-destructive/15 px-4 py-3 text-sm font-semibold text-destructive transition-all hover:scale-[1.02] hover:bg-destructive/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
         >
           <CheckCircle2 className="h-4 w-4" />
           Finalizar Sessão
-        </button>
-      )}
-
-      {can_delete && !can_finish && (
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={is_deleting}
-          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-destructive/15 px-4 py-3 text-sm font-semibold text-destructive transition-all hover:scale-[1.02] hover:bg-destructive/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-        >
-          <Trash2 className="h-4 w-4" />
-          {is_deleting ? 'Excluindo...' : 'Excluir sessão'}
         </button>
       )}
     </article>
