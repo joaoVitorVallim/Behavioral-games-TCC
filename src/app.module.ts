@@ -10,6 +10,7 @@ import { PlayerModule } from './player/player.module';
 import { MatchModule } from './match/match.module';
 import { PrisonerModule } from './prisoner/prisoner.module';
 import { RouletteModule } from './roulette/roulette.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { RouletteModule } from './roulette/roulette.module';
     MatchModule,
     PrisonerModule,
     RouletteModule,
+    MailModule,
 
   ],
 })

@@ -33,6 +33,7 @@ async function bootstrap() {
     .addTag('Sessions', 'Game session management')
     .addTag('Players', 'Player/student management')
     .addTag('Matches', 'Match management')
+    .addTag('Mail', 'Emailing xlsx session reports')
     .addBearerAuth()
     .build();
 
