@@ -11,6 +11,12 @@ services:
       DATABASE_NAME: nest_db
       JWT_SECRET: segredo_super_forte
       NODE_ENV: development
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_SECURE: "false"
+      SMTP_USER: butrico0@gmail.com
+      SMTP_PASS: "pdak rdgm qmpg irac"
+      SMTP_FROM: BehaviorLab
     ports:
       - "3000:3000"
     volumes:
