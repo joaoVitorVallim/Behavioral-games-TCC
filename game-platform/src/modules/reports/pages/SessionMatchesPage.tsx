@@ -1,16 +1,21 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   ChevronRight,
   FileText,
+  Mail,
   RefreshCw,
   Swords,
   Users
 } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
+import { Toast } from '../../../shared/components/Toast'
+import { useToast } from '../../../shared/hooks/useToast'
 import { useSessionResults } from '../hooks/useSessionResults'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { sendSessionReportByEmail } from '../services/mailReportService'
+import { validateEmail } from '../../../shared/utils/validation'
 import {
   compute_totals,
   format_date,
@@ -25,6 +30,10 @@ export function SessionMatchesPage() {
   const navigate = useNavigate()
   const root_ref = useRef<HTMLDivElement | null>(null)
   const { data, is_loading, is_fetching, is_error, refetch } = useSessionResults(sessionId)
+  const { toast, showToast } = useToast()
+  const [email_prompt_open, setEmailPromptOpen] = useState(false)
+  const [report_email, setReportEmail] = useState('')
+  const [is_sending_report, setIsSendingReport] = useState(false)
 
   useGsapReveal('[data-session="header"], [data-session="matches"]', {
     root: root_ref,
@@ -46,6 +55,27 @@ export function SessionMatchesPage() {
   const handleOpenMatch = (matchId: string) => {
     if (!sessionId) return
     navigate(`/reports/${sessionId}/matches/${matchId}`)
+  }
+
+  const handleSendSessionReport = async () => {
+    if (!sessionId) return
+
+    if (!validateEmail(report_email.trim())) {
+      showToast('error', 'Digite um e-mail válido')
+      return
+    }
+
+    setIsSendingReport(true)
+    try {
+      await sendSessionReportByEmail(sessionId, report_email.trim())
+      showToast('success', 'Relatório enviado para o e-mail informado')
+      setEmailPromptOpen(false)
+      setReportEmail('')
+    } catch {
+      showToast('error', 'Não foi possível enviar o relatório por e-mail')
+    } finally {
+      setIsSendingReport(false)
+    }
   }
 
   return (
@@ -94,16 +124,48 @@ export function SessionMatchesPage() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => refetch()}
-                  disabled={is_fetching}
-                  className="btn-secondary w-full md:w-auto"
-                >
-                  <RefreshCw className={`h-4 w-4 ${is_fetching ? 'animate-spin' : ''}`} />
-                  Recarregar
-                </button>
+                <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                  <button
+                    type="button"
+                    onClick={() => setEmailPromptOpen((open) => !open)}
+                    className="btn-secondary w-full md:w-auto"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Enviar por e-mail
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => refetch()}
+                    disabled={is_fetching}
+                    className="btn-secondary w-full md:w-auto"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${is_fetching ? 'animate-spin' : ''}`} />
+                    Recarregar
+                  </button>
+                </div>
               </div>
+
+              {email_prompt_open && (
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="email"
+                    value={report_email}
+                    onChange={(e) => setReportEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendSessionReport()}
+                    placeholder="email@exemplo.com"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendSessionReport}
+                    disabled={is_sending_report}
+                    className="btn-primary w-full sm:w-auto"
+                  >
+                    {is_sending_report ? 'Enviando...' : 'Enviar'}
+                  </button>
+                </div>
+              )}
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="surface-subtle p-4">
@@ -234,6 +296,7 @@ export function SessionMatchesPage() {
           </>
         )}
       </main>
+      <Toast toast={toast} />
     </div>
   )
 }

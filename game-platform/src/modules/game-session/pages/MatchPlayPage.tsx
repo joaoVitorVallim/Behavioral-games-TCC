@@ -2,6 +2,7 @@ import { MatchShell } from "../components/MatchShell"
 import { RoundScreen } from "../components/RoundScreen"
 import { ResultScreen } from "../components/ResultScreen"
 import { useMatchRound } from "../hooks/useMatchRound"
+import { Toast } from "../../../shared/components/Toast"
 
 /** Partida em andamento: rodadas e resultado final. */
 export function MatchPlayPage() {
@@ -35,6 +36,7 @@ export function MatchPlayPage() {
             onNext={match.next}
           />
         ))}
+      <Toast toast={match.toast} />
     </MatchShell>
   )
 }

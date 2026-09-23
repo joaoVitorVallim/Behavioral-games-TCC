@@ -20,5 +20,6 @@ export const MATCH_SESSION_STORAGE_KEYS = {
   sessionId: 'sessionId',
   isPlayer1: 'isPlayer1',
   matchReadyData: 'matchReadyData',
-  matchResult: 'matchResult'
+  matchResult: 'matchResult',
+  playerEmail: 'playerEmail'
 } as const

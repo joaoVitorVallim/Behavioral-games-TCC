@@ -2,6 +2,9 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { disconnectSocket, getSocket } from "../services/matchSocket"
 import { matchSession } from "../utils/match-session"
+import { sendMatchResultByEmail } from "../../reports/services/mailReportService"
+import { useToast } from "../../../shared/hooks/useToast"
+import { MATCH_SESSION_STORAGE_KEYS } from "../../../shared/constants/storageKeys"
 import {
   CARD_CHOICE,
   cardForChoice,
@@ -255,6 +258,8 @@ export function useMatchRound() {
   const [now, setNow] = useState(0)
   const stateRef = useRef(state)
   const { view } = state
+  const { toast, showToast } = useToast()
+  const email_sent_ref = useRef(false)
 
   useEffect(() => {
     stateRef.current = state
@@ -286,6 +291,19 @@ export function useMatchRound() {
     const onMatchFinished = (d: MatchResult) => {
       matchSession.setMatchResult(d)
       send({ type: "matchFinished", data: d })
+
+      if (!email_sent_ref.current) {
+        const player_email = sessionStorage.getItem(MATCH_SESSION_STORAGE_KEYS.playerEmail)
+        const session_id = matchSession.getSessionId()
+
+        if (player_email && session_id) {
+          email_sent_ref.current = true
+          sendMatchResultByEmail(session_id, matchId, player_email)
+            .then(() => showToast('success', 'Resultado enviado para seu e-mail'))
+            .catch(() => showToast('error', 'Não foi possível enviar o resultado por e-mail'))
+            .finally(() => sessionStorage.removeItem(MATCH_SESSION_STORAGE_KEYS.playerEmail))
+        }
+      }
     }
     const onPlayerDisconnected = () => send({ type: "playerDisconnected" })
 
@@ -319,7 +337,7 @@ export function useMatchRound() {
       socket.off("readyCheck", onReadyCheck)
       socket.off("error", onError)
     }
-  }, [matchId, navigate, playerId])
+  }, [matchId, navigate, playerId, showToast])
 
   const ticking = view.phase === "choose" && view.deadline !== null
   useEffect(() => {
@@ -374,6 +392,7 @@ export function useMatchRound() {
     playedByTime: view.playedByTime,
     history: view.history,
     opponentAway: view.opponentAway,
+    toast,
     pick,
     next,
     newSession,

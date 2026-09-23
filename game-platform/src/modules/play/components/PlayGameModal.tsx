@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGames } from '../../game-session/hooks/useGames'
 import { useJoinSession } from '../../game-session/hooks/useJoinSession'
-import { sanitizeString, validateSessionCode, validateInput } from '../../../shared/utils/validation'
+import { sanitizeString, validateSessionCode, validateInput, validateEmail } from '../../../shared/utils/validation'
 import { RateLimiter } from '../../../shared/utils/security'
 import { MATCH_SESSION_STORAGE_KEYS } from '../../../shared/constants/storageKeys'
 import { usePlayableSessions } from '../hooks/usePlayableSessions'
@@ -66,6 +66,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
   const [code, setCode] = useState('')
   const [matched_session, setMatchedSession] = useState<Session | null>(null)
   const [form_data, setFormData] = useState<Record<string, string>>({})
+  const [player_email, setPlayerEmail] = useState('')
   const [validation_error, setValidationError] = useState('')
 
   const { joinSession, is_joining } = useJoinSession(matched_session?.id ?? '')
@@ -99,6 +100,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
         sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.playerId, data.player.id)
         sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.sessionId, data.session.id)
         sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.matchId, data.match?.id ?? '')
+        sessionStorage.setItem(MATCH_SESSION_STORAGE_KEYS.playerEmail, player_email.trim())
 
         const game_route = resolveGameRoute(target_session.game, data.match?.id ?? '', data.player.id, data.session.id)
 
@@ -114,7 +116,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
         setValidationError('Não foi possível entrar na sessão. Verifique o código e tente novamente.')
       }
     })
-  }, [code, joinSession, onClose, navigate])
+  }, [code, joinSession, onClose, navigate, player_email])
 
   const handleSelectGame = useCallback((game_id: string) => {
     setSelectedGame(game_id)
@@ -150,18 +152,16 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
     rate_limiter.reset(`play-${selected_game}`)
     setValidationError('')
     setMatchedSession(found)
-
-    const found_requirements = found.inputInfo.filter((field) => field in PLAYER_FIELD_DEFS)
-    if (found_requirements.length === 0) {
-      handleJoin(found, {})
-      return
-    }
-
     setStep('fields')
-  }, [code, selected_game, sessions, handleJoin])
+  }, [code, selected_game, sessions])
 
   const handleFieldsSubmit = useCallback(() => {
     if (!matched_session) return
+
+    if (!validateEmail(player_email.trim())) {
+      setValidationError('Digite um e-mail válido')
+      return
+    }
 
     const all_required_filled = requirements
       .filter((req) => req.required)
@@ -186,7 +186,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
 
     setValidationError('')
     handleJoin(matched_session, form_data)
-  }, [matched_session, requirements, form_data, handleJoin])
+  }, [matched_session, requirements, form_data, player_email, handleJoin])
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value.substring(0, 500) }))
@@ -272,6 +272,18 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
             <p style={{ margin: '0 0 22px', fontSize: 15, lineHeight: 1.5, color: 'var(--modal-text)' }}>Preencha os dados solicitados para entrar na sessão.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+              <div style={{ textAlign: 'left' }}>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: 'var(--modal-title)' }}>
+                  E-mail <span style={{ color: '#c04040' }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  value={player_email}
+                  onChange={(e) => { setPlayerEmail(e.target.value); setValidationError('') }}
+                  placeholder="seuemail@exemplo.com"
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '2px solid var(--prof-border)', fontSize: 14, color: 'var(--modal-title)', background: 'none' }}
+                />
+              </div>
               {requirements.map((req) => (
                 <div key={req.field} style={{ textAlign: 'left' }}>
                   <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: 'var(--modal-title)' }}>
