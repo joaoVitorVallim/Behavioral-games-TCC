@@ -10,7 +10,7 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 import { useToast } from '../../../shared/hooks/useToast'
 import { get_session_label } from '../utils/session-label'
-import { RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { RefreshCw, AlertTriangle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import type { Session } from '../types'
 
 export const SessionsPage = () => {
@@ -31,6 +31,9 @@ export const SessionsPage = () => {
   const [session_to_delete, setSessionToDelete] = useState<Session | null>(null)
   const [session_to_finish, setSessionToFinish] = useState<Session | null>(null)
   const { toast, showToast } = useToast()
+  const [show_finished, setShowFinished] = useState(false)
+  const finished_count = sessions.filter((session) => !session.isActive).length
+  const visible_sessions = show_finished ? sessions : sessions.filter((session) => session.isActive)
 
   useEffect(() => {
     if (!location.state || typeof location.state !== 'object') return
@@ -44,7 +47,7 @@ export const SessionsPage = () => {
   }, [location.state, refetch, navigate])
 
   useGsapReveal('[data-session-card="true"]', {
-    deps: [is_loading, sessions],
+    deps: [is_loading, visible_sessions],
     y: 20,
     duration: 0.55,
     stagger: 0.08
@@ -113,7 +116,7 @@ export const SessionsPage = () => {
               <p className="heading-kicker mb-2">Catalogo ativo</p>
               <h2 className="text-4xl text-foreground md:text-5xl">Sessões Disponíveis</h2>
               <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
-                Aqui estão as sessões criadas por você. Acompanhe o andamento das partidas e gerencie cada sessão.
+                Aqui estão as sessões criadas pelos docentes. Acompanhe o andamento das partidas e gerencie cada sessão.
               </p>
             </div>
             <button
@@ -128,19 +131,38 @@ export const SessionsPage = () => {
           </div>
         </section>
 
+        {!is_loading && finished_count > 0 && (
+          <div className="mb-6 flex justify-end">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={show_finished}
+              onClick={() => setShowFinished((prev) => !prev)}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                show_finished
+                  ? 'border-primary/40 bg-primary/15 text-primary'
+                  : 'border-border/70 bg-card/65 text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {show_finished ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              {show_finished ? 'Ocultar encerradas' : 'Mostrar encerradas'} ({finished_count})
+            </button>
+          </div>
+        )}
+
         {is_loading ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <SessionCardSkeleton key={`skeleton-${index}`} />
             ))}
           </div>
-        ) : sessions.length === 0 ? (
+        ) : visible_sessions.length === 0 ? (
           <div className="surface-panel py-14 text-center text-muted-foreground">
             <p className="text-lg">Nenhuma sessão disponível no momento</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sessions.map((session) => (
+            {visible_sessions.map((session) => (
               <SessionCard
                 key={session.id}
                 session={session}

@@ -99,7 +99,7 @@ export const SessionCard = ({
       </div>
 
       <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-        Criado por {session.user.name}
+        Criado por <span className="text-foreground">{session.user.name}</span>
       </p>
 
       <div className={`${can_finish ? 'mb-6 ' : ''}flex items-center justify-between rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-sm font-medium text-foreground`}>

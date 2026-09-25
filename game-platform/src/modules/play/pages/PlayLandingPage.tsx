@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Brain } from 'lucide-react'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { usePlayTheme } from '../hooks/usePlayTheme'
 import { PlayGameModal } from '../components/PlayGameModal'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
@@ -43,6 +44,7 @@ const PLAY_STYLES = `
 
 export function PlayLandingPage() {
   const navigate = useNavigate()
+  const { is_authenticated } = useAuth()
   const { theme, toggleTheme } = usePlayTheme()
   const [is_modal_open, setIsModalOpen] = useState(false)
   const root_ref = useRef<HTMLDivElement | null>(null)
@@ -101,7 +103,7 @@ export function PlayLandingPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate(is_authenticated ? '/sessions' : '/login')}
               className="prof-btn"
               style={{ display: 'inline-flex', alignItems: 'center', padding: '10px 18px', borderRadius: 999, cursor: 'pointer', fontWeight: 600, fontSize: 15.5 }}
             >

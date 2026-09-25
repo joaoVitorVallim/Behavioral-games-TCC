@@ -111,7 +111,7 @@ export function RegisterPage() {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="nome@instituicao.edu.br"
+                    placeholder="nome@fho.edu.br"
                     className="input-shell pl-9 text-sm"
                     autoComplete="email"
                   />

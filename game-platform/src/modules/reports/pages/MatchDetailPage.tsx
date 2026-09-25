@@ -7,7 +7,6 @@ import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 import {
   compute_totals,
   format_datetime,
-  format_player_summary,
   get_sorted_rounds,
   translate_choice
 } from '../utils/format'
@@ -84,68 +83,106 @@ export function MatchDetailPage() {
 
         {!is_loading && !is_error && data && (
           <>
-            <section className="surface-panel mb-8 px-6 py-7 md:px-10 md:py-8">
-              <div className="mb-3 flex items-center gap-3">
-                <Swords className="h-8 w-8 text-primary" />
-                <h1 className="text-3xl text-foreground md:text-4xl">Detalhes da Partida</h1>
+            <section className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
+              <div className="surface-panel flex items-center gap-3 px-6 py-5 lg:w-1/3">
+                <Swords className="h-8 w-8 shrink-0 text-primary" />
+                <h1 className="text-3xl text-foreground">Detalhes da Partida</h1>
               </div>
-              <p className="text-sm text-muted-foreground md:text-base">
-                Sessão{' '}
-                <span className="text-foreground">
-                  {get_session_label(data.session)}
-                </span>{' '}
-                · Jogo <span className="text-foreground capitalize">{data.session.game}</span>{' '}
-                · Iniciada em{' '}
-                <span className="text-foreground">
-                  {format_datetime(data.match.created_at)}
-                </span>
-              </p>
+
+              <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="surface-subtle p-4">
+                  <p className="heading-kicker mb-1">Sessão</p>
+                  <p className="text-base font-semibold text-foreground">
+                    {get_session_label(data.session)}
+                  </p>
+                </div>
+                <div className="surface-subtle p-4">
+                  <p className="heading-kicker mb-1">Jogo</p>
+                  <p className="text-base font-semibold capitalize text-foreground">
+                    {data.session.game}
+                  </p>
+                </div>
+                <div className="surface-subtle p-4">
+                  <p className="heading-kicker mb-1">Iniciada em</p>
+                  <p className="text-base font-semibold text-foreground">
+                    {format_datetime(data.match.created_at)}
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section
               data-match="players"
-              className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2"
+              className="mb-8 grid grid-cols-1 gap-4 xl:grid-cols-2"
             >
               {(['player1', 'player2'] as const).map((role, index) => {
                 const player = player_by_role[role]
                 const role_label = index === 0 ? 'Jogador 1' : 'Jogador 2'
                 const role_total = index === 0 ? totals.player1 : totals.player2
+                const player_fields: Array<[string, string | number | null | undefined]> = [
+                  ['Curso', player?.course],
+                  ['Escolaridade', player?.educationLevel],
+                  ['Semestre', player?.semester],
+                  ['Idade', player?.age],
+                  ['Gênero', player?.gender],
+                  ['Profissão', player?.profession]
+                ]
+                const filled_fields = player_fields.filter(
+                  ([, value]) => value !== null && value !== undefined && value !== ''
+                )
 
                 return (
                   <div key={role} className="surface-panel p-6">
-                    <div className="mb-4 flex items-center gap-3">
-                      <div className="rounded-xl border border-primary/35 bg-primary/10 p-2 text-primary">
-                        <UserCircle className="h-6 w-6" />
+                    <div className="mb-5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl border border-primary/35 bg-primary/10 p-2 text-primary">
+                          <UserCircle className="h-7 w-7" />
+                        </div>
+                        <div>
+                          <p className="heading-kicker">Participante</p>
+                          <h2 className="text-2xl text-foreground">{role_label}</h2>
+                        </div>
                       </div>
-                      <div>
-                        <p className="heading-kicker">Participante</p>
-                        <h2 className="text-2xl text-foreground">{role_label}</h2>
+
+                      <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-right">
+                        <p className="heading-kicker">Pontos</p>
+                        <p className="text-3xl font-bold text-foreground">{role_total}</p>
                       </div>
                     </div>
 
-                    <div className="surface-subtle mb-4 p-4">
-                      <p className="heading-kicker mb-1">Pontuação total</p>
-                      <p className="text-3xl font-semibold text-foreground">{role_total}</p>
-                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="surface-subtle p-4">
+                        <p className="heading-kicker mb-3">Dados do jogador</p>
+                        {filled_fields.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Sem dados informados.</p>
+                        ) : (
+                          <dl className="space-y-2">
+                            {filled_fields.map(([label, value]) => (
+                              <div key={label}>
+                                <dt className="text-xs text-muted-foreground">{label}</dt>
+                                <dd className="text-sm font-semibold text-foreground">{value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
+                      </div>
 
-                    <div className="space-y-2 text-sm">
-                      <p className="text-muted-foreground">
-                        {format_player_summary(player)}
-                      </p>
-                      {player?.course && (
-                        <p className="text-xs text-muted-foreground">Curso: {player.course}</p>
-                      )}
-                      {player?.profession && (
-                        <p className="text-xs text-muted-foreground">
-                          Profissão: {player.profession}
-                        </p>
-                      )}
-                      {player?.age !== null && player?.age !== undefined && (
-                        <p className="text-xs text-muted-foreground">Idade: {player.age}</p>
-                      )}
-                      {player?.gender && (
-                        <p className="text-xs text-muted-foreground">Gênero: {player.gender}</p>
-                      )}
+                      {/* TODO: placeholders — replace with analyst/student data from the API */}
+                      <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+                        <p className="heading-kicker mb-3">Analista / Aluno</p>
+                        <dl className="space-y-2">
+                          <div>
+                            <dt className="text-xs text-muted-foreground">RA</dt>
+                            <dd className="text-sm font-semibold text-foreground">00000000</dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground">E-mail</dt>
+                            <dd className="break-all text-sm font-semibold text-foreground">
+                              aluno@email.com
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
                     </div>
                   </div>
                 )
