@@ -36,7 +36,7 @@ export function ReportsPage() {
                 <h1 className="text-4xl text-foreground md:text-5xl">Relatórios</h1>
               </div>
               <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
-                Selecione uma sessão para visualizar os resultados das partidas.
+                Selecione uma sessão para <span className="font-medium text-foreground">visualizar</span> os resultados das partidas.
               </p>
             </div>
 
@@ -54,10 +54,10 @@ export function ReportsPage() {
         </section>
 
         <section data-reports="table" className="surface-panel p-6 md:p-8">
-          <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="mb-6 flex items-center gap-3">
             <h2 className="text-2xl text-foreground md:text-3xl">Sessões</h2>
             {!is_loading && !is_error && (
-              <span className="rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs font-semibold text-muted-foreground">
+              <span className="rounded-full border border-primary/40 bg-primary/15 px-3.5 py-1.5 text-sm font-semibold text-primary">
                 {sessions.length} {sessions.length === 1 ? 'sessão' : 'sessões'}
               </span>
             )}
@@ -81,10 +81,10 @@ export function ReportsPage() {
                 <thead className="bg-secondary/35 text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Sessão</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
                     <th className="px-4 py-3 font-semibold">Jogo</th>
                     <th className="px-4 py-3 font-semibold">Criada em</th>
                     <th className="px-4 py-3 font-semibold">Participantes</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
                     <th className="px-4 py-3 text-right font-semibold">Ações</th>
                   </tr>
                 </thead>
@@ -101,6 +101,17 @@ export function ReportsPage() {
                           Código: {session.inviteCode}
                         </p>
                       </td>
+                      <td className="px-4 py-3">
+                        {session.isActive ? (
+                          <span className="inline-flex items-center rounded-full border border-success/40 bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">
+                            Ativa
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-destructive/40 bg-destructive/15 px-2.5 py-0.5 text-xs font-semibold text-destructive">
+                            Finalizada
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground capitalize">
                         {session.game}
                       </td>
@@ -112,17 +123,6 @@ export function ReportsPage() {
                           <Users className="h-3.5 w-3.5 text-muted-foreground" />
                           {session.playersCount}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {session.isActive ? (
-                          <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                            Ativa
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-border bg-secondary/40 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                            Finalizada
-                          </span>
-                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end">

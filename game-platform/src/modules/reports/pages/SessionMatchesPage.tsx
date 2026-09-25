@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -11,14 +11,17 @@ import {
 import { Header } from '../../../shared/components/Header'
 import { useSessionResults } from '../hooks/useSessionResults'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
-import {
-  compute_totals,
-  format_date,
-  format_datetime,
-  format_player_summary
-} from '../utils/format'
+import { compute_totals, format_date, format_datetime } from '../utils/format'
 import { get_session_label } from '../../game-session/utils/session-label'
-import type { PlayerResult } from '../types'
+
+// Backend MatchStatus enum: aguardando | em_partida | finalizada | cancelada
+const MATCH_STATUS: Record<string, { label: string; class_name: string }> = {
+  finalizada: { label: 'Finalizada', class_name: 'border-success/40 bg-success/15 text-success' },
+  em_partida: { label: 'Em andamento', class_name: 'border-amber-400/40 bg-amber-400/15 text-amber-400' },
+  aguardando: { label: 'Aguardando', class_name: 'border-primary/40 bg-primary/15 text-primary' },
+  cancelada: { label: 'Cancelada', class_name: 'border-destructive/40 bg-destructive/15 text-destructive' }
+}
+const MATCH_STATUS_FALLBACK = { label: '—', class_name: 'border-border bg-secondary/40 text-muted-foreground' }
 
 export function SessionMatchesPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -33,15 +36,6 @@ export function SessionMatchesPage() {
     stagger: 0.08,
     deps: [data]
   })
-
-  const players_by_id = useMemo(() => {
-    const map = new Map<string, PlayerResult>()
-    if (!data) return map
-    for (const player of data.players) {
-      map.set(player.id, player)
-    }
-    return map
-  }, [data])
 
   const handleOpenMatch = (matchId: string) => {
     if (!sessionId) return
@@ -88,10 +82,23 @@ export function SessionMatchesPage() {
                       {get_session_label(data.session)}
                     </h1>
                   </div>
-                  <p className="text-sm text-muted-foreground md:text-base">
-                    Código: <span className="text-foreground">{data.session.inviteCode}</span> · Jogo:{' '}
-                    <span className="text-foreground capitalize">{data.session.game}</span>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {data.session.isActive ? (
+                      <span className="inline-flex items-center rounded-full border border-success/40 bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">
+                        Ativa
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border border-destructive/40 bg-destructive/15 px-2.5 py-0.5 text-xs font-semibold text-destructive">
+                        Finalizada
+                      </span>
+                    )}
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/15 px-2.5 py-0.5 text-xs font-semibold capitalize text-primary">
+                      {data.session.game}
+                    </span>
+                    <span className="inline-flex items-center rounded-full border border-border bg-secondary/40 px-2.5 py-0.5 font-mono text-xs font-semibold text-foreground">
+                      Código: {data.session.inviteCode}
+                    </span>
+                  </div>
                 </div>
 
                 <button
@@ -105,54 +112,48 @@ export function SessionMatchesPage() {
                 </button>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="surface-subtle p-4">
-                  <p className="heading-kicker mb-1">Criada em</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {format_datetime(data.session.created_at)}
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+                  <p className="heading-kicker mb-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5" />
+                      Participantes
+                    </span>
                   </p>
+                  <p className="text-3xl font-bold text-foreground">{data.players.length}</p>
                 </div>
-                <div className="surface-subtle p-4">
-                  <p className="heading-kicker mb-1">Finalizada em</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {format_datetime(data.session.finished_at)}
+                <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+                  <p className="heading-kicker mb-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Swords className="h-3.5 w-3.5" />
+                      Partidas
+                    </span>
                   </p>
-                </div>
-                <div className="surface-subtle p-4">
-                  <p className="heading-kicker mb-1">Status</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {data.session.isActive ? 'Ativa' : 'Finalizada'}
-                  </p>
+                  <p className="text-3xl font-bold text-foreground">{data.matches.length}</p>
                 </div>
                 <div className="surface-subtle p-4">
                   <p className="heading-kicker mb-1">Docente</p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-lg font-semibold text-foreground">
                     {data.session.createdBy?.name ?? '—'}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 surface-subtle p-4">
-                <p className="heading-kicker mb-2">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5" />
-                    Jogadores
-                  </span>
-                </p>
-                <p className="text-sm text-foreground">
-                  {data.players.length}{' '}
-                  {data.players.length === 1 ? 'participante' : 'participantes'}
-                </p>
-              </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Criada em {format_datetime(data.session.created_at)}
+                {data.session.finished_at && (
+                  <> · Finalizada em {format_datetime(data.session.finished_at)}</>
+                )}
+              </p>
             </section>
 
             <section data-session="matches" className="surface-panel p-6 md:p-8">
-              <div className="mb-6 flex items-center justify-between gap-3">
+              <div className="mb-6 flex items-center gap-3">
                 <div className="flex items-center gap-3">
                   <Swords className="h-6 w-6 text-primary" />
                   <h2 className="text-2xl text-foreground md:text-3xl">Partidas</h2>
                 </div>
-                <span className="rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                <span className="rounded-full border border-primary/40 bg-primary/15 px-3.5 py-1.5 text-sm font-semibold text-primary">
                   {data.matches.length}{' '}
                   {data.matches.length === 1 ? 'partida' : 'partidas'}
                 </span>
@@ -167,18 +168,18 @@ export function SessionMatchesPage() {
                   <table className="w-full border-collapse text-left text-sm">
                     <thead className="bg-secondary/35 text-muted-foreground">
                       <tr>
+                        <th className="px-4 py-3 font-semibold">Partida</th>
+                        <th className="px-4 py-3 font-semibold">Status</th>
+                        <th className="px-4 py-3 font-semibold">RA</th>
                         <th className="px-4 py-3 font-semibold">Jogador 1</th>
                         <th className="px-4 py-3 font-semibold">Jogador 2</th>
                         <th className="px-4 py-3 font-semibold">Rodadas</th>
                         <th className="px-4 py-3 font-semibold">Placar</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
                         <th className="px-4 py-3 text-right font-semibold">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.matches.map((match) => {
-                        const player1 = players_by_id.get(match.player1_id) ?? null
-                        const player2 = players_by_id.get(match.player2_id) ?? null
+                      {data.matches.map((match, index) => {
                         const totals = compute_totals(match.moves)
                         const rounds_played = Object.keys(match.moves).length
 
@@ -188,24 +189,27 @@ export function SessionMatchesPage() {
                             className="border-t border-border/70 bg-card/35 transition-colors hover:bg-card/60"
                           >
                             <td className="px-4 py-3">
-                              <p className="font-medium text-foreground">Jogador 1</p>
+                              <p className="font-semibold text-foreground">Partida {index + 1}</p>
                               <p className="text-xs text-muted-foreground">
-                                {format_player_summary(player1)}
+                                {format_date(match.created_at)}
                               </p>
                             </td>
                             <td className="px-4 py-3">
-                              <p className="font-medium text-foreground">Jogador 2</p>
-                              <p className="text-xs text-muted-foreground">
-                                {format_player_summary(player2)}
-                              </p>
+                              <span
+                                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                                  (MATCH_STATUS[match.status] ?? MATCH_STATUS_FALLBACK).class_name
+                                }`}
+                              >
+                                {(MATCH_STATUS[match.status] ?? MATCH_STATUS_FALLBACK).label}
+                              </span>
                             </td>
+                            <td className="px-4 py-3 text-foreground" />
+                            <td className="px-4 py-3 font-semibold text-foreground">Jogador 1</td>
+                            <td className="px-4 py-3 font-semibold text-foreground">Jogador 2</td>
                             <td className="px-4 py-3 text-foreground">{rounds_played}</td>
-                            <td className="px-4 py-3 text-foreground font-medium">
+                            <td className="px-4 py-3 text-lg font-bold text-foreground">
                               {totals.player1} <span className="text-muted-foreground">x</span>{' '}
                               {totals.player2}
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground capitalize">
-                              {match.status}
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex justify-end">
