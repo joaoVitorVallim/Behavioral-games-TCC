@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match, MatchStatus } from '../match/match.entity';
@@ -9,6 +9,7 @@ import {
   PRISONER_PAYOFF,
 } from './interfaces/prisoner-match.interface';
 import { SettingsGamePrisoner } from '../settings/settings-game-prisoner.entity';
+import { MatchReportMailer } from '../mail/match-report-mailer.service';
 
 export type RoundTimeoutCallback = (matchId: string) => void;
 export type SessionEndCallback = (state: PrisonerMatchState) => void;
@@ -20,13 +21,26 @@ export class PrisonerService {
   private readonly activeMatches = new Map<string, PrisonerMatchState>();
   private onRoundTimeout: RoundTimeoutCallback | null = null;
   private onSessionEnd: SessionEndCallback | null = null;
+  private readonly logger = new Logger(PrisonerService.name);
 
   constructor(
     @InjectRepository(Match)
     private matchRepository: Repository<Match>,
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
+    private readonly matchReportMailer: MatchReportMailer,
   ) {}
+
+  /** E-mail digitado por um dos jogadores na entrada, para mandar o relatório no fim. */
+  async saveReportEmail(matchId: string, playerId: string, email: string): Promise<void> {
+    const state = this.getState(matchId);
+    const trimmed = email.trim();
+    if (state.player1Id === playerId) {
+      await this.matchRepository.update(matchId, { reportEmail: trimmed });
+    } else if (state.player2Id === playerId) {
+      await this.matchRepository.update(matchId, { player2ReportEmail: trimmed });
+    }
+  }
 
   setRoundTimeoutCallback(cb: RoundTimeoutCallback) {
     this.onRoundTimeout = cb;
@@ -435,6 +449,17 @@ export class PrisonerService {
     const saved = await this.matchRepository.save(match);
 
     this.activeMatches.delete(matchId);
+
+    // Não segura a resposta do fim da partida: o e-mail sai em segundo plano, igual na roleta.
+    const emails = [saved.reportEmail, saved.player2ReportEmail].filter(
+      (email): email is string => !!email,
+    );
+    if (emails.length > 0) {
+      void this.matchReportMailer.send(saved.session_id, matchId, emails).catch((error) => {
+        this.logger.error(`Falha ao enviar o relatório da partida ${matchId}: ${(error as Error).message}`);
+      });
+    }
+
     return saved;
   }
 

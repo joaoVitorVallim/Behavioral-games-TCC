@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Session } from './session.entity';
 import { SessionService } from './session.service';
@@ -16,7 +16,7 @@ import { PrisonerModule } from '../prisoner/prisoner.module';
     GameModule,
     SettingsModule,
     UsersModule,
-    PrisonerModule,
+    forwardRef(() => PrisonerModule),
   ],
   controllers: [SessionController],
   providers: [SessionService],

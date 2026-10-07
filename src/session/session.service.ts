@@ -94,6 +94,8 @@ export class SessionService {
       player1_id: match.player1_id,
       player2_id: match.player2_id ?? null,
       status: match.status,
+      reportEmail: match.reportEmail ?? null,
+      player2ReportEmail: match.player2ReportEmail ?? null,
       matchTime: match.matchTime ?? null,
       endedReason: match.endedReason ?? null,
       moves: match.moves ?? {},
@@ -580,7 +582,10 @@ export class SessionService {
     if (results.session.game !== GameType.ROULETTE) {
       throw new BadRequestException('Esta sessão não é do jogo da roleta.');
     }
-    return buildRouletteReport(results as unknown as RouletteMatchResults);
+    return buildRouletteReport(results as unknown as RouletteMatchResults, {
+      status: 'none',
+      to: results.match.reportEmail ?? null,
+    });
   }
 
   async getMatchResults(sessionId: string, matchId: string) {

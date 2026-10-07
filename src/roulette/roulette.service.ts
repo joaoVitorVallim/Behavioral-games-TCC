@@ -49,8 +49,8 @@ export class RouletteService {
    */
   private readonly roundPopups = new Map<string, Record<number, string>>();
   /**
-   * E-mail que o jogador digitou na entrada, para mandar o relatório no fim. Fica só em memória
-   * (não vai para o banco), como no envio do Prisioneiro.
+   * E-mail que o jogador digitou na entrada, para mandar o relatório no fim (também gravado em
+   * match.reportEmail, para o professor ver de quem é).
    */
   private readonly reportEmails = new Map<string, string>();
   private readonly emailStatus = new Map<string, RouletteReportEmailStatus>();
@@ -68,7 +68,11 @@ export class RouletteService {
   ) {}
 
   async initMatch(matchId: string, playerId: string, email?: string): Promise<RouletteMatchState> {
-    if (email) this.reportEmails.set(matchId, email.trim());
+    if (email) {
+      const trimmed = email.trim();
+      this.reportEmails.set(matchId, trimmed);
+      await this.matchRepository.update(matchId, { reportEmail: trimmed });
+    }
     const existing = this.activeMatches.get(matchId);
     if (existing) {
       if (existing.playerId !== playerId) {

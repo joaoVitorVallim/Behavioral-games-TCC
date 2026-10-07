@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { SessionService } from '../session/session.service';
 import { MailService } from './mail.service';
 import { MatchResultXlsxService } from './match-result-xlsx.service';
@@ -18,6 +18,7 @@ const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.s
 @Injectable()
 export class MatchReportMailer {
   constructor(
+    @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
     private readonly mailService: MailService,
     private readonly matchResultXlsxService: MatchResultXlsxService,

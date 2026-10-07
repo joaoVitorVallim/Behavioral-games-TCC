@@ -89,6 +89,14 @@ export class Match {
   @Column({ nullable: true })
   player2_id?: string | null;
 
+  /** E-mail digitado pelo jogador na entrada, para o professor saber de quem é o relatório. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  reportEmail?: string | null;
+
+  /** Prisioneiro: e-mail do 2º jogador (o campo acima guarda o do 1º). */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  player2ReportEmail?: string | null;
+
   @Column({ type: 'jsonb', nullable: true })
   moves?: MatchMoves;
 

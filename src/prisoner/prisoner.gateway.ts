@@ -211,6 +211,10 @@ export class PrisonerGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       const state = this.prisonerService.connectPlayer(dto.matchId, dto.playerId, client.id);
       client.join(dto.matchId);
 
+      if (dto.email) {
+        await this.prisonerService.saveReportEmail(dto.matchId, dto.playerId, dto.email);
+      }
+
       if (state.status === 'finished') {
         client.emit('matchFinished', {
           matchId: dto.matchId,
