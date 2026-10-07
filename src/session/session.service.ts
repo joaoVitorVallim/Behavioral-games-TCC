@@ -156,6 +156,7 @@ export class SessionService {
           popup: dto.settings.popup,
           initMoney: dto.settings.initMoney,
           disableGiveUp: dto.settings.disableGiveUp,
+          maxRefills: dto.settings.maxRefills,
         },
         gameTypeMap[dto.game],
       );
@@ -319,6 +320,33 @@ export class SessionService {
     return session;
   }
 
+  /**
+   * Busca pública da tela de entrada: só o necessário para o aluno entrar (jogo e campos que a
+   * sessão pede), sem professor, configuração nem jogadores. O código é normalizado como no join.
+   */
+  async findPublicByInviteCode(code: string) {
+    const inviteCode = code.trim().toUpperCase();
+    const session = await this.sessionRepository.findOne({
+      where: { inviteCode },
+      select: ['id', 'session_name', 'game', 'inviteCode', 'isActive', 'inputInfo'],
+    });
+
+    if (!session) {
+      throw new NotFoundException(
+        `Código de sessão "${inviteCode}" não encontrado. Verifique o código e tente novamente.`,
+      );
+    }
+
+    return {
+      id: session.id,
+      session_name: session.session_name ?? null,
+      game: session.game,
+      inviteCode: session.inviteCode,
+      isActive: session.isActive,
+      inputInfo: session.inputInfo ?? [],
+    };
+  }
+
   async joinByInviteCode(payload: JoinSessionDto) {
     const inviteCode = payload.inviteCode.trim().toUpperCase();
 
@@ -375,6 +403,8 @@ export class SessionService {
       // Criar o novo jogador
       const player = playerRepo.create({
         session_id: session.id,
+        ra: payload.ra,
+        email: payload.email,
         educationLevel: payload.educationLevel,
         semester: payload.semester,
         course: payload.course,

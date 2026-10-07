@@ -11,6 +11,8 @@ interface PrisonerMove {
 
 export interface MatchReportPlayer {
   role: 'player1' | 'player2';
+  ra?: string;
+  email?: string;
   educationLevel?: string;
   semester?: number;
   course?: string;
@@ -87,30 +89,51 @@ export class MatchResultXlsxService {
   }
 
   /**
-   * Mesmo layout da partida do Prisioneiro, para a roleta: cabeçalho, cartões (jogador e
-   * resultado) e a tabela de jogadas com a linha de Total. Os números vêm prontos do
-   * buildRouletteReport (backend), iguais aos que a tela final do jogador mostra.
+   * Planilha que o ALUNO recebe no fim da partida da roleta, no formato do "Modelo registro
+   * aposta": uma linha por rodada (frase, valor na mesa, valor apostado, cor e chance escolhidas,
+   * cor e chance sorteadas, total) e a frase de reforço/punição. O relatório do professor não usa
+   * planilha: fica na área de relatórios do site, com o gráfico.
    */
   async generateRoulette(report: RouletteReport): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Behavioral Games Platform';
     workbook.created = new Date();
 
-    const sheet = workbook.addWorksheet('Partida');
-    [10, 20, 16, 16, 12, 10, 16, 14, 12, 14, 44, 16].forEach((width, index) => {
-      sheet.getColumn(index + 1).width = width;
+    type Round = RouletteReport['rounds'][number];
+    type Column = { header: string; width: number; value: (r: Round) => ExcelJS.CellValue; percent?: boolean };
+    const columns: Column[] = [
+      { header: 'Rodada', width: 9, value: (r) => r.round },
+      { header: 'Frase (aviso do professor)', width: 34, value: (r) => r.popupMessage ?? '' },
+      { header: 'Valor na mesa', width: 14, value: (r) => r.coinsBefore },
+      { header: 'Valor apostado', width: 15, value: (r) => r.aposta },
+      { header: 'Cor selecionada', width: 16, value: (r) => r.opcaoLabel.toLowerCase() },
+      { header: 'Prob. cor selecionada', width: 13, value: (r) => r.winProbability ?? '-', percent: true },
+      { header: 'Cor certa da rodada', width: 16, value: (r) => r.resultadoLabel?.toLowerCase() ?? '-' },
+      { header: 'Prob. cor certa', width: 13, value: (r) => r.resultProbability ?? '-', percent: true },
+      { header: 'Total', width: 11, value: (r) => r.coinsAfter },
+    ];
+    const lastCol = columns.length;
+
+    const sheet = workbook.addWorksheet('Minha partida');
+    columns.forEach((column, index) => {
+      sheet.getColumn(index + 1).width = column.width;
     });
 
     // Cabeçalho
-    sheet.mergeCells(1, 1, 1, 12);
-    this.setCell(sheet, 1, 1, 'Detalhes da Partida', { bold: true, color: WHITE, size: 14, fill: NAVY });
+    sheet.mergeCells(1, 1, 1, lastCol);
+    this.setCell(sheet, 1, 1, 'Relatório da sua partida — Roleta', {
+      bold: true,
+      color: WHITE,
+      size: 14,
+      fill: NAVY,
+    });
     sheet.getRow(1).height = 26;
-    sheet.mergeCells(2, 1, 2, 12);
+    sheet.mergeCells(2, 1, 2, lastCol);
     this.setCell(
       sheet,
       2,
       1,
-      `Sessão: ${report.session.name}   ·   Jogo: Roleta   ·   Iniciada em: ${this.formatDate(report.match.startedAt)}`,
+      `Sessão: ${report.session.name}   ·   Iniciada em: ${this.formatDate(report.match.startedAt)}`,
       { color: 'FF44546A' },
     );
 
@@ -130,118 +153,53 @@ export class MatchResultXlsxService {
       return r;
     };
 
-    const playerRows: Array<[string, ExcelJS.CellValue]> = [
-      ['Fichas finais', summary.finalCoins],
-      ...report.player.fields.map((f): [string, ExcelJS.CellValue] => [f.label, f.value]),
-    ];
+    const playerRows: Array<[string, ExcelJS.CellValue]> = report.player.fields.map(
+      (f): [string, ExcelJS.CellValue] => [f.label, f.value],
+    );
     const resultRows: Array<[string, ExcelJS.CellValue]> = [
       ['Fichas iniciais', summary.initMoney],
       ['Meta', summary.goal],
-      ['Resultado líquido', summary.netResult],
+      ['Fichas finais', summary.finalCoins],
+      ['Resultado', summary.netResult],
       ['Motivo do fim', report.match.endedReasonLabel],
-      ['Quantidade de jogadas', summary.totalRounds],
-      ['Vitórias / derrotas', `${summary.wins} / ${summary.losses}`],
-      ['Taxa de acerto', `${Math.round(summary.winRate * 100)}%`],
-      ['Total apostado', summary.totalBet],
-      ['Aposta média', summary.averageBet],
-      ['Maior / menor aposta', `${summary.maxBet} / ${summary.minBet}`],
-      ['Tempo médio entre jogadas (s)', summary.averageSecondsBetween ?? '-'],
-      ['Duração da partida (s)', report.match.durationSeconds ?? '-'],
-      ['Maior sequência sem reforço', summary.longestUnreinforcedStreak],
-      ['Popups exibidos', `${summary.popupsShown} de ${summary.popupsConfigured}`],
-      ['Leitura média do popup (s)', summary.averagePopupReadSeconds ?? '-'],
+      ['Rodadas jogadas', summary.totalRounds],
+      ['Reforçado / punido', `${summary.reinforcedPercent}% / ${summary.punishedPercent}%`],
+      ['Reposições de fichas', summary.refillsUsed],
     ];
-    const endPlayer = card(1, 'Jogador', playerRows, 4);
-    const endResult = card(6, 'Resultado', resultRows, 4);
+    const endPlayer = playerRows.length > 0 ? card(1, 'Jogador', playerRows, 4) : 4;
+    const endResult = card(playerRows.length > 0 ? 6 : 1, 'Resultado', resultRows, 4);
 
-    // Tabela de jogadas
+    // Tabela de jogadas (colunas do modelo)
     const startRow = Math.max(endPlayer, endResult) + 1;
-    const headers = [
-      'Rodada',
-      'Horário',
-      'Tempo desde a última (s)',
-      'Condição apostada',
-      'Aposta',
-      'Casa',
-      'Cor sorteada',
-      'Resultado',
-      'Variação',
-      'Saldo após',
-      'Popup antes da jogada',
-      'Leitura do popup (s)',
-    ];
-    headers.forEach((header, index) => {
-      this.setCell(sheet, startRow, index + 1, header, { bold: true, color: WHITE, fill: NAVY });
+    columns.forEach((column, index) => {
+      const cell = this.setCell(sheet, startRow, index + 1, column.header, { bold: true, color: WHITE, fill: NAVY });
+      cell.alignment = { wrapText: true, vertical: 'middle' };
     });
+    sheet.getRow(startRow).height = 32;
 
     let row = startRow + 1;
     report.rounds.forEach((round, index) => {
       const fill = index % 2 === 1 ? 'FFF6F8FC' : undefined;
-      const values: ExcelJS.CellValue[] = [
-        round.round,
-        round.playedAt ? this.formatTime(round.playedAt) : '-',
-        round.secondsSinceLast ?? '-',
-        round.opcaoLabel,
-        round.aposta,
-        round.pocket ?? '-',
-        round.resultadoLabel ?? '-',
-        round.won ? 'Ganhou' : 'Perdeu',
-        round.delta,
-        round.coinsAfter,
-        round.popupMessage ?? '-',
-        round.popupReadSeconds ?? '-',
-      ];
-      values.forEach((value, col) => this.setCell(sheet, row, col + 1, value, { fill }));
+      columns.forEach((column, col) => {
+        const cell = this.setCell(sheet, row, col + 1, column.value(round), { fill });
+        if (column.percent && typeof cell.value === 'number') cell.numFmt = '0%';
+        if (col === 1) cell.alignment = { wrapText: true, vertical: 'top' };
+      });
       row++;
     });
 
-    if (report.rounds.length > 0) {
-      const total: ExcelJS.CellValue[] = [
-        'Total',
-        '',
-        summary.averageSecondsBetween !== null ? `média ${summary.averageSecondsBetween}` : '',
-        '',
-        summary.totalBet,
-        '',
-        '',
-        `${summary.wins} vitórias`,
-        summary.netResult,
-        summary.finalCoins,
-        `${summary.popupsShown} popups`,
-        summary.averagePopupReadSeconds !== null ? `média ${summary.averagePopupReadSeconds}` : '',
-      ];
-      total.forEach((value, col) => this.setCell(sheet, row, col + 1, value, { bold: true, fill: LIGHT_BLUE }));
+    if (report.rounds.length === 0) {
+      sheet.mergeCells(row, 1, row, lastCol);
+      this.setCell(sheet, row, 1, 'Nenhuma jogada registrada nesta partida.');
       row++;
     }
 
-    // Popups configurados na sessão: o que apareceu, em qual rodada e quanto tempo ficou aberto.
-    if (report.popups.length > 0) {
-      row += 2;
-      sheet.mergeCells(row, 1, row, 12);
-      this.setCell(sheet, row, 1, 'Popups', { bold: true, color: WHITE, fill: NAVY });
-      row++;
-      const popupHeaders: Array<[number, number, string]> = [
-        [1, 1, 'Rodada'],
-        [2, 10, 'Mensagem'],
-        [11, 11, 'Exibido'],
-        [12, 12, 'Leitura (s)'],
-      ];
-      for (const [from, to, label] of popupHeaders) {
-        if (to > from) sheet.mergeCells(row, from, row, to);
-        this.setCell(sheet, row, from, label, { bold: true, fill: LIGHT_BLUE });
-      }
-      row++;
-      for (const popup of report.popups) {
-        this.setCell(sheet, row, 1, popup.round);
-        sheet.mergeCells(row, 2, row, 10);
-        this.setCell(sheet, row, 2, popup.message).alignment = { wrapText: true, vertical: 'top' };
-        this.setCell(sheet, row, 11, popup.shown ? 'Sim' : 'Não chegou à rodada');
-        this.setCell(sheet, row, 12, popup.readSeconds ?? '-');
-        row++;
-      }
-    }
+    // Frase-resumo do modelo
+    row++;
+    sheet.mergeCells(row, 1, row, lastCol);
+    this.setCell(sheet, row, 1, summary.reinforcementSummary, { bold: true, fill: LIGHT_BLUE });
+    row++;
 
-    sheet.autoFilter = { from: { row: startRow, column: 1 }, to: { row: startRow, column: headers.length } };
     sheet.views = [{ state: 'frozen', ySplit: startRow }];
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -330,6 +288,14 @@ export class MatchResultXlsxService {
         color: WHITE,
         fill: NAVY,
       });
+      r++;
+
+      this.setCell(sheet, r, col, 'RA', { bold: true, fill: LIGHT_BLUE });
+      this.setCell(sheet, r, col + 1, player?.ra || '-');
+      r++;
+
+      this.setCell(sheet, r, col, 'E-mail', { bold: true, fill: LIGHT_BLUE });
+      this.setCell(sheet, r, col + 1, player?.email || '-');
       r++;
 
       this.setCell(sheet, r, col, 'Pontuação total', {

@@ -1,6 +1,6 @@
 import type { RouletteMoveOption, RouletteRoundMove } from '../../match/match.entity';
 import { PLAYER_OPTIONAL_FIELDS_LABELS_PT } from '../../common/constants/player-fields.constants';
-import { DEFAULT_GOAL, DEFAULT_INIT_MONEY, ROULETTE_CONDITIONS } from '../roulette.rules';
+import { DEFAULT_GOAL, DEFAULT_INIT_MONEY, ROULETTE_CONDITIONS, chanceOf } from '../roulette.rules';
 
 /**
  * Mesmo formato que SessionService.getMatchResults() devolve: é dele que o relatório da roleta
@@ -48,7 +48,10 @@ export interface RouletteReportRound {
   delta: number;
   coinsBefore: number;
   coinsAfter: number;
+  /** Chance da cor apostada ("Prob. cor selecionada"). */
   winProbability: number | null;
+  /** Chance da cor sorteada ("Prob. cor certa"); null em jogadas antigas sem a cor. */
+  resultProbability: number | null;
   pityStreak: number | null;
   /** Mensagem do professor exibida antes desta jogada; null quando não houve popup. */
   popupMessage: string | null;
@@ -95,6 +98,11 @@ export interface RouletteReport {
     losses: number;
     /** 0–1 */
     winRate: number;
+    /** % de jogadas reforçadas (ganhou) e punidas (perdeu), inteiros que somam 100. */
+    reinforcedPercent: number;
+    punishedPercent: number;
+    /** Frase do modelo de registro: "Foi reforçado em X% das jogadas, e punido em Y%." */
+    reinforcementSummary: string;
     totalBet: number;
     averageBet: number;
     maxBet: number;
@@ -161,7 +169,9 @@ export function buildRouletteReport(
     const coinsAfter = move.coinsAmount;
     // Jogadas antigas não têm `delta`: sai da diferença de saldo.
     const delta = typeof move.delta === 'number' ? move.delta : coinsAfter - previousCoins;
-    const coinsBefore = coinsAfter - delta;
+    // Gravado no giro; em jogadas antigas, o saldo depois da jogada anterior (a conta
+    // "depois − variação" erra quando houve reposição).
+    const coinsBefore = typeof move.coinsBefore === 'number' ? move.coinsBefore : previousCoins;
     previousCoins = coinsAfter;
 
     streak = move.winrate ? 0 : streak + 1;
@@ -181,7 +191,13 @@ export function buildRouletteReport(
       delta,
       coinsBefore,
       coinsAfter,
-      winProbability: typeof move.winProbability === 'number' ? move.winProbability : null,
+      winProbability: typeof move.winProbability === 'number' ? move.winProbability : chanceOf(move.opcao),
+      resultProbability:
+        typeof move.resultProbability === 'number'
+          ? move.resultProbability
+          : move.resultado
+            ? chanceOf(move.resultado)
+            : null,
       pityStreak: typeof move.pityStreak === 'number' ? move.pityStreak : null,
       popupMessage: move.popupMessage ?? null,
       popupReadSeconds: typeof move.popupReadSeconds === 'number' ? move.popupReadSeconds : null,
@@ -210,8 +226,9 @@ export function buildRouletteReport(
     .map((r) => r.secondsSinceLast)
     .filter((s): s is number => typeof s === 'number');
   const finalCoins = rounds.length > 0 ? rounds[rounds.length - 1].coinsAfter : initMoney;
+  const reinforcedPercent = rounds.length > 0 ? Math.round((wins / rounds.length) * 100) : 0;
 
-  const requested = session.inputInfo ?? [];
+  const requested = ['ra', 'email', ...(session.inputInfo ?? [])];
   const fields = requested
     .filter((key) => key in PLAYER_OPTIONAL_FIELDS_LABELS_PT)
     .map((key) => {
@@ -247,6 +264,12 @@ export function buildRouletteReport(
       wins,
       losses: rounds.length - wins,
       winRate: rounds.length > 0 ? round2(wins / rounds.length) : 0,
+      reinforcedPercent,
+      punishedPercent: rounds.length > 0 ? 100 - reinforcedPercent : 0,
+      reinforcementSummary:
+        rounds.length > 0
+          ? `Foi reforçado em ${reinforcedPercent}% das jogadas, e punido em ${100 - reinforcedPercent}%.`
+          : 'Nenhuma jogada registrada.',
       totalBet: bets.reduce((a, b) => a + b, 0),
       averageBet: bets.length > 0 ? round2(bets.reduce((a, b) => a + b, 0) / bets.length) : 0,
       maxBet: bets.length > 0 ? Math.max(...bets) : 0,

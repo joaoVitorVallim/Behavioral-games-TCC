@@ -5,12 +5,32 @@ import {
   IsUUID,
   IsInt,
   Max,
+  MaxLength,
+  IsEmail,
   IsEnum,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EducationLevel } from '../education-level.enum';
 
 export class CreatePlayerDto {
+  @ApiPropertyOptional({
+    example: '12345678',
+    description: "Player's RA (academic registration number)",
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  ra?: string;
+
+  @ApiPropertyOptional({
+    example: 'aluno@email.com',
+    description: "Analyst/student e-mail typed at entry",
+  })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  email?: string;
+
   @ApiPropertyOptional({
     enum: EducationLevel,
     example: EducationLevel.BACHELOR,

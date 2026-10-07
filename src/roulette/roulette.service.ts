@@ -113,6 +113,9 @@ export class RouletteService {
     const refillsUsed = ordered.filter((move) => move.refilled).length;
 
     const startedAt = Date.now();
+    // Partida nova começa nas instruções, com o relógio parado; uma retomada (já tem jogadas)
+    // volta direto para a mesa.
+    const waiting = ordered.length === 0;
     const lastPlayedAt = last?.playedAt ? Date.parse(last.playedAt) : NaN;
     const state: RouletteMatchState = {
       matchId,
@@ -123,14 +126,16 @@ export class RouletteService {
       pointsLimit: positiveOr(settings?.pointsLimit, DEFAULT_GOAL),
       timeLimit,
       startedAt,
-      endsAt: timeLimit !== null ? startedAt + timeLimit * 1000 : null,
+      endsAt: timeLimit !== null && !waiting ? startedAt + timeLimit * 1000 : null,
       lastSpinAt: Number.isFinite(lastPlayedAt) ? lastPlayedAt : null,
       pityStreak,
       moves,
-      status: 'in_progress',
+      status: waiting ? 'waiting' : 'in_progress',
       endedReason: null,
       tableLayout: settings?.tableLayout ?? DEFAULT_TABLE_LAYOUT,
       allowGiveUp: !settings?.disableGiveUp,
+      maxRefills:
+        typeof settings?.maxRefills === 'number' && settings.maxRefills >= 0 ? settings.maxRefills : MAX_BANKRUPT_REFILLS,
       refillsUsed,
     };
 
@@ -139,6 +144,20 @@ export class RouletteService {
       matchId,
       Object.fromEntries((settings?.roundPopups ?? []).map((popup) => [popup.round, popup.message])),
     );
+    return state;
+  }
+
+  /** Jogador saiu das instruções: só aqui o relógio da partida começa a contar. Idempotente. */
+  startMatch(matchId: string, playerId: string): RouletteMatchState {
+    const state = this.getState(matchId);
+    if (state.playerId !== playerId) {
+      throw new BadRequestException(`Player ${playerId} is not part of match ${matchId}`);
+    }
+    if (state.status !== 'waiting') return state;
+
+    state.startedAt = Date.now();
+    state.endsAt = state.timeLimit !== null ? state.startedAt + state.timeLimit * 1000 : null;
+    state.status = 'in_progress';
     return state;
   }
 
@@ -192,7 +211,7 @@ export class RouletteService {
       chipValues: ROULETTE_CHIP_VALUES,
       serverNow: Date.now(),
       popup,
-      maxRefills: MAX_BANKRUPT_REFILLS,
+
       allowGiveUp: this.effectiveAllowGiveUp(state),
     };
   }
@@ -229,15 +248,16 @@ export class RouletteService {
     const delta = deltaFor(opcao, aposta, won);
     const winProbability = chanceOf(opcao);
     const pityStreakAtSpin = state.pityStreak;
+    const coinsBefore = state.coins;
 
     state.coins += delta;
     state.pityStreak = won ? 0 : state.pityStreak + 1;
 
-    // Saldo zerou: repõe as fichas iniciais até MAX_BANKRUPT_REFILLS vezes antes de encerrar por
+    // Saldo zerou: repõe as fichas iniciais até state.maxRefills vezes (config do professor) antes de encerrar por
     // 'saldo'. `delta` fica com o resultado natural da aposta (pro "Variação" do relatório bater
     // com "Ganhou/Perdeu"); a reposição em si fica marcada em `refilled`, separada.
     let refilled = false;
-    if (state.coins <= 0 && state.refillsUsed < MAX_BANKRUPT_REFILLS) {
+    if (state.coins <= 0 && state.refillsUsed < state.maxRefills) {
       state.refillsUsed += 1;
       state.coins = state.initMoney;
       refilled = true;
@@ -251,6 +271,7 @@ export class RouletteService {
       ...(popupMessage ? { popupMessage } : {}),
       ...(popupReadSeconds !== undefined ? { popupReadSeconds } : {}),
       ...(refilled ? { refilled: true } : {}),
+      coinsBefore,
       coinsAmount: state.coins,
       aposta,
       opcao,
@@ -259,6 +280,7 @@ export class RouletteService {
       pityStreak: pityStreakAtSpin,
       pocket: pocket.label,
       resultado: pocket.condition,
+      resultProbability: chanceOf(pocket.condition),
       delta,
       playedAt: new Date(now).toISOString(),
       secondsSinceLast,
@@ -359,7 +381,7 @@ export class RouletteService {
    */
   async finalizeMatch(matchId: string): Promise<RouletteMatchView> {
     const state = this.getState(matchId);
-    if (state.status === 'in_progress') {
+    if (state.status !== 'finished') {
       const timeUp = state.endsAt !== null && Date.now() >= state.endsAt - 1000;
       await this.finish(state, timeUp ? 'tempo' : 'jogador');
     }

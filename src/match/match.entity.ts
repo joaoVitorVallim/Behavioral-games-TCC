@@ -23,8 +23,10 @@ export enum RouletteMoveOption {
 }
 
 export interface RouletteRoundMove {
-  /** Saldo depois da rodada. */
+  /** Saldo depois da rodada ("Total" no relatório; já com a reposição, se houve). */
   coinsAmount: number;
+  /** Saldo antes do giro ("Valor na mesa" no relatório). Ausente em jogadas antigas. */
+  coinsBefore?: number;
   aposta: number;
   /** Condição em que o jogador apostou. */
   opcao: RouletteMoveOption;
@@ -37,6 +39,8 @@ export interface RouletteRoundMove {
   /** Casa sorteada ("0", "00", "1"…"36") e a cor dela. */
   pocket?: string;
   resultado?: RouletteMoveOption;
+  /** Chance da cor sorteada ("Prob. cor certa" no relatório). Ausente em jogadas antigas. */
+  resultProbability?: number;
   /** Variação do saldo nesta rodada. */
   delta?: number;
   /** Horário do giro no relógio do servidor (ISO 8601). */
@@ -103,7 +107,7 @@ export class Match {
   @Column({ type: 'int', nullable: true })
   matchTime?: number;
 
-  /** 'rodadas' (fim natural), 'tempo_sessao' ou 'sessao_encerrada'. */
+  /** 'rodadas' (fim natural), 'tempo_sessao', 'sessao_encerrada' ou 'abandono' (jogador fechou a página). */
   @Column({ type: 'varchar', length: 24, nullable: true })
   endedReason?: string;
 

@@ -28,6 +28,16 @@ export class RouletteController {
     return this.rouletteService.toView(state);
   }
 
+  @Post(':matchId/start')
+  @ApiOperation({
+    summary: 'Start the roulette clock',
+    description: 'Called when the player leaves the instructions screen; the time limit starts counting here (idempotent).',
+  })
+  @ApiParam({ name: 'matchId', description: 'Match ID' })
+  start(@Param('matchId') matchId: string, @Query('playerId') playerId: string): RouletteMatchView {
+    return this.rouletteService.toView(this.rouletteService.startMatch(matchId, playerId));
+  }
+
   @Post(':matchId/spin')
   @ApiOperation({
     summary: 'Spin the roulette',

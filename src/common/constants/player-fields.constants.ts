@@ -22,6 +22,8 @@ export const PLAYER_OPTIONAL_FIELDS_LABELS = {
 
 /** Rótulos usados nos relatórios (planilhas e tela de resultado). */
 export const PLAYER_OPTIONAL_FIELDS_LABELS_PT: Record<string, string> = {
+  ra: 'RA',
+  email: 'E-mail',
   educationLevel: 'Escolaridade',
   semester: 'Semestre',
   course: 'Curso',

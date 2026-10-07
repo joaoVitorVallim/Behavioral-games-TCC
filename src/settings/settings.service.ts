@@ -14,7 +14,12 @@ import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { GameService } from '../game/game.service';
 import { GameType } from '../game/games.enum';
 import { PLAYER_OPTIONAL_FIELDS } from '../common/constants/player-fields.constants';
-import { DEFAULT_GOAL, DEFAULT_INIT_MONEY } from '../roulette/roulette.rules';
+import { DEFAULT_GOAL, DEFAULT_INIT_MONEY, MAX_BANKRUPT_REFILLS } from '../roulette/roulette.rules';
+
+/** Reposições de fichas: inteiro de 0 a 20; ausente ou inválido cai no padrão da mesa. */
+function normalizeMaxRefills(value: number | null | undefined): number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? Math.min(value, 20) : MAX_BANKRUPT_REFILLS;
+}
 
 /** A partida acaba quando o saldo chega na meta: meta ≤ fichas iniciais acabaria no 1º giro. */
 function assertGoalAboveStart(initMoney: number, pointsLimit: number) {
@@ -86,6 +91,7 @@ export class SettingsService {
       { name: 'tableLayout', type: `enum(${ROULETTE_TABLE_LAYOUTS.join(',')})` },
       { name: 'roundPopups', type: 'roundPopups' },
       { name: 'disableGiveUp', type: 'boolean' },
+      { name: 'maxRefills', type: 'number' },
     ];
 
     if (game === 'prisoner') {
@@ -130,6 +136,7 @@ export class SettingsService {
         roundPopups: normalizeRoundPopups(dto.roundPopups),
         tableLayout: dto.tableLayout ?? DEFAULT_TABLE_LAYOUT,
         disableGiveUp: dto.disableGiveUp ?? false,
+        maxRefills: normalizeMaxRefills(dto.maxRefills),
       });
       settings = await this.settingsRouletteRepository.save(rouletteSettings);
     } else if (gameType === 'prisoner') {
@@ -204,6 +211,7 @@ export class SettingsService {
       }
       if (dto.tableLayout !== undefined) settings.tableLayout = dto.tableLayout;
       if (dto.disableGiveUp !== undefined) settings.disableGiveUp = dto.disableGiveUp;
+      if (dto.maxRefills !== undefined) settings.maxRefills = normalizeMaxRefills(dto.maxRefills);
       return await this.settingsRouletteRepository.save(settings);
     } else if (settings instanceof SettingsGamePrisoner) {
       if (dto.userViewPoints !== undefined) settings.userViewPoints = dto.userViewPoints;

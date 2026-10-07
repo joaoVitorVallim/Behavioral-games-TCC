@@ -142,6 +142,7 @@ export class SessionController {
         summary: "Join Prisoner's Dilemma session",
         value: {
           inviteCode: 'F4LVTX',
+          ra: '12345678',
           educationLevel: 'bachelor',
           semester: 6,
           profession: 'Student',
@@ -151,6 +152,7 @@ export class SessionController {
         summary: 'Join roulette session',
         value: {
           inviteCode: 'R8K2MP',
+          ra: '87654321',
           educationLevel: 'high_school',
         },
       },
@@ -331,7 +333,8 @@ export class SessionController {
   @Get('codigo/:codigo')
   @ApiOperation({
     summary: 'Find session by invite code',
-    description: 'Returns the session based on unique invite code',
+    description:
+      'Public lookup used by the entry screen: returns only what a player needs to join (game, required player fields, whether it is active).',
   })
   @ApiParam({
     name: 'codigo',
@@ -368,7 +371,7 @@ export class SessionController {
     description: 'Session not found',
   })
   findByInviteCode(@Param('codigo') codigo: string) {
-    return this.sessionService.findByInviteCode(codigo);
+    return this.sessionService.findPublicByInviteCode(codigo);
   }
 
   @Get('stats/:id')

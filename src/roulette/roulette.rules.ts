@@ -14,7 +14,7 @@ export interface RoulettePocket {
 export interface RouletteCondition {
   id: RouletteMoveOption;
   label: string;
-  /** Retorno total sobre a aposta: 2 = devolve a aposta + 1× de lucro. */
+  /** Retorno total sobre a aposta: 4 = devolve a aposta + 3× de lucro. */
   payout: number;
   payoutLabel: string;
   /** Chance de cair nesta condição (casas da cor / total de casas). */
@@ -42,8 +42,8 @@ export const ROULETTE_WHEEL: RoulettePocket[] = WHEEL_ORDER.map((label) => ({
 
 const PAYOUTS: Record<RouletteMoveOption, number> = {
   [RouletteMoveOption.AZUL]: 18,
-  [RouletteMoveOption.VERMELHO]: 2,
-  [RouletteMoveOption.PRETO]: 2,
+  [RouletteMoveOption.VERMELHO]: 4,
+  [RouletteMoveOption.PRETO]: 4,
 };
 
 const LABELS: Record<RouletteMoveOption, string> = {

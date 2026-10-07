@@ -16,16 +16,17 @@ export interface RouletteMatchState {
   pointsLimit: number;
   /** Segundos de partida; null = sem limite. */
   timeLimit: number | null;
-  /** Início da partida no relógio do servidor (epoch ms). */
+  /** Início da partida no relógio do servidor (epoch ms). Em 'waiting', é o horário da entrada. */
   startedAt: number;
-  /** Fim pelo tempo (epoch ms); null = sem limite. */
+  /** Fim pelo tempo (epoch ms); null = sem limite ou ainda nas instruções ('waiting'). */
   endsAt: number | null;
   /** Horário do último giro (epoch ms); null antes da 1ª jogada. Base do "tempo desde a última". */
   lastSpinAt: number | null;
   /** Rodadas seguidas sem reforço. */
   pityStreak: number;
   moves: RouletteMoves;
-  status: 'in_progress' | 'finished';
+  /** 'waiting' = jogador ainda nas instruções: o relógio só começa no start(). */
+  status: 'waiting' | 'in_progress' | 'finished';
   endedReason: RouletteEndedReason | null;
   /** Layout de mesa escolhido na configuração da sessão. */
   tableLayout: string;
@@ -34,8 +35,10 @@ export interface RouletteMatchState {
    * (exposto em View/SpinResult) também libera depois da 1ª reposição — ver effectiveAllowGiveUp.
    */
   allowGiveUp: boolean;
-  /** Quantas vezes o saldo já foi reposto ao zerar (ver MAX_BANKRUPT_REFILLS). */
+  /** Quantas vezes o saldo já foi reposto ao zerar. */
   refillsUsed: number;
+  /** Reposições permitidas antes de encerrar por 'saldo' (config do professor; 0 = nenhuma). */
+  maxRefills: number;
 }
 
 /** O que o jogador recebe ao entrar/consultar: estado + regras da mesa para desenhar. */
@@ -50,8 +53,6 @@ export interface RouletteMatchView extends RouletteMatchState {
   serverNow: number;
   /** Mensagem do professor para a rodada que vai começar; null quando não há. */
   popup: string | null;
-  /** Quantas reposições de saldo são permitidas antes de encerrar por 'saldo'. */
-  maxRefills: number;
 }
 
 export interface RouletteSpinResult {

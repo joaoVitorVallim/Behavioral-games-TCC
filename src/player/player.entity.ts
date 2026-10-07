@@ -14,6 +14,14 @@ export class Player {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** RA (registro acadêmico) informado ao entrar. Nullable só por causa dos jogadores antigos. */
+  @Column({ length: 30, nullable: true })
+  ra?: string;
+
+  /** E-mail do analista/aluno digitado na entrada (para onde vai o relatório). */
+  @Column({ length: 255, nullable: true })
+  email?: string;
+
   @Column({
     type: 'enum',
     enum: EducationLevel,

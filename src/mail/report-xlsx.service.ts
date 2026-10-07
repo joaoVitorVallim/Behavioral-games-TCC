@@ -298,10 +298,12 @@ export class ReportXlsxService {
     const requestedFields = (data.session.inputInfo ?? []).filter(
       (field) => field in PLAYER_FIELD_LABELS,
     );
-    const columns = ['label', 'total', 'summary', ...requestedFields];
+    const columns = ['label', 'ra', 'email', 'total', 'summary', ...requestedFields];
 
     sheet.columns = columns.map((key) => {
       if (key === 'label') return { header: 'Jogador', key, width: 16 };
+      if (key === 'ra') return { header: 'RA', key, width: 16 };
+      if (key === 'email') return { header: 'E-mail', key, width: 28 };
       if (key === 'total') return { header: 'Pontuação total', key, width: 16 };
       if (key === 'summary') return { header: 'Resumo', key, width: 34 };
       return { header: PLAYER_FIELD_LABELS[key], key, width: 20 };
@@ -312,6 +314,8 @@ export class ReportXlsxService {
       const playerId = player.id as string;
       const row: Record<string, unknown> = {
         label: playerLabels.get(playerId) ?? playerId,
+        ra: player.ra || '-',
+        email: player.email || '-',
         total: totals.get(playerId) ?? 0,
         summary: this.summarize(player),
       };

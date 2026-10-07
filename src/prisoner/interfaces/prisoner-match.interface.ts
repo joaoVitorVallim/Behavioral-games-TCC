@@ -11,6 +11,9 @@ export interface PrisonerRoundResult {
 
 export type PrisonerMoves = Record<string, PrisonerRoundResult>;
 
+/** 'abandono': um dos jogadores fechou a página e não voltou dentro do prazo. */
+export type PrisonerEndedReason = 'rodadas' | 'tempo_sessao' | 'sessao_encerrada' | 'abandono';
+
 /**
  * Rodada como ela vai para UM jogador: com userViewPoints desligado, os pontos do outro
  * jogador saem como null. O que fica gravado em PrisonerMoves continua completo, então o
@@ -48,7 +51,12 @@ export interface PrisonerMatchState {
   sessionTimer: ReturnType<typeof setTimeout> | null;
   /** Última rodada que fechou com pontos — é o que o relatório chama de "rodadas jogadas". */
   lastResolvedRound: number;
-  endedReason: 'rodadas' | 'tempo_sessao' | 'sessao_encerrada' | null;
+  endedReason: PrisonerEndedReason | null;
+  /** Prazo para quem fechou a página voltar; vencido, a partida é encerrada por abandono. */
+  abandonTimers: {
+    player1: ReturnType<typeof setTimeout> | null;
+    player2: ReturnType<typeof setTimeout> | null;
+  };
   /** Rodada que estava aberta quando a sessão acabou: entra no relatório sem pontos. */
   interruptedRound: number | null;
   roundDeadline: number | null;

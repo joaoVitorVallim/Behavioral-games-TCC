@@ -53,4 +53,11 @@ export class SettingsGameRoulette extends Settings {
    */
   @Column({ name: 'disablegiveup', type: 'boolean', default: false })
   disableGiveUp: boolean;
+
+  /**
+   * Quantas vezes as fichas são repostas ao zerar antes de a partida acabar por 'saldo'.
+   * 0 = nenhuma reposição; null (configurações antigas) = MAX_BANKRUPT_REFILLS.
+   */
+  @Column({ name: 'maxrefills', type: 'int', nullable: true })
+  maxRefills: number | null;
 }

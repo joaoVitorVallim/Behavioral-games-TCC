@@ -11,6 +11,7 @@ import {
   ValidateNested,
   Min,
   Max,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GameType } from '../../game/games.enum';
@@ -156,4 +157,15 @@ export class CreateSettingsDto {
   @IsOptional()
   @IsBoolean()
   disableGiveUp?: boolean;
+
+  @ApiPropertyOptional({
+    example: 2,
+    description:
+      'How many times the chips are refilled when they hit zero before the match ends; 0 = none (Roulette only)',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(20)
+  maxRefills?: number;
 }

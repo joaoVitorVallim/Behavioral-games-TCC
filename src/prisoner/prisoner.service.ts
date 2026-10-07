@@ -6,6 +6,7 @@ import { Session } from '../session/session.entity';
 import {
   PrisonerMatchState,
   PrisonerChoice,
+  PrisonerEndedReason,
   PRISONER_PAYOFF,
 } from './interfaces/prisoner-match.interface';
 import { SettingsGamePrisoner } from '../settings/settings-game-prisoner.entity';
@@ -18,6 +19,8 @@ export type SessionEndCallback = (state: PrisonerMatchState) => void;
 export class PrisonerService {
   private static readonly REVEAL_GRACE_MS = 4000;
   private static readonly BOOT_GRACE_MS = 1500;
+  /** Tolerância para quem caiu voltar (F5, rede instável) antes de a partida ser encerrada. */
+  private static readonly ABANDON_GRACE_MS = 8000;
   private readonly activeMatches = new Map<string, PrisonerMatchState>();
   private onRoundTimeout: RoundTimeoutCallback | null = null;
   private onSessionEnd: SessionEndCallback | null = null;
@@ -119,6 +122,7 @@ export class PrisonerService {
       sessionTimer: null,
       lastResolvedRound: 0,
       endedReason: null,
+      abandonTimers: { player1: null, player2: null },
       interruptedRound: null,
       pausedRemainingMs: null,
       pausedRound: null,
@@ -133,8 +137,10 @@ export class PrisonerService {
 
     if (state.player1Id === playerId) {
       state.player1SocketId = socketId;
+      this.clearAbandonTimer(state, 'player1');
     } else if (state.player2Id === playerId) {
       state.player2SocketId = socketId;
+      this.clearAbandonTimer(state, 'player2');
     } else {
       throw new BadRequestException(`Player ${playerId} is not part of match ${matchId}`);
     }
@@ -186,8 +192,9 @@ export class PrisonerService {
   disconnectPlayer(socketId: string): PrisonerMatchState | null {
     for (const state of this.activeMatches.values()) {
       if (state.player1SocketId === socketId || state.player2SocketId === socketId) {
-        if (state.player1SocketId === socketId) state.player1SocketId = null;
-        if (state.player2SocketId === socketId) state.player2SocketId = null;
+        const side = state.player1SocketId === socketId ? 'player1' : 'player2';
+        if (side === 'player1') state.player1SocketId = null;
+        else state.player2SocketId = null;
         if (state.status !== 'finished') {
           state.status = 'waiting';
           if (state.roundDeadline !== null) {
@@ -195,11 +202,35 @@ export class PrisonerService {
             state.pausedRound = state.currentRound;
           }
           this.clearRoundTimer(state);
+          this.armAbandonTimer(state, side);
         }
         return state;
       }
     }
     return null;
+  }
+
+  /**
+   * Fechar a página encerra a partida: sem o outro jogador não há como seguir. O prazo curto
+   * só existe para um F5 ou uma queda de rede não derrubarem a partida dos dois.
+   */
+  private armAbandonTimer(state: PrisonerMatchState, side: 'player1' | 'player2'): void {
+    this.clearAbandonTimer(state, side);
+    state.abandonTimers[side] = setTimeout(() => {
+      state.abandonTimers[side] = null;
+      if (state.status === 'finished') return;
+      const socketId = side === 'player1' ? state.player1SocketId : state.player2SocketId;
+      if (socketId) return;
+      this.endEarly(state, 'abandono', true, true);
+    }, PrisonerService.ABANDON_GRACE_MS);
+  }
+
+  private clearAbandonTimer(state: PrisonerMatchState, side?: 'player1' | 'player2'): void {
+    for (const s of side ? [side] : (['player1', 'player2'] as const)) {
+      const timer = state.abandonTimers[s];
+      if (timer) clearTimeout(timer);
+      state.abandonTimers[s] = null;
+    }
   }
 
   submitChoice(
@@ -310,7 +341,7 @@ export class PrisonerService {
     state.sessionTimer = setTimeout(() => {
       state.sessionTimer = null;
       if (state.status !== 'in_progress') return;
-      this.endBySession(state, 'tempo_sessao', true, true);
+      this.endEarly(state, 'tempo_sessao', true, true);
     }, remaining);
   }
 
@@ -343,22 +374,23 @@ export class PrisonerService {
     }
     // Entre rodadas: nada é descartado, a partida apenas não abre a próxima. Quem avisa os
     // jogadores é o emitRoundOutcome, que já vai ver status 'finished'.
-    this.endBySession(state, 'tempo_sessao', false, false);
+    this.endEarly(state, 'tempo_sessao', false, false);
   }
 
   /**
-   * Encerra a partida por causa da sessão. A rodada aberta é DESCARTADA, nunca completada:
-   * forceResolveRound preencheria com 'defect' e pontuaria, e o relatório diria que alguém
-   * traiu quando na verdade acabou o tempo.
+   * Encerra a partida antes do fim das rodadas (sessão ou abandono). A rodada aberta é
+   * DESCARTADA, nunca completada: forceResolveRound preencheria com 'defect' e pontuaria, e o
+   * relatório diria que alguém traiu quando na verdade acabou o tempo.
    */
-  private endBySession(
+  private endEarly(
     state: PrisonerMatchState,
-    reason: 'tempo_sessao' | 'sessao_encerrada',
+    reason: Exclude<PrisonerEndedReason, 'rodadas'>,
     midRound: boolean,
     notify: boolean,
   ): PrisonerMatchState {
     this.clearRoundTimer(state);
     this.clearSessionTimer(state);
+    this.clearAbandonTimer(state);
 
     if (midRound) {
       const rodadaAberta = state.currentRound > state.lastResolvedRound;
@@ -389,7 +421,7 @@ export class PrisonerService {
     let encerradas = 0;
     for (const state of this.activeMatches.values()) {
       if (state.sessionId !== sessionId || state.status !== 'in_progress') continue;
-      this.endBySession(state, reason, true, true);
+      this.endEarly(state, reason, true, true);
       encerradas++;
     }
     return encerradas;
@@ -438,6 +470,7 @@ export class PrisonerService {
     const state = this.getState(matchId);
     this.clearRoundTimer(state);
     this.clearSessionTimer(state);
+    this.clearAbandonTimer(state);
 
     const match = await this.matchRepository.findOne({ where: { id: matchId } });
     if (!match) throw new NotFoundException(`Match ${matchId} not found`);
