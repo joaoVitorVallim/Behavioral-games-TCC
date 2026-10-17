@@ -37,6 +37,10 @@ export const build_points_series = (
   })
 }
 
+// Conta ações (quantas vezes cooperou/competiu), não pontos: o jogador sempre joga uma carta por
+// rodada, e queremos ver esse padrão de comportamento mesmo em rodadas que renderam 0 pontos.
+// "Pontos versus Rodadas" (build_points_series) já cobre a soma de pontos; este gráfico é sobre
+// a ação em si.
 export const build_cooperation_series = (
   moves: MatchMoves,
   player: PlayerKey
@@ -48,12 +52,11 @@ export const build_cooperation_series = (
   return rounds.map((round) => {
     const move = moves[String(round)]
     const choice = move?.[choice_field[player]]
-    const points = move?.[points_field[player]] ?? 0
 
     if (choice === 'cooperate') {
-      cooperacao += points
+      cooperacao += 1
     } else if (choice === 'defect') {
-      competicao += points
+      competicao += 1
     }
 
     return { round, cooperacao, competicao }

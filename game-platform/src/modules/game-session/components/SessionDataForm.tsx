@@ -1,5 +1,6 @@
 import { ChevronDown, Users } from 'lucide-react'
 import { PLAYER_FIELD_DEPENDENTS } from '../constants/playerFieldDependencies'
+import { GAME_LABELS_PT } from '../constants/configFieldLabels'
 import type { GameCatalogItem } from '../types'
 import type { PlayerInfoOption } from '../types'
 
@@ -102,7 +103,7 @@ export function SessionDataForm({
               )}
               {!games_loading && games.map((game) => (
                 <option key={game.id} value={game.id}>
-                  {game.name}
+                  {GAME_LABELS_PT[game.id] ?? game.name}
                 </option>
               ))}
             </select>

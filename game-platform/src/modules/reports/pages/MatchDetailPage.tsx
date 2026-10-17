@@ -1,9 +1,12 @@
 import { useMemo, useRef } from 'react'
+import type { CSSProperties } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Swords, UserCircle } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { useMatchResult } from '../hooks/useMatchResult'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
+import { GAME_LABELS_PT } from '../../game-session/constants/configFieldLabels'
 import {
   compute_totals,
   format_datetime,
@@ -14,12 +17,21 @@ import {
   build_cooperation_series,
   build_points_series
 } from '../utils/chart-data'
+import { nice_y_scale } from '../utils/chartScale'
 import { PointsChart } from '../components/PointsChart'
 import { CooperationChart } from '../components/CooperationChart'
 import { RouletteMatchDetail } from '../components/RouletteMatchDetail'
 import { MatchEmailSender } from '../components/MatchEmailSender'
 import { get_session_label } from '../../game-session/utils/session-label'
+import { CARD_COLOR, cardForChoice } from '../../game-session/types'
 import type { PlayerResultWithRole } from '../types'
+import type { Choice } from '../../game-session/types'
+
+// Mesmas cores de carta que o jogador vê durante a partida (CARD_COLOR em game-session/types.ts).
+const choice_badge_style = (choice: Choice): CSSProperties =>
+  cardForChoice(choice) === 'B'
+    ? { backgroundColor: CARD_COLOR.B, color: '#fff', border: '2px solid #fff' }
+    : { backgroundColor: CARD_COLOR.R, color: '#fff' }
 
 export function MatchDetailPage() {
   const { sessionId, matchId } = useParams<{ sessionId: string; matchId: string }>()
@@ -56,6 +68,37 @@ export function MatchDetailPage() {
     () => (data ? compute_totals(data.match.moves) : { player1: 0, player2: 0 }),
     [data]
   )
+
+  // Séries pré-calculadas uma vez por papel, para o gráfico de cada jogador usar a mesma escala
+  // de eixo Y do outro (o professor compara os dois lado a lado) em vez de cada um escalar sozinho.
+  const points_series = useMemo(
+    () => ({
+      player1: data ? build_points_series(data.match.moves, 'player1') : [],
+      player2: data ? build_points_series(data.match.moves, 'player2') : []
+    }),
+    [data]
+  )
+
+  const cooperation_series = useMemo(
+    () => ({
+      player1: data ? build_cooperation_series(data.match.moves, 'player1') : [],
+      player2: data ? build_cooperation_series(data.match.moves, 'player2') : []
+    }),
+    [data]
+  )
+
+  const points_scale = useMemo(() => {
+    const values = [...points_series.player1, ...points_series.player2].map((p) => p.points)
+    return nice_y_scale(Math.max(0, ...values))
+  }, [points_series])
+
+  const cooperation_scale = useMemo(() => {
+    const values = [...cooperation_series.player1, ...cooperation_series.player2].flatMap((p) => [
+      p.cooperacao,
+      p.competicao
+    ])
+    return nice_y_scale(Math.max(0, ...values))
+  }, [cooperation_series])
 
   // Roleta tem relatório próprio (jogadas, apostas, tempos e popups), calculado no backend.
   if (data?.session.game === 'roulette' && sessionId && matchId) {
@@ -113,8 +156,8 @@ export function MatchDetailPage() {
                 </div>
                 <div className="surface-subtle p-4">
                   <p className="heading-kicker mb-1">Jogo</p>
-                  <p className="text-base font-semibold capitalize text-foreground">
-                    {data.session.game}
+                  <p className="text-base font-semibold text-foreground">
+                    {GAME_LABELS_PT[data.session.game] ?? humanizeLabel(data.session.game)}
                   </p>
                 </div>
                 <div className="surface-subtle p-4">
@@ -238,15 +281,25 @@ export function MatchDetailPage() {
                         return (
                           <tr
                             key={round}
-                            className="border-t border-border/70 bg-card/35"
+                            className="border-t border-border/70 bg-card/35 transition-colors hover:bg-primary/15"
                           >
                             <td className="px-4 py-3 font-medium text-foreground">{round}</td>
-                            <td className="px-4 py-3 text-foreground">
-                              {translate_choice(move.player1Choice)}
+                            <td className="px-4 py-3">
+                              <span
+                                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                style={choice_badge_style(move.player1Choice)}
+                              >
+                                {translate_choice(move.player1Choice)}
+                              </span>
                             </td>
                             <td className="px-4 py-3 text-foreground">{move.player1Points}</td>
-                            <td className="px-4 py-3 text-foreground">
-                              {translate_choice(move.player2Choice)}
+                            <td className="px-4 py-3">
+                              <span
+                                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                style={choice_badge_style(move.player2Choice)}
+                              >
+                                {translate_choice(move.player2Choice)}
+                              </span>
                             </td>
                             <td className="px-4 py-3 text-foreground">{move.player2Points}</td>
                           </tr>
@@ -276,8 +329,6 @@ export function MatchDetailPage() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {(['player1', 'player2'] as const).map((role, index) => {
                   const role_label = index === 0 ? 'Jogador 1' : 'Jogador 2'
-                  const points_data = build_points_series(data.match.moves, role)
-                  const cooperation_data = build_cooperation_series(data.match.moves, role)
 
                   return (
                     <div key={role} className="surface-subtle p-5">
@@ -287,12 +338,12 @@ export function MatchDetailPage() {
 
                       <div className="mb-6">
                         <p className="heading-kicker mb-2">Pontos versus Rodadas</p>
-                        <PointsChart data={points_data} />
+                        <PointsChart data={points_series[role]} scale={points_scale} />
                       </div>
 
                       <div>
                         <p className="heading-kicker mb-2">Cooperação e Competição</p>
-                        <CooperationChart data={cooperation_data} />
+                        <CooperationChart data={cooperation_series[role]} scale={cooperation_scale} />
                       </div>
                     </div>
                   )

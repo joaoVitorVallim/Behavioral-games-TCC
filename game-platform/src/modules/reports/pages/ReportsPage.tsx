@@ -4,6 +4,8 @@ import { FileText, RefreshCw, Users, ChevronRight } from 'lucide-react'
 import { Header } from '../../../shared/components/Header'
 import { useSessionsResults } from '../hooks/useSessionsResults'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
+import { GAME_LABELS_PT } from '../../game-session/constants/configFieldLabels'
 import { format_date } from '../utils/format'
 import { get_session_label } from '../../game-session/utils/session-label'
 
@@ -112,8 +114,8 @@ export function ReportsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground capitalize">
-                        {session.game}
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {GAME_LABELS_PT[session.game] ?? humanizeLabel(session.game)}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {format_date(session.created_at)}

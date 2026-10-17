@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from 'react'
 import { CheckCircle2, MoreVertical, Trash2, Users } from 'lucide-react'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { useClickOutside } from '../../../shared/hooks/useClickOutside'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
+import { GAME_LABELS_PT } from '../constants/configFieldLabels'
 import { get_session_label } from '../utils/session-label'
 import type { Session } from '../types'
 
@@ -49,8 +51,14 @@ export const SessionCard = ({
           <h3 className="mb-1 text-base leading-tight text-card-foreground">
             {get_session_label(session)}
           </h3>
-          <p className="heading-kicker text-[0.62rem]">
-            {session.game}
+          <p className="heading-kicker mb-1.5 text-[0.62rem]">
+            {GAME_LABELS_PT[session.game] ?? humanizeLabel(session.game)}
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            Código
+            <span className="font-mono text-sm font-bold tracking-wider text-foreground">
+              {session.inviteCode}
+            </span>
           </p>
         </div>
 

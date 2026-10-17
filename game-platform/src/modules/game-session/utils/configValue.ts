@@ -1,10 +1,17 @@
 import { CONFIG_ENUM_LABELS_PT } from '../constants/configFieldLabels'
 import { filled_round_popups, is_round_popup_list } from './roundPopups'
+import { SECONDS_AS_MINUTES_FIELDS, seconds_to_minutes_input } from './configUnits'
 
 /** Formats a single config field's raw value for display (booleans as Sim/Não). */
-export function format_config_value(value: unknown): string {
+export function format_config_value(field_name: string, value: unknown): string {
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
-  if (typeof value === 'number') return String(value)
+  if (typeof value === 'number') {
+    if (SECONDS_AS_MINUTES_FIELDS.has(field_name)) {
+      const minutes = seconds_to_minutes_input(value)
+      return minutes === '' ? '-' : `${minutes} min`
+    }
+    return String(value)
+  }
   if (typeof value === 'string') return CONFIG_ENUM_LABELS_PT[value] ?? value
   if (is_round_popup_list(value)) {
     const rounds = filled_round_popups(value).map((popup) => popup.round)

@@ -9,12 +9,15 @@ import {
   YAxis
 } from 'recharts'
 import type { CooperationChartPoint } from '../utils/chart-data'
+import type { NiceYScale } from '../utils/chartScale'
 
 interface CooperationChartProps {
   data: CooperationChartPoint[]
+  /** Escala do eixo Y; quando vem de fora, garante o mesmo teto/ticks em gráficos comparados lado a lado. */
+  scale?: NiceYScale
 }
 
-export function CooperationChart({ data }: CooperationChartProps) {
+export function CooperationChart({ data, scale }: CooperationChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
@@ -43,6 +46,9 @@ export function CooperationChart({ data }: CooperationChartProps) {
           <YAxis
             stroke="var(--color-muted-foreground)"
             tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+            domain={scale?.domain}
+            ticks={scale?.ticks}
+            allowDecimals={false}
           />
           <Tooltip
             contentStyle={{
@@ -55,6 +61,9 @@ export function CooperationChart({ data }: CooperationChartProps) {
             labelFormatter={(label) => `Rodada ${label}`}
           />
           <Legend
+            verticalAlign="top"
+            align="left"
+            height={28}
             wrapperStyle={{ color: 'var(--color-muted-foreground)', fontSize: 12 }}
             iconType="plainline"
           />

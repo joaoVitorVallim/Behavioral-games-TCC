@@ -7,6 +7,7 @@ import { RateLimiter } from '../../../shared/utils/security'
 import { MATCH_SESSION_STORAGE_KEYS } from '../../../shared/constants/storageKeys'
 import { isAxiosError } from 'axios'
 import { sessionService } from '../../game-session/services/sessionService'
+import { GAME_LABELS_PT } from '../../game-session/constants/configFieldLabels'
 import type { PlayTheme } from '../hooks/usePlayTheme'
 import type { PublicSession, SessionRequirement, JoinSessionPayload, JoinSessionResponse } from '../../game-session/types'
 
@@ -15,7 +16,7 @@ interface PlayGameModalProps {
   onClose: () => void
 }
 
-type ModalStep = 'game' | 'code' | 'fields'
+type ModalStep = 'game' | 'code' | 'analyst' | 'player'
 
 const rate_limiter = new RateLimiter(5, 60000)
 
@@ -167,7 +168,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
 
       rate_limiter.reset(`play-${selected_game}`)
       setMatchedSession(found)
-      setStep('fields')
+      setStep('analyst')
     } catch (error) {
       const status = isAxiosError(error) ? error.response?.status : undefined
       setValidationError(
@@ -180,7 +181,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
     }
   }, [code, selected_game, looking_up])
 
-  const handleFieldsSubmit = useCallback(() => {
+  const handleAnalystSubmit = useCallback(() => {
     if (!matched_session) return
 
     if (!RA_PATTERN.test(player_ra.trim())) {
@@ -192,6 +193,19 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
       setValidationError('Digite um e-mail válido')
       return
     }
+
+    setValidationError('')
+
+    if (requirements.length === 0) {
+      handleJoin(matched_session, {})
+      return
+    }
+
+    setStep('player')
+  }, [matched_session, player_ra, player_email, requirements, handleJoin])
+
+  const handlePlayerSubmit = useCallback(() => {
+    if (!matched_session) return
 
     const all_required_filled = requirements
       .filter((req) => req.required)
@@ -216,7 +230,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
 
     setValidationError('')
     handleJoin(matched_session, form_data)
-  }, [matched_session, requirements, form_data, player_email, player_ra, handleJoin])
+  }, [matched_session, requirements, form_data, handleJoin])
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value.substring(0, 500) }))
@@ -261,7 +275,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
                   onClick={() => handleSelectGame(game.id)}
                   style={{ textAlign: 'left', padding: '16px 18px', borderRadius: 14, border: '2px solid var(--prof-border)', background: 'none', cursor: 'pointer', fontFamily: 'Montserrat', fontWeight: 800, fontSize: 16, color: 'var(--modal-title)' }}
                 >
-                  {game.name}
+                  {GAME_LABELS_PT[game.id] ?? game.name}
                   <span style={{ display: 'block', marginTop: 4, fontFamily: 'Manrope', fontWeight: 500, fontSize: 13, color: 'var(--modal-text)' }}>{game.description}</span>
                 </button>
               ))}
@@ -296,10 +310,10 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
           </>
         )}
 
-        {step === 'fields' && (
+        {step === 'analyst' && (
           <>
-            <p style={{ margin: '0 0 10px', fontFamily: 'Montserrat', fontWeight: 900, fontSize: 24, color: 'var(--modal-title)' }}>Dados para entrada</p>
-            <p style={{ margin: '0 0 22px', fontSize: 15, lineHeight: 1.5, color: 'var(--modal-text)' }}>Preencha os dados solicitados para entrar na sessão.</p>
+            <p style={{ margin: '0 0 10px', fontFamily: 'Montserrat', fontWeight: 900, fontSize: 24, color: 'var(--modal-title)' }}>Dados do Analista</p>
+            <p style={{ margin: '0 0 22px', fontSize: 15, lineHeight: 1.5, color: 'var(--modal-text)' }}>Informe o RA e o e-mail de quem está acessando esta sessão.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
               <div style={{ textAlign: 'left' }}>
@@ -329,6 +343,34 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
                   style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '2px solid var(--prof-border)', fontSize: 14, color: 'var(--modal-title)', background: 'none' }}
                 />
               </div>
+            </div>
+
+            {validation_error && <p style={{ margin: '0 0 14px', fontSize: 13, color: '#c04040' }}>{validation_error}</p>}
+
+            <button
+              type="button"
+              onClick={handleAnalystSubmit}
+              disabled={is_joining}
+              style={{ width: '100%', padding: '14px 28px', border: 'none', borderRadius: 999, background: 'var(--modal-btn)', color: '#fff', fontFamily: 'Montserrat', fontWeight: 800, fontSize: 16, cursor: is_joining ? 'default' : 'pointer', opacity: is_joining ? 0.7 : 1 }}
+            >
+              {is_joining ? 'Entrando...' : 'Continuar'}
+            </button>
+          </>
+        )}
+
+        {step === 'player' && (
+          <>
+            <button
+              type="button"
+              onClick={() => { setValidationError(''); setStep('analyst') }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'var(--modal-text)' }}
+            >
+              ← Voltar
+            </button>
+            <p style={{ margin: '0 0 10px', fontFamily: 'Montserrat', fontWeight: 900, fontSize: 24, color: 'var(--modal-title)' }}>Dados do Jogador</p>
+            <p style={{ margin: '0 0 22px', fontSize: 15, lineHeight: 1.5, color: 'var(--modal-text)' }}>Preencha os dados solicitados pelo professor para entrar na sessão.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
               {requirements.map((req) => (
                 <div key={req.field} style={{ textAlign: 'left' }}>
                   <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: 'var(--modal-title)' }}>
@@ -362,7 +404,7 @@ export function PlayGameModal({ theme, onClose }: PlayGameModalProps) {
 
             <button
               type="button"
-              onClick={handleFieldsSubmit}
+              onClick={handlePlayerSubmit}
               disabled={is_joining}
               style={{ width: '100%', padding: '14px 28px', border: 'none', borderRadius: 999, background: 'var(--modal-btn)', color: '#fff', fontFamily: 'Montserrat', fontWeight: 800, fontSize: 16, cursor: is_joining ? 'default' : 'pointer', opacity: is_joining ? 0.7 : 1 }}
             >

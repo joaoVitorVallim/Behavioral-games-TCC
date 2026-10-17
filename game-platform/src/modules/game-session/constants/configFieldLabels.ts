@@ -14,7 +14,7 @@ export const CONFIG_FIELD_LABELS_PT: Record<string, string> = {
   // roleta
   tableLayout: 'Mesa',
   roundPopups: 'Popups por rodada',
-  timeLimit: 'Tempo limite (segundos)',
+  timeLimit: 'Tempo limite (minutos)',
   pointsLimit: 'Meta de fichas',
   initMoney: 'Fichas iniciais',
   popup: 'Aviso na tela',

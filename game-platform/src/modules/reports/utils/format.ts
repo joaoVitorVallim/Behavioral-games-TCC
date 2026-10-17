@@ -28,9 +28,11 @@ export const format_datetime = (iso: string | null | undefined): string => {
   }
 }
 
+// Rótulo pela cor da carta (preta = cooperar, vermelha = trair), igual ao que o jogador vê
+// durante a partida (CARD_NAME em game-session/types.ts) — não pelo nome da ação.
 export const translate_choice = (choice: Choice): string => {
-  if (choice === 'cooperate') return 'Cooperar'
-  if (choice === 'defect') return 'Trair'
+  if (choice === 'cooperate') return 'Preta'
+  if (choice === 'defect') return 'Vermelha'
   return choice
 }
 

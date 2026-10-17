@@ -101,7 +101,7 @@ export function SessionSummary({
                     <p className="text-xs text-muted-foreground">
                       {CONFIG_FIELD_LABELS_PT[key] ?? humanizeLabel(key)}
                     </p>
-                    <p className="text-sm font-medium text-foreground">{format_config_value(value)}</p>
+                    <p className="text-sm font-medium text-foreground">{format_config_value(key, value)}</p>
                   </div>
                 ))}
               </div>

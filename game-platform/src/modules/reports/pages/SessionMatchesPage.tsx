@@ -16,6 +16,8 @@ import { useSessionResults } from '../hooks/useSessionResults'
 import { useGsapReveal } from '../../../shared/hooks/useGsapReveal'
 import { sendSessionReportByEmail } from '../services/mailReportService'
 import { validateEmail } from '../../../shared/utils/validation'
+import { humanizeLabel } from '../../../shared/utils/humanizeLabel'
+import { GAME_LABELS_PT } from '../../game-session/constants/configFieldLabels'
 import { compute_totals, format_date, format_datetime } from '../utils/format'
 import { get_session_label } from '../../game-session/utils/session-label'
 
@@ -124,8 +126,8 @@ export function SessionMatchesPage() {
                         Finalizada
                       </span>
                     )}
-                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/15 px-2.5 py-0.5 text-xs font-semibold capitalize text-primary">
-                      {data.session.game}
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                      {GAME_LABELS_PT[data.session.game] ?? humanizeLabel(data.session.game)}
                     </span>
                     <span className="inline-flex items-center rounded-full border border-border bg-secondary/40 px-2.5 py-0.5 font-mono text-xs font-semibold text-foreground">
                       Código: {data.session.inviteCode}

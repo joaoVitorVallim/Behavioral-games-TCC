@@ -6,6 +6,11 @@ import {
   CONFIG_FIELD_LABELS_PT
 } from '../constants/configFieldLabels'
 import { is_round_popup_list } from '../utils/roundPopups'
+import {
+  SECONDS_AS_MINUTES_FIELDS,
+  minutes_input_to_seconds,
+  seconds_to_minutes_input
+} from '../utils/configUnits'
 import { RoundPopupsEditor } from './RoundPopupsEditor'
 import type { ConfigFieldValue, CreateConfigPayload, GameConfigFieldDefinition } from '../types'
 
@@ -99,6 +104,11 @@ export function ConfigurationForm({
     }
 
     if (field.type === 'number') {
+      const shown_in_minutes = SECONDS_AS_MINUTES_FIELDS.has(field.name)
+      const displayed_value = shown_in_minutes
+        ? seconds_to_minutes_input(field_value)
+        : typeof field_value === 'number' && field_value > 0 ? field_value : ''
+
       return (
         <div key={field.name}>
           <label htmlFor={`config-${field.name}`} className={label_class}>{field_label}</label>
@@ -107,8 +117,15 @@ export function ConfigurationForm({
             type="number"
             min={0}
             placeholder="Sem limite"
-            value={typeof field_value === 'number' && field_value > 0 ? field_value : ''}
-            onChange={(e) => handleChange(field.name, e.target.value === '' ? 0 : Number(e.target.value))}
+            value={displayed_value}
+            onChange={(e) =>
+              handleChange(
+                field.name,
+                shown_in_minutes
+                  ? minutes_input_to_seconds(e.target.value)
+                  : e.target.value === '' ? 0 : Number(e.target.value)
+              )
+            }
             className={input_class}
           />
           {field_hint && <p className="text-xs text-muted-foreground mt-1">{field_hint}</p>}

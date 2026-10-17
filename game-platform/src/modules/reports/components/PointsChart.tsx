@@ -8,6 +8,7 @@ import {
   YAxis
 } from 'recharts'
 import type { PointsChartPoint } from '../utils/chart-data'
+import type { NiceYScale } from '../utils/chartScale'
 
 interface PointsChartProps {
   data: PointsChartPoint[]
@@ -15,9 +16,11 @@ interface PointsChartProps {
   valueLabel?: string
   /** Nome do eixo X (padrão "Rodadas"). */
   roundLabel?: string
+  /** Escala do eixo Y; quando vem de fora, garante o mesmo teto/ticks em gráficos comparados lado a lado. */
+  scale?: NiceYScale
 }
 
-export function PointsChart({ data, valueLabel = 'Pontos', roundLabel = 'Rodadas' }: PointsChartProps) {
+export function PointsChart({ data, valueLabel = 'Pontos', roundLabel = 'Rodadas', scale }: PointsChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
@@ -46,6 +49,9 @@ export function PointsChart({ data, valueLabel = 'Pontos', roundLabel = 'Rodadas
           <YAxis
             stroke="var(--color-muted-foreground)"
             tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+            domain={scale?.domain}
+            ticks={scale?.ticks}
+            allowDecimals={false}
             label={{
               value: valueLabel,
               angle: -90,

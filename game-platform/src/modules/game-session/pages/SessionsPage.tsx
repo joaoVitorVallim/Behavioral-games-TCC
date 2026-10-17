@@ -33,7 +33,7 @@ export const SessionsPage = () => {
   const { toast, showToast } = useToast()
   const [show_finished, setShowFinished] = useState(false)
   const finished_count = sessions.filter((session) => !session.isActive).length
-  const visible_sessions = show_finished ? sessions : sessions.filter((session) => session.isActive)
+  const visible_sessions = sessions.filter((session) => session.isActive !== show_finished)
 
   useEffect(() => {
     if (!location.state || typeof location.state !== 'object') return
