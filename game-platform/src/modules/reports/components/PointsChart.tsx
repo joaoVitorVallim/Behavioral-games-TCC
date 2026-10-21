@@ -72,7 +72,7 @@ export function PointsChart({ data, valueLabel = 'Pontos', roundLabel = 'Rodadas
             labelFormatter={(label) => `Rodada ${label}`}
           />
           <Line
-            type="monotone"
+            type="linear"
             dataKey="points"
             stroke="var(--color-primary)"
             strokeWidth={2.5}

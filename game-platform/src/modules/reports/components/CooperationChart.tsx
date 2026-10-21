@@ -1,6 +1,5 @@
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -27,9 +26,22 @@ export function CooperationChart({ data, scale }: CooperationChartProps) {
   }
 
   return (
-    <div className="h-64 w-full">
+    <div className="flex h-64 w-full flex-col">
+      {/* Legenda fora do SVG: um <Legend> do recharts reserva altura no topo do gráfico, o que
+          empurra o eixo Y para baixo e descentraliza o rótulo "Nº de Rodadas" em relação à caixa
+          inteira (o PointsChart, sem legenda, não tem esse problema). */}
+      <div className="mb-1 flex items-center gap-4 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
+          Cooperação
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: 'var(--color-destructive)' }} />
+          Competição
+        </span>
+      </div>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 16, right: 24, bottom: 8, left: 0 }}>
+        <LineChart data={data} margin={{ top: 8, right: 24, bottom: 8, left: 0 }}>
           <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
           <XAxis
             dataKey="round"
@@ -49,6 +61,13 @@ export function CooperationChart({ data, scale }: CooperationChartProps) {
             domain={scale?.domain}
             ticks={scale?.ticks}
             allowDecimals={false}
+            label={{
+              value: 'Nº de Rodadas',
+              angle: -90,
+              position: 'insideLeft',
+              fill: 'var(--color-muted-foreground)',
+              fontSize: 12
+            }}
           />
           <Tooltip
             contentStyle={{
@@ -60,16 +79,9 @@ export function CooperationChart({ data, scale }: CooperationChartProps) {
             labelStyle={{ color: 'var(--color-muted-foreground)' }}
             labelFormatter={(label) => `Rodada ${label}`}
           />
-          <Legend
-            verticalAlign="top"
-            align="left"
-            height={28}
-            wrapperStyle={{ color: 'var(--color-muted-foreground)', fontSize: 12 }}
-            iconType="plainline"
-          />
           <Line
             name="Cooperação"
-            type="monotone"
+            type="linear"
             dataKey="cooperacao"
             stroke="var(--color-primary)"
             strokeWidth={2.5}
@@ -78,7 +90,7 @@ export function CooperationChart({ data, scale }: CooperationChartProps) {
           />
           <Line
             name="Competição"
-            type="monotone"
+            type="linear"
             dataKey="competicao"
             stroke="var(--color-destructive)"
             strokeWidth={2.5}
